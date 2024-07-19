@@ -1,0 +1,18 @@
+read:
+  type: 'dict'
+  required: True
+  schema:
+    module:
+      type: 'string'
+      required: True
+      allowed: ['snap', 'gdal']
+    bands:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+

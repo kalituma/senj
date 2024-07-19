@@ -1,0 +1,7 @@
+path_const: &path_cons '^(?:[a-zA-Z]:[\/]|[\/])?(?:[^\/:*?"<>{}|]+[\/])*[^\/:*?"<>{}| ]*$'
+
+atmos:
+  config:
+    type: 'string'
+    regex: *path_cons
+    required: True

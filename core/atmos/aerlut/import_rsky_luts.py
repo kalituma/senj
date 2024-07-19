@@ -1,0 +1,43 @@
+import os
+import numpy as np
+import scipy.interpolate
+from netCDF4 import Dataset
+from core import atmos
+
+def import_rsky_luts(models=[1,2], lutbase='ACOLITE-RSKY-202102-82W', sensor=None,
+                    override=False, get_remote = True):
+
+    rskyd = {}
+
+    for mod in models:
+        lut = None
+        ret = atmos.aerlut.import_rsky_lut(mod, lutbase=lutbase, sensor=sensor, get_remote = get_remote)
+        rskyd[mod] = {'lut':ret[0], 'meta':ret[1], 'dims':ret[2], 'rgi':ret[3]}
+
+        if sensor is None: ## generic model
+            if 'wind' in rskyd[mod]['meta']:
+                rskyd[mod]['dim'] = [rskyd[mod]['meta']['wave'], rskyd[mod]['meta']['azi'], rskyd[mod]['meta']['thv'],
+                                     rskyd[mod]['meta']['ths'], rskyd[mod]['meta']['wind'], rskyd[mod]['meta']['tau']]
+            else:
+                rskyd[mod]['dim'] = [rskyd[mod]['meta']['wave'], rskyd[mod]['meta']['azi'], rskyd[mod]['meta']['thv'],
+                                     rskyd[mod]['meta']['ths'], rskyd[mod]['meta']['tau']]
+
+            rskyd[mod]['rgi'] = scipy.interpolate.RegularGridInterpolator(rskyd[mod]['dim'],
+                                                                          rskyd[mod]['lut'],
+                                                                          bounds_error=False,
+                                                                          fill_value=np.nan)
+        else: ## sensor specific model
+            if 'wind' in rskyd[mod]['meta']:
+                rskyd[mod]['dim'] = [rskyd[mod]['meta']['azi'], rskyd[mod]['meta']['thv'],
+                                     rskyd[mod]['meta']['ths'], rskyd[mod]['meta']['wind'], rskyd[mod]['meta']['tau']]
+            else:
+                rskyd[mod]['dim'] = [rskyd[mod]['meta']['azi'], rskyd[mod]['meta']['thv'],
+                                     rskyd[mod]['meta']['ths'], rskyd[mod]['meta']['tau']]
+
+            rskyd[mod]['rgi'] = {}
+            for b in rskyd[mod]['lut']:
+                rskyd[mod]['rgi'][b] = scipy.interpolate.RegularGridInterpolator(rskyd[mod]['dim'],
+                                                                                 rskyd[mod]['lut'][b],
+                                                                                 bounds_error=False,
+                                                                                 fill_value=np.nan)
+    return(rskyd)

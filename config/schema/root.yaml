@@ -1,0 +1,59 @@
+path_const: &path_cons '^(?:[a-zA-Z]:[\/]|[\/])?(?:[^\/:*?"<>{}|]+[\/])*[^\/:*?"<>{}| ]*$'
+link_var: &link_var '^{{[a-zA-Z0-9_]+}}$'
+func_var: &func_var '^!{[a-zA-Z0-9_]+}$'
+
+root:
+  type: 'dict'
+  required: true
+  schema:
+    input:
+      type: 'dict'
+      required: True
+      schema:
+        path:
+          type: ['string', 'list']
+          required: True
+          anyof:
+            - type: 'string'
+              regex: *path_cons
+              empty: False
+            - type: 'string'
+              regex: *link_var
+              empty: False
+            - type: 'list'
+              minlength: 1
+              schema:
+                type: 'string'
+                regex: *path_cons
+                empty: False
+            - type: 'list'
+              minlength: 1
+              schema:
+                type: 'string'
+                regex: *link_var
+                empty: False
+        pattern:
+          type: 'string'
+        sort:
+          type: 'dict'
+          oneof:
+            - schema:
+                reg_exp:
+                  type: 'string'
+                  required: True
+                date_format:
+                  type: 'string'
+                  required: True
+            - schema:
+                func:
+                  type: 'string'
+                  regex: *func_var
+                  required: True
+    operations:
+      type: 'list'
+      required: True
+      schema:
+        type: 'string'
+
+
+

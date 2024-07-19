@@ -1,0 +1,40 @@
+sort_patt: &parse_str_patt '([12]\d{3}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])T(?:0[0-9]|1[0-9]|2[0-3])(?:[0-5][0-9])(?:[0-5][0-9]))'
+date_patt: &parse_date_patt '%Y%m%dT%H%M%S'
+
+parent: &parent
+  operations: [ 'read' ]
+  read:
+    module: 'snap'
+    bands: ['B2', 'B3', 'B4']
+
+read_s2_1:
+  <<: *parent
+  input:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    pattern: '*.dim'
+    sort:
+      reg_exp: *parse_str_patt
+      date_format: *parse_date_patt
+
+read_s2_2:
+  <<: *parent
+  input:
+    path: ['/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2', '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2']
+
+read_s2_3:
+  <<: *parent
+  input:
+    path: ['{{read_s2_1}}', '{{read_s2_2}}']
+
+read_s2_4:
+  <<: *parent
+  input:
+    path: '{{read_s2_1}}'
+    pattern: '*.dim'
+    sort:
+      func: '!{sort_by_name}'
+  read:
+    module: 'snap'
+
+
+

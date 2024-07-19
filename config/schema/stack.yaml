@@ -1,0 +1,27 @@
+stack:
+  type: 'dict'
+  required: true
+
+  schema:
+    axis:
+      type: 'integer'
+      allowed: [ 0, -1 ]
+      required: false
+    bands:
+      type: 'list'
+      required: false
+      empty: false
+      oneof:
+        - type: 'list'
+          schema:
+            type: 'list'
+            empty: false
+            schema:
+              type: 'integer'
+              min: 1
+        - type: 'list'
+          schema:
+            type: 'list'
+            empty: false
+            schema:
+              type: 'string'

@@ -1,0 +1,14 @@
+subset:
+  type: 'dict'
+  required: true
+
+  schema:
+    bounds:
+      type: 'list'
+      empty: false
+      required: true
+      schema:
+        type: 'number'
+        required: True
+    epsg:
+      type: 'integer'

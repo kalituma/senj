@@ -1,0 +1,51 @@
+import os
+from pyproj import Proj
+import pyproj
+import numpy as np
+from pyresample.bilinear import NumpyBilinearResampler
+from pyresample import geometry
+
+from core import atmos
+from core.atmos.nc import nc_data
+
+
+def srtm15plus_lonlat(lon1, lat1, path=None, sea_level=0):
+
+    if path is None:
+        file = atmos.dem.srtm15plus(path=None \
+                                    if 'srtm15plus_path' not in atmos.config \
+                                    else atmos.config['srtm15plus_path'])
+    else:
+        file = '{}'.format(path)
+
+    limit = np.nanmin(lat1), np.nanmin(lon1), np.nanmax(lat1), np.nanmax(lon1)
+
+    ## read lat/lon
+    lat = nc_data(file, 'lat')
+    lon = nc_data(file, 'lon')
+
+    lonoff = 0.25
+    latoff = 0.25
+    sublon = np.where((lon >= limit[1]-lonoff) & (lon <= limit[3]+lonoff))
+    sublat = np.where((lat >= limit[0]-latoff) & (lat <= limit[2]+latoff))
+
+    sub = [sublon[0][0], sublat[0][0], sublon[0][-1]-sublon[0][0]+1, sublat[0][-1]-sublat[0][0]+1]
+
+    yi = lat[sublat].shape[0]
+    xi = lon[sublon].shape[0]
+
+    lon0 = np.tile(lon[sublon], yi).reshape(yi, xi)
+    lat0 = np.rot90(np.tile(lat[sublat], xi).reshape(xi, yi))
+    lon = None
+    lat = None
+
+    ## read z
+    zin, zatt = nc_data(file, 'z', attributes=True, sub = sub)
+    zin = np.flipud(zin)
+
+    result = atmos.shared.reproject2(zin, lon0, lat0, lon1, lat1, nearest=False, radius_of_influence=5000)
+
+    if sea_level is not None:
+        result[result<sea_level] = sea_level
+
+    return(result)

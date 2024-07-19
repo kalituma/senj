@@ -1,0 +1,179 @@
+import unittest
+
+from core import SCHEMA_PATH
+from core.util import read_yaml
+from core.config import load_schema_map, validate_config_func
+
+class TestParsingCerberus(unittest.TestCase):
+    def setUp(self) -> None:
+        self.resource_path = '../resources'
+        self.schema_map = load_schema_map(SCHEMA_PATH)
+
+        self.root_success_config = read_yaml(f'{self.resource_path}/root_success.yaml')
+        self.root_fail_config = read_yaml(f'{self.resource_path}/root_fail.yaml')
+
+    def test_parse_root_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'root' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_root_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'root' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    # success case
+    def test_parse_read_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'read' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_read_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'read' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_stack_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'stack' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_stack_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'stack' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_subset_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'subset' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_subset_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'subset' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_write_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'write' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_write_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'write' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_apply_orbit_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'apply_orbit' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_apply_orbit_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'apply_orbit' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_terrain_correction_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'terrain_correction' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_terrain_correction_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'terrain_correction' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_calibrate_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'calibrate' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_calibrate_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'calibrate' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_speckle_filter_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'speckle_filter' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_speckle_filter_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'speckle_filter' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_thermal_noise_removal_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'thermal_noise_removal' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_thermal_noise_removal_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'thermal_noise_removal' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_topsar_deburst_success(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'topsar_deburst' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_topsar_deburst_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'topsar_deburst' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(ValueError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)

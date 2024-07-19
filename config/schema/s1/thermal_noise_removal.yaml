@@ -1,0 +1,8 @@
+thermal_noise_removal:
+  type: dict
+  schema:
+    selected_polarisations:
+      type: 'list'
+      schema:
+        type: 'string'
+        allowed: ['VV', 'VH', 'HH', 'HV']
