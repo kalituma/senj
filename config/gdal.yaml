@@ -1,0 +1,47 @@
+
+read_tif_1:
+  input:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.tif'
+  operations : ['read']
+  read:
+    module: 'gdal'
+
+read_tif_2:
+  input:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.1.tif'
+  operations : ['read']
+  read:
+    module: 'gdal'
+
+read_tif_3:
+  input:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.2.tif'
+  operations : ['read']
+  read:
+    module: 'gdal'
+
+preprocessing_1:
+  input:
+    path: ['{{read_tif_1}}', '{{read_tif_2}}', '{{read_tif_3}}']
+  operations : ['stack', 'subset', 'reproject']
+  stack:
+#    axis: 0
+    bands: [[1], [2, 3], [3]]
+  subset:
+    bounds: [426820, 3851030, 445250, 3873340]
+  reproject:
+    src_epsg: 32652
+    dst_epsg: 4326
+
+preprocessing_2:
+  input:
+    path: '{{preprocessing_1}}'
+    operations : ['resample', 'write']
+
+  resample:
+    method: 'bilinear'
+    resolution: 0.0001
+
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2/s2.tif'
+    module: 'gdal'

@@ -1,0 +1,276 @@
+parent: &parent
+  input:
+    path: [ '{{read_tif_1}}', '{{read_tif_2}}', '{{read_tif_3}}' ]
+
+# root
+root_1:
+  input:
+    path: 1
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+root_2:
+  input:
+    path: 'a'
+  operations: 1
+
+root_3:
+  input:
+    path: '../resources/s2merge_1_stack_subset'
+    pattern: 1
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+root_4:
+  input:
+    path: '../resources/s2merge_1_stack_subset.tif'
+    sort:
+      reg_exp: 1
+      date_format: 2
+
+root_5:
+  input:
+    path: '../resources/s2merge_1_stack_subset.tif'
+    sort:
+      func: 'function'
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+# read
+read_1:
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+read_2:
+  <<: *parent
+  operations : ['read']
+  read:
+    module: 'snaphu'
+
+read_3:
+  <<: *parent
+  operations : ['read']
+  read:
+    module: 'snap'
+    bands: []
+
+read_4:
+  <<: *parent
+  operations : ['read']
+  read:
+    module: 'snap'
+    bands: [3.5, 2.4]
+
+# stack
+stack_1:
+  <<: *parent
+  operations : ['stack']
+  stack:
+    cal: 3
+
+stack_2:
+  <<: *parent
+  operations : ['stack']
+  stack:
+    axis: 3
+
+stack_3:
+  <<: *parent
+  operations: [ 'stack' ]
+  stack:
+    bands: [ 1,2 ]
+
+stack_4:
+  <<: *parent
+  operations: [ 'stack' ]
+  stack:
+    bands: [ 'B1','B2' ]
+
+stack_5:
+  <<: *parent
+  operations: [ 'stack' ]
+  stack:
+    bands: [ [1],['B2'] ]
+
+# subset
+subset_1:
+  <<: *parent
+  operations : ['subset']
+  subset:
+    epsg: 4326
+    bounds: []
+
+subset_2:
+  <<: *parent
+  operations : ['subset']
+  subset:
+    bounds: ['a','b','c','d']
+
+subset_3:
+  <<: *parent
+  operations : ['subset']
+  subset:
+    epsg: 4326
+
+# write
+write_1:
+  <<: *parent
+  operations : ['write']
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+
+write_2:
+  <<: *parent
+  operations : ['write']
+  write:
+    path: '43:fd'
+    module: 'snap'
+
+write_3:
+  <<: *parent
+  operations: [ 'write' ]
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    module: 'snap'
+    prefix: 1
+
+write_4:
+  <<: *parent
+  operations: [ 'write' ]
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    module: 'snap'
+    suffix: 1
+
+# apply orbit
+apply_orbit_1:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit:
+    orbit_type: 'a'
+
+apply_orbit_2:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: '3'
+
+apply_orbit_3:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: 3
+    continue_on_fail: 'true'
+
+# terrain correction
+terrain_correction_1:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    bands: 'Amplitude_VV'
+
+terrain_correction_2:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    dem_name: 'abc'
+
+terrain_correction_3:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    pixel_spacing_meter: '10'
+
+
+terrain_correction_4:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    pixel_spacing_degree: '0.0001'
+
+terrain_correction_5:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    dem_resampling_method: 'abcd'
+
+terrain_correction_6:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    save_dem: 'true'
+
+terrain_correction_7:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    map_projection: 4326
+
+# calibrate
+calibrate_1:
+  <<: *parent
+  operations : ['calibrate']
+  calibrate:
+    selected_polarisations: [ 1, 'abcd' ]
+
+calibrate_2:
+  <<: *parent
+  operations: [ 'calibrate' ]
+  calibrate:
+    output_sigma_band: 1
+
+# speckle_filter
+speckle_filter_1:
+  <<: *parent
+  operations : ['speckle_filter']
+  speckle_filter:
+    filter: 'abcd'
+
+speckle_filter_2:
+  <<: *parent
+  operations : ['speckle_filter']
+  speckle_filter:
+    filter_size: [3]
+
+speckle_filter_3:
+  <<: *parent
+  operations : ['speckle_filter']
+  speckle_filter:
+    sigma: 0.4
+
+speckle_filter_4:
+  <<: *parent
+  operations : ['speckle_filter']
+  speckle_filter:
+    window_size: 2
+
+thermal_noise_removal_1:
+  <<: *parent
+  operations : ['thermal_noise_removal']
+  thermal_noise_removal:
+    selected_polarisations: [ 'a' ]
+
+thermal_noise_removal_2:
+  <<: *parent
+  operations : ['thermal_noise_removal']
+  thermal_noise_removal:
+    selected_polarisations: 'VV'
+
+# topsar_deburst
+topsar_deburst_1:
+  <<: *parent
+  operations : ['topsar_deburst']
+  topsar_deburst:
+    selected_polarisations: [ 'a' ]
+
+topsar_deburst_2:
+  <<: *parent
+  operations : ['topsar_deburst']
+  topsar_deburst:
+    selected_polarisations: 'VV'

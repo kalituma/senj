@@ -1,0 +1,19 @@
+path_const: &path_cons '^(?:[a-zA-Z]:[\/]|[\/])?(?:[^\/:*?"<>{}|]+[\/])*[^\/:*?"<>{}| ]*$'
+
+write:
+  type: 'dict'
+  required: true
+  schema:
+    path:
+      type: 'string'
+      dependencies: [output_affix, output_prefix]
+      regex: *path_cons
+      required: true
+    module:
+      type: 'string'
+      allowed: [ 'gdal', 'snap' ]
+      required: true
+    suffix:
+      type: 'string'
+    prefix:
+      type: 'string'

@@ -1,0 +1,294 @@
+sort_patt: &parse_str_patt '([12]\d{3}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])T(?:0[0-9]|1[0-9]|2[0-3])(?:[0-5][0-9])(?:[0-5][0-9]))'
+date_patt: &parse_date_patt '%Y%m%dT%H%M%S'
+
+parent: &parent
+  input:
+    path: [ '{{read_tif_1}}', '{{read_tif_2}}', '{{read_tif_3}}' ]
+
+# root
+root_1:
+  input:
+    path: '../resources/s2merge_1_stack_subset.tif'
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+root_2:
+  input:
+    path: ['../resources/s2merge_1_stack_subset.tif', '../resources/s2merge_1_stack_subset.tif', '../resources/s2merge_1_stack_subset.tif']
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+root_3:
+  input:
+    path: '../resources/s2merge_1_stack_subset'
+    pattern: '*.dim'
+    sort:
+      reg_exp: *parse_str_patt
+      date_format: *parse_date_patt
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+root_4:
+  input:
+    path: '../resources/s2merge_1_stack_subset'
+    pattern: '*.dim'
+    sort:
+      func: '!{sort_by_name}'
+  operations: [ 'read' ]
+  read:
+    module: 'gdal'
+
+# read
+read_1:
+  <<: *parent
+  operations : ['read']
+  read:
+    module: 'gdal'
+
+read_2:
+  <<: *parent
+  operations : ['read']
+  read:
+    module: 'gdal'
+    bands: [ 1, 2, 3 ]
+
+
+read_3:
+  <<: *parent
+  operations : ['read', 'stack']
+  read:
+    module: 'snap'
+    bands: [ 'B1', 'B2', 'B3' ]
+
+# stack
+stack_1:
+  <<: *parent
+  operations : ['stack']
+  stack:
+    axis: 0
+    bands: [ [ 1, 2, 3 ], [ 4, 5, 6 ] ]
+
+stack_2:
+  <<: *parent
+  operations : ['stack']
+  stack:
+    axis: -1
+    bands: [ [ 'B1', 'B2' ], [ 'B4', 'B5' ] ]
+
+stack_3:
+  <<: *parent
+  operations : ['stack']
+  stack:
+    axis: -1
+
+stack_4:
+  <<: *parent
+  operations : ['stack']
+  stack:
+    bands: [ [ 'B1', 'B2' ], [ 'B4', 'B5' ] ]
+
+# subset
+subset_1:
+  <<: *parent
+  operations : ['subset']
+  subset:
+    epsg: 4326
+    bounds: [128,10,34,25]
+
+subset_2:
+  <<: *parent
+  operations : ['subset']
+  subset:
+    bounds: [128.1,32.5,129.3,33.4]
+
+# write
+write_1:
+  <<: *parent
+  operations : ['write']
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    module: 'gdal'
+
+write_2:
+  <<: *parent
+  operations : ['write']
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    module: 'snap'
+    suffix: '_merged'
+    prefix: 's2_'
+
+# apply orbit
+apply_orbit_1:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit: {}
+
+apply_orbit_1_1:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit:
+
+apply_orbit_2:
+  <<: *parent
+  operations : ['apply_orbit']
+
+apply_orbit_3:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit:
+      orbit_type: 'SENTINEL_PRECISE'
+
+apply_orbit_4:
+  <<: *parent
+  operations : ['apply_orbit']
+  apply_orbit:
+    poly_degree: 3
+
+apply_orbit_5:
+  <<: *parent
+  operations: [ 'apply_orbit' ]
+  apply_orbit:
+    continue_on_fail: true
+
+# terrain correction
+terrain_correction_1:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction: {}
+
+terrain_correction_2:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+
+terrain_correction_3:
+  <<: *parent
+  operations : ['terrain_correction']
+
+terrain_correction_4:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    bands: [ 'Amplitude_VV', 'Intersity_VV' ]
+
+terrain_correction_5:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    bands: [ 'Amplitude_VV', 'Intersity_VV' ]
+    dem_name: 'SRTM 3Sec'
+    pixel_spacing_meter: 10
+    pixel_spacing_degree: 0.0001
+    dem_resampling_method: 'NEAREST_NEIGHBOR'
+    save_dem: true
+    map_projection: 'WGS84(DD)'
+
+terrain_correction_6:
+  <<: *parent
+  operations : ['terrain_correction']
+  terrain_correction:
+    bands: [ 'Amplitude_VV', 'Intersity_VV' ]
+    dem_resampling_method: 'NEAREST_NEIGHBOR'
+    save_dem: true
+    map_projection: 'WGS84(DD)'
+
+# calibrate
+calibrate_1:
+  <<: *parent
+  operations : ['calibrate']
+  calibrate: {}
+
+calibrate_2:
+  <<: *parent
+  operations : ['calibrate']
+  calibrate:
+
+calibrate_3:
+  <<: *parent
+  operations : ['calibrate']
+
+calibrate_4:
+  <<: *parent
+  operations : ['calibrate']
+  calibrate:
+    selected_polarisations: [ 'VV', 'VH' ]
+    output_sigma_band: true
+    output_beta_band: true
+    output_gamma_band: true
+    output_image_db: true
+    output_image_complex: true
+
+# speckle_filter
+speckle_filter_1:
+  <<: *parent
+  operations : ['speckle_filter']
+  speckle_filter: {}
+
+speckle_filter_2:
+  <<: *parent
+  operations : ['speckle_filter']
+  speckle_filter:
+
+speckle_filter_3:
+  <<: *parent
+  operations : ['speckle_filter']
+
+speckle_filter_4:
+    <<: *parent
+    operations : ['speckle_filter']
+    speckle_filter:
+    bands: [ 'Amplitude_VV', 'Intersity_VV' ]
+    filter: 'Refined Lee'
+    filter_size: [ 3, 3 ]
+    damping_factor: 2
+    number_looks: 2
+    window_size: 3
+    target_window_size: 3
+    sigma: 0.8
+    an_size: 50
+
+# thermal_noise_removal
+thermal_noise_removal_1:
+  <<: *parent
+  operations : ['thermal_noise_removal']
+
+thermal_noise_removal_2:
+  <<: *parent
+  operations : ['thermal_noise_removal']
+  thermal_noise_removal: {}
+
+thermal_noise_removal_3:
+  <<: *parent
+  operations : ['thermal_noise_removal']
+  thermal_noise_removal:
+
+thermal_noise_removal_4:
+  <<: *parent
+  operations : ['thermal_noise_removal']
+  thermal_noise_removal:
+      selected_polarisations: [ 'VV', 'VH' ]
+
+# topsar deburst
+topsar_deburst_1:
+  <<: *parent
+  operations : ['topsar_deburst']
+  topsar_deburst: {}
+
+topsar_deburst_2:
+  <<: *parent
+  operations : ['topsar_deburst']
+  topsar_deburst:
+
+topsar_deburst_3:
+  <<: *parent
+  operations : ['topsar_deburst']
+
+topsar_deburst_4:
+  <<: *parent
+  operations : ['topsar_deburst']
+  topsar_deburst:
+    selected_polarisations: [ 'VV', 'VH' ]

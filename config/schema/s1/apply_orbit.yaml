@@ -1,0 +1,17 @@
+apply_orbit:
+  type: 'dict'
+  schema:
+    orbit_type:
+      type: 'string'
+      allowed:
+        - 'SENTINEL_PRECISE'
+        - 'SENTINEL_RESTITUTED'
+        - 'DORIS_POR'
+        - 'DORIS_VOR'
+        - 'DELFT_PRECISE'
+        - 'PRARE_PRECISE'
+        - 'K5_PRECISE'
+    poly_degree:
+      type: 'integer'
+    continue_on_fail:
+      type: 'boolean'

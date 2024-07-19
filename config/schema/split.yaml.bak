@@ -1,0 +1,5 @@
+split:
+  axis:
+      type: 'integer'
+      allowed: [0, -1]
+      required: True

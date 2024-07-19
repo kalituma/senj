@@ -1,0 +1,37 @@
+sort_patt: &parse_str_patt '([12]\d{3}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])T(?:0[0-9]|1[0-9]|2[0-3])(?:[0-5][0-9])(?:[0-5][0-9]))'
+date_patt: &parse_date_patt '%Y%m%dT%H%M%S'
+
+read_s2_1:
+  input:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    pattern: '*.dim'
+    sort:
+      reg_exp: *parse_str_patt
+      date_format: *parse_date_patt
+  operations : ['read']
+  read:
+    module: 'snap'
+    bands: ['B2', 'B3', 'B4']
+
+read_s2_2:
+  input:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    pattern: '*.dim'
+    sort:
+      reg_exp: *parse_str_patt
+      date_format: *parse_date_patt
+  operations : ['read']
+  read:
+    loader: 'snap'
+    bands: ['B5']
+
+stack_s2_1_2:
+  input:
+    path: ['{{read_s2_1}}', '{{read_s2_2}}']
+  operations : ['stack', 'write']
+  stack:
+    bands: ['B2', 'B3', 'B4', 'B5']
+  write:
+    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    suffix: '_stacked'
+    module: 'snap'

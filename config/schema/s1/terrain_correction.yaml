@@ -1,0 +1,42 @@
+dem: &dem
+  - 'SRTM 3Sec'
+  - 'SRTM 1Sec HGT'
+  - 'ASTER 1Sec GDEM'
+  - 'ACE30'
+  - 'ACE2_5Min'
+  - 'GETASSE30'
+  - 'Copernicus 30m Global DEM'
+
+resample_method: &resample_method
+  - 'NEAREST_NEIGHBOR'
+  - 'BILINEAR_INTERPOLATION'
+  - 'CUBIC_CONVOLUTION'
+  - 'BISINC_5_POINT_INTERPOLATION'
+  - 'BISINC_11_POINT_INTERPOLATION'
+  - 'BISINC_21_POINT_INTERPOLATION'
+  - 'BICUBIC_INTERPOLATION'
+
+terrain_correction:
+  type: 'dict'
+  schema:
+    bands:
+      type: 'list'
+      schema:
+        type: 'string'
+    dem_name:
+      type: 'string'
+      allowed: *dem
+    pixel_spacing_meter:
+      type: 'float'
+    pixel_spacing_degree:
+      type: 'float'
+    dem_resampling_method:
+      type: 'string'
+      allowed: *resample_method
+    img_resampling_method:
+      type: 'string'
+      allowed: *resample_method
+    save_dem:
+      type: 'boolean'
+    map_projection:
+      type: 'string'
