@@ -1,5 +1,6 @@
 from tqdm import tqdm
 from esa_snappy import Product, ProductUtils, ProductData
+from core.raster import BandError
 from core.raster.gpf_module import create_product_data
 
 
@@ -28,6 +29,9 @@ def copy_product(src_product, selected_bands:list=None):
 
     else:
         matched_band = src_product.getBandNames()
+
+    if len(matched_band) == 0:
+        raise BandError(list(matched_band))
 
     target_band = src_product.getBand(matched_band[0])
     width, height = target_band.getRasterWidth(), target_band.getRasterHeight()

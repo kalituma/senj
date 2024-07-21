@@ -1,11 +1,7 @@
 import os
 import re
 from datetime import datetime
-from core import LAMBDA
 
-@LAMBDA.reg(name='sort_by_name')
-def sort_by_name(file_name: str, pattern=None) -> str:
-    return str(os.path.basename(file_name))
 
 def sort_by_pattern(input: str, str_pattern:str, date_pattern:str):
 

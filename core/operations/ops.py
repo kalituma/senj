@@ -49,7 +49,7 @@ class CachedOp(Op):
     def pre_process(self, raster:"Raster", context:"Context", *args, **kwargs):
         if not raster.is_band_cached:
             selected_bands = raster.selected_bands if raster.selected_bands else None
-            raster = read_band_from_raw(raster, selected_bands, raster.module_type)
+            raster = read_band_from_raw(raster, selected_bands)
         return raster
 
     def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):

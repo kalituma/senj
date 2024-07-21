@@ -1,41 +1,74 @@
+from typing import TYPE_CHECKING
 from core import PROCESSOR, OPERATIONS
+from core.logic import FILE_PROCESSOR, LINK_PROCESSOR, Context
+from core.logic.executor import ProcessingExecutor
+
+if TYPE_CHECKING:
+    from core.graph import GraphManager, ProcessingSource
+    from core.logic import Processor
 
 class ProcessorBuilder:
-    def __init__(self):
-        self._processor = None
-        self._linked_process = []
-        self._operations = []
+    def __init__(self, graph_manager:"GraphManager"):
+        self._graph_manager = graph_manager
+        self._processor_map = {}
+        self._end_point:list["Processor"] = []
 
     @property
-    def processor(self):
-        return self._processor
+    def end_point(self) -> list["Processor"]:
+        return self._end_point
 
-    @processor.setter
-    def processor(self, value):
-        self._processor = value
+    def build_op_args(self, op, op_args):
+        if op == 'write':
+            op_args['out_ext'] = op_args['ext']
+            del op_args['ext']
+        return op_args
 
-    def make_processor(self, proc_type, proc_name, **kwargs):
-        creator = PROCESSOR.get(proc_type)
-        self._processor = creator(proc_name, **kwargs)
-        return self
+    def build_operation(self, graph_elem: "ProcessingSource"):
 
-    def add_operations(self, ops:list, args_list:list):
-        for op_name, args in zip(ops, args_list):
-            self.add_operation(op_name, args)
-        return self
+        proc = graph_elem.name
+        assert proc in self._processor_map, f'{proc} obj should be built before building operations.'
+        ops = graph_elem.ops
 
-    def add_operation(self, op_name, args):
-        creator = OPERATIONS.get(op_name)
-        self._operations.append(creator(**args))
-        return self
+        for op in ops['ops_order']:
+            if op != 'input':
+                op_args = self.build_op_args(op, ops['op_args'][op])
+                constructor = OPERATIONS[op]
+                self._processor_map[proc].add_op(constructor(**op_args))
 
-    def add_linked_process(self, child_proc):
-        self._linked_process.append(child_proc)
-        return self
+    def build_processor(self, graph_elem: "ProcessingSource"):
+        proc = graph_elem.name
+        if proc in self._processor_map:
+            return self._processor_map[proc]
 
-    def build(self):
-        for op in self._operations:
-            self._processor.add_op(op)
-        for linked_proc in self._linked_process:
-            self._processor.add_linked_process(linked_proc)
-        return self._processor
+        if self._graph_manager.is_init(proc):
+            constructor = PROCESSOR[FILE_PROCESSOR]
+            input_args = self._graph_manager.get_op_args(proc, 'input')
+        else:
+            constructor = PROCESSOR[LINK_PROCESSOR]
+            input_args = {}
+
+        self._processor_map[proc] = constructor(proc_name=proc, **input_args)
+        self.build_operation(graph_elem)
+
+        if self._graph_manager.is_end(proc):
+            self._end_point.append(self._processor_map[proc])
+
+        return self._processor_map[proc]
+
+    def connect_link(self):
+        for graph_elem in self._graph_manager:
+            for next_proc in graph_elem.links:
+                self._processor_map[next_proc].add_linked_process(self._processor_map[graph_elem.name])
+
+    def build_executor(self):
+        self._executors = ProcessingExecutor(Context())
+        for end_point in self._end_point:
+            end_point.set_executor(self._executors)
+
+    def build(self) -> list["Processor"]:
+        for graph_elem in self._graph_manager:
+            self.build_processor(graph_elem)
+        self.connect_link()
+        self.build_executor()
+
+        return self.end_point

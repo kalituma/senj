@@ -17,6 +17,7 @@ INCLUDE = 'INCLUDE'
 GEN = 'GEN'
 LINK = 'LINK'
 
-from .graph_build import *
-from .graph_query import *
-
+from .build_graph import *
+from .query_graph import *
+from .graph_manager import *
+from .processor_builder import *

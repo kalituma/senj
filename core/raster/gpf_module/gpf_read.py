@@ -2,9 +2,10 @@ import re
 import numpy as np
 from typing import Tuple
 from pathlib import Path
-from esa_snappy import GPF, ProductData
+from esa_snappy import GPF, Product, ProductData
 
 from core.util import read_pickle
+from core.raster import BandError
 from core.raster.gpf_module import build_read_params, set_meta_to_product, make_meta_dict
 
 def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=None, bname_word_included:bool=False):
@@ -24,11 +25,11 @@ def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=Non
         selected = src_bnames.copy()
 
     if len(selected) == 0:
-        raise ValueError(f'No band names found in the product : {selected_bnames}')
+        raise BandError(selected_bnames)
 
     return selected
 
-def load_raster_gpf(in_path, selected_bands:list[str]=None, bname_word_included=False):
+def load_raster_gpf(in_path, selected_bands:list[str]=None, bname_word_included=False) -> Tuple[dict, Product, list[str]]:
 
     path_ext = Path(in_path).suffix[1:]
 

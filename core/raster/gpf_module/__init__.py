@@ -6,15 +6,7 @@ S2_RES_BAND_MAP = {
     '60': 'B1'
 }
 
-ORBIT_TYPE = {
-    'SENTINEL_PRECISE' : 'Sentinel Precise (Auto Download)',
-    'SENTINEL_RESTITUTED': 'Sentinel Restituted (Auto Download)',
-    'DORIS_POR': 'Doris Preliminary (ENVISAT)',
-    'DORIS_VOR': 'Doris Precise VOR (ENVISAT) (Auto Download)',
-    'DELFT_PRECISE': 'DELFT Precise (ENVISAT, ERS1&2) (Auto Download)',
-    'PRARE_PRECISE': 'PRARE Precise (ERS1&2) (Auto Download)',
-    'K5_PRECISE': 'Kompsat5 Precise'
-}
+
 
 from .gpf_const import *
 from .gpf_op_params import *

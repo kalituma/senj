@@ -11,7 +11,9 @@ ATMOS_CONFIG = os.path.join(PROJECT_PATH, 'config', 'atmos')
 SCHEMA_PATH = os.path.join(PROJECT_PATH, 'config', 'schema')
 
 from core.registry import Registry, LAMBDA, PROCESSOR, OPERATIONS
+
 from core import util
+from core import lambda_funcs
 from core import atmos
 from core import config
 from core import operations

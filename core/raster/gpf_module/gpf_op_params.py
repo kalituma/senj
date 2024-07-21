@@ -1,4 +1,4 @@
-from esa_snappy import HashMap, jpy
+from esa_snappy import HashMap, jpy, Rectangle
 
 from core.raster.gpf_module import get_default_bands, get_default_masks
 
@@ -59,6 +59,9 @@ def build_subset_params(**kwargs):
 
     if 'tiePointGridNames' in kwargs:
         kwargs['tiePointGridNames'] = jpy.array('java.lang.String', kwargs['tiePointGridNames'])
+
+    if 'region' in kwargs:
+        kwargs['region'] = Rectangle(*kwargs['region'])
 
     return _build_params(**kwargs)
 

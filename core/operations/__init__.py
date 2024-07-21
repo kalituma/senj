@@ -39,3 +39,6 @@ from .subset_op import *
 from .stack_op import *
 from .split_op import *
 from .convert_op import *
+
+from .s1 import *
+from .cached import *

@@ -1,5 +1,17 @@
+import importlib
+import pkgutil
+
+def _import_submodule(package:str):
+    pkg = importlib.import_module(package)
+    for _, name, is_pkg in pkgutil.walk_packages(pkg.__path__):
+        full_name = f'{package}.{name}'
+        importlib.import_module(full_name)
+        if is_pkg:
+            _import_submodule(full_name)
+
 class Registry:
-    def __init__(self, name:str):
+    def __init__(self, name:str, package:str):
+        self._package = package
         self._reg_name = name
         self._reg_dict = {}
 
@@ -17,27 +29,21 @@ class Registry:
     def reg_dict(self):
         return self._reg_dict
 
-    def get(self, reg_name:str):
-        reg_func = None
+    def __getitem__(self, name:str):
+        try:
+            return self.reg_dict[name]
+        except KeyError:
+            try:
+                _import_submodule(self._package)
+                return self.reg_dict[name]
+            except ImportError:
+                raise KeyError(name)
 
-        if not isinstance(reg_name, str):
-            raise ValueError('registered name must be a string')
+    def _reg(self, reg_name:str=None, reg_obj=None, **kwargs):
 
         if reg_name in self._reg_dict:
-            reg_func = self._reg_dict[reg_name]
-
-        return reg_func
-
-    def _reg(self, reg_name=None, reg_func=None, **kwargs):
-
-        if isinstance(reg_name, str):
-            reg_name = [reg_name]
-
-        for name in reg_name:
-            if name in self._reg_dict:
-                existed_func = self._reg_dict[name]
-                raise ValueError(f'{name} is already registered')
-            self._reg_dict[name] = reg_func
+            raise ValueError(f'{reg_name} is already registered')
+        self._reg_dict[reg_name] = reg_obj
 
     def reg(self, name, reg_func=None, **kwargs):
 

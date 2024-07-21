@@ -1,3 +1,6 @@
+from typing import Callable
+
+from networkx import DiGraph
 from core.graph import PINIT, PEND, PR, OP, LINK, INCLUDE
 
 def get_parent_processors(graph, proc_name):
@@ -6,38 +9,28 @@ def get_parent_processors(graph, proc_name):
 def get_child_processors(graph, proc_name):
     return get_successors_by_relation(graph, proc_name, LINK)
 
+def get_procs(graph:DiGraph, lambda_func:Callable[..., bool]):
+    return [node for node, attr in graph.nodes(data=True) if lambda_func(attr)]
+
 def get_predecessors_by_relation(graph, node, relation):
-    return [predecessor for predecessor in graph.predecessors(node) if graph.get_edge_data(predecessor, node).get('relation') == relation]
+    return [predecessor for predecessor in graph.predecessors(node) if graph.get_edge_data(predecessor, node).get('RELATION') == relation]
 
 def get_successors_by_relation(graph, node, relation):
-    return [successor for successor in graph.successors(node) if graph.get_edge_data(node, successor).get('relation') == relation]
+    return [successor for successor in graph.successors(node) if graph.get_edge_data(node, successor).get('RELATION') == relation]
 
-def get_end_procs(graph):
-    return [node for node, attrs in graph.nodes(data=True) if attrs.get('node_type') == PR and attrs.get('process_type') == PEND]
+def get_ops_args(graph:DiGraph, proc:str, q_relation:str=INCLUDE) -> tuple[list, list]:
+    ops = []
+    args = []
 
-def make_list_of_operations_for_proc(graph, proc_nodes_list:list):
+    for successor in graph.successors(proc):
+        edge_attr = graph.get_edge_data(proc, successor)
+        if edge_attr.get('RELATION') == q_relation:
+            op_name = successor.split(':')[1]
+            op_args = graph.nodes[successor]['ARGS']
+            ops.append(op_name)
+            args.append(op_args)
 
-    op_list = []
-    for proc_nodes in proc_nodes_list:
-        proc_op_nodes = []
-        for proc_node in proc_nodes:
-            op_nodes, _ = get_ops_using_proc(graph, proc_node)
-            proc_op_nodes.append(op_nodes)
-        op_list.append(proc_op_nodes)
-
-    return op_list
-
-def get_ops_using_proc(graph, proc_node, q_relation=INCLUDE):
-    op_nodes = []
-    op_atts = []
-    for successor in graph.successors(proc_node):
-        edge_data = graph.get_edge_data(proc_node, successor)
-        if edge_data.get('relation') == q_relation:
-            op_name = successor[len(proc_node) + 1:]
-            op_nodes.append(op_name)
-            op_atts.append(graph.nodes[successor]['args'])
-    return op_nodes, op_atts
-
+    return ops, args
 
 def find_all_paths(graph, start, end, reverse=False, path=None, spec=None):
 
@@ -53,7 +46,7 @@ def find_all_paths(graph, start, end, reverse=False, path=None, spec=None):
         spec[start] = {}
 
     if 'op' not in spec[start]:
-        spec[start]['op'], _ = get_ops_using_proc(graph, start)
+        spec[start]['op'], _ = get_ops_from_proc(graph, start)
         spec[start]['link'] = []
 
     #last step

@@ -1,4 +1,5 @@
 path_const: &path_cons '^(?:[a-zA-Z]:[\/]|[\/])?(?:[^\/:*?"<>{}|]+[\/])*[^\/:*?"<>{}| ]*$'
+ext_const: &ext_cons '^(?:[.][a-zA-Z0-9]+)?$'
 
 write:
   type: 'dict'
@@ -6,7 +7,7 @@ write:
   schema:
     path:
       type: 'string'
-      dependencies: [output_affix, output_prefix]
+#      dependencies: [output_affix, output_prefix]
       regex: *path_cons
       required: true
     module:
@@ -17,3 +18,7 @@ write:
       type: 'string'
     prefix:
       type: 'string'
+    ext:
+      type: 'string'
+      dependencies: [module]
+      allowed: [ 'tif', 'dim']

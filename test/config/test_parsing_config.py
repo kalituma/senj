@@ -1,7 +1,10 @@
 import unittest
+from functools import partial
+
 from core import SCHEMA_PATH
 from core.util import PathType, read_yaml, sort_by_name
 from core.config import extract_pnodes_pops, validate_in_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_lambda_var_to_func, load_schema_map, parse_config
+from core.graph import build_graph
 
 class TestConfigParsing(unittest.TestCase):
     def setUp(self) -> None:
@@ -10,11 +13,10 @@ class TestConfigParsing(unittest.TestCase):
         self.read_config_path = f'{self.resource_path}/config/stack_read.yaml'
         self.read_config = read_yaml(self.read_config_path)
 
-        self.stack_config_path = f'{self.resource_path}/config/stack.yaml'
-        self.stack_config = read_yaml(self.stack_config_path)
-
         self.schema_map = load_schema_map(SCHEMA_PATH)
 
+        self.stack_config_path = f'{self.resource_path}/config/stack.yaml'
+        self.stack_config = read_yaml(self.stack_config_path)
     def delete_not_dict(self):
         result = dict()
         for key, value in self.read_config.items():
@@ -61,5 +63,17 @@ class TestConfigParsing(unittest.TestCase):
         self.assertEqual(new_config['input']['sort']['func'], sort_by_name)
 
     def test_parse_config(self):
+
         all_config, p_nodes, p_init, p_end, p_link, ops_args = parse_config(self.stack_config, self.schema_map)
-        print()
+
+        self.assertEqual(isinstance(all_config['read_s2_1']['input']['sort']['func'], partial), True)
+        self.assertEqual(p_nodes, ['read_s2_1', 'read_s2_2', 'stack_s2_1_2'])
+        self.assertEqual(p_init, {'read_s2_1': PathType.DIR, 'read_s2_2': PathType.DIR})
+        self.assertEqual(p_end, ['stack_s2_1_2'])
+        self.assertEqual(p_link, [('read_s2_1', 'stack_s2_1_2'), ('read_s2_2', 'stack_s2_1_2')])
+        self.assertEqual(ops_args['read_s2_1'], [{'op_name': 'input', 'args': all_config['read_s2_1']['input']}, {'op_name': 'read', 'args': all_config['read_s2_1']['read']}])
+
+    def test_build_graph(self):
+        all_config, p_nodes, p_init, p_end, p_link, ops_args = parse_config(self.stack_config, self.schema_map)
+        graph = build_graph(p_nodes, p_init, p_end, p_link, ops_args)
+

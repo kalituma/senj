@@ -38,6 +38,6 @@ class Calibrate(Op):
             assert_bnames(self.calib_params['selectedPolarisations'], pols, 'Selected polarizations not found in metadata')
 
         raster.raw = calibrate(raster.raw, self.calib_params)
-        raster = self.post_process(raster)
+        raster = self.post_process(raster, context)
         return raster
 

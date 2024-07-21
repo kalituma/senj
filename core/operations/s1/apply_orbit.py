@@ -10,12 +10,14 @@ from core.raster.gpf_module import apply_orbit_func, ORBIT_TYPE
 if TYPE_CHECKING:
     from core.logic.context import Context
 
+
+
 @OPERATIONS.reg(name=APPLYORBIT_OP)
 class ApplyOrbit(Op):
-    def __init__(self, orbitType:str=ORBIT_TYPE['SENTINEL_PRECISE'], polyDegree:int=3, continueOnFail:bool=False):
+    def __init__(self, orbitType:ORBIT_TYPE=ORBIT_TYPE.SENTINEL_PRECISE, polyDegree:int=3, continueOnFail:bool=False):
         super().__init__(APPLYORBIT_OP)
         self.ap_params = {
-            'orbitType': orbitType,
+            'orbitType': str(orbitType),
             'polyDegree': polyDegree,
             'continueOnFail': continueOnFail
         }

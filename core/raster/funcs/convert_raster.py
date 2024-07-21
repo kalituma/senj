@@ -30,7 +30,7 @@ def convert_raster_func(raster_obj:Raster, out_module_type:RasterType) -> Raster
     assert raster_obj.module_type != out_module_type, 'input and output module type should be different'
     # cached to raw
     if not raster_obj.is_band_cached:
-        raster_obj = read_band_from_raw(raster_obj, raster_obj.selected_bands, raster_obj.module_type)
+        raster_obj = read_band_from_raw(raster_obj, raster_obj.selected_bands)
 
     if out_module_type == RasterType.SNAP:
         raster_obj = convert_to_gpf(raster_obj) # Product

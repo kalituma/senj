@@ -22,7 +22,7 @@ read_s2_2:
       date_format: *parse_date_patt
   operations : ['read']
   read:
-    loader: 'snap'
+    module: 'snap'
     bands: ['B5']
 
 stack_s2_1_2:
@@ -30,8 +30,9 @@ stack_s2_1_2:
     path: ['{{read_s2_1}}', '{{read_s2_2}}']
   operations : ['stack', 'write']
   stack:
-    bands: ['B2', 'B3', 'B4', 'B5']
+    bands: [['B2', 'B3', 'B4'], ['B5']]
   write:
     path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
     suffix: '_stacked'
     module: 'snap'
+    ext: 'tif'
