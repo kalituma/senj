@@ -9,8 +9,9 @@ EXT_MAP = {
     'snap': ['dim', 'tif']
 }
 
+from .raster_error import *
 from .raster_type import *
 from .raster import *
-from .raster_error import *
+
 
 from .funcs import *

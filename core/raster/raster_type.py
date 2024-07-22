@@ -1,5 +1,6 @@
 from typing import Union
 from enum import Enum
+from core.raster import ModuleError
 
 class RasterType(Enum):
     GDAL = 'gdal'
@@ -12,7 +13,7 @@ class RasterType(Enum):
         elif s == 'snap':
             return cls.SNAP
         else:
-            raise ValueError(f'{s} is not a valid RasterType')
+            raise ModuleError(s)
 
     def __str__(self):
         return self.value

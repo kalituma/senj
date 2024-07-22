@@ -1,9 +1,13 @@
 from typing import Callable, Union
 from pathlib import Path
 
+from core.operations import READ_OP
+
 from core import PROCESSOR
+from core.util import check_operation
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor
+
 
 @PROCESSOR.reg(FILE_PROCESSOR)
 class FileProcessor(Processor):
@@ -25,15 +29,24 @@ class FileProcessor(Processor):
             assert Path(self.root).exists(), f'File does not exist: {self.root}'
             yield self.root
         else:
+            assert Path(self.root).exists(), f'File does not exist: {self.root}'
             p = Path(self.root).rglob(self.search_pattern)
+
             if self.sort_func is None:
                 p_list = sorted(p)
             else:
                 p_list = sorted(p, key=self.sort_func)
 
+            if len(p_list) == 0:
+                raise AssertionError(f'No file found with pattern: {self.search_pattern}')
+
             for x in p_list:
                 if x.is_file():
                     yield str(x)
+
+    @check_operation(READ_OP)
+    def add_op(self, op):
+        super().add_op(op)
 
     def postprocess(self, x, result_clone:bool=False):
         return x

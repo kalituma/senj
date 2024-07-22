@@ -5,7 +5,7 @@ from core import OPERATIONS
 from core.operations import Op, MODULE_EXT_MAP
 from core.operations import READ_OP
 
-from core.raster import RasterType, Raster, ModuleError
+from core.raster import RasterType, Raster, ExtensionNotSupportedError
 from core.raster import load_raster
 from core.util import check_input_ext
 
@@ -23,7 +23,7 @@ class Read(Op):
         in_ext = check_input_ext(path)
 
         if in_ext not in MODULE_EXT_MAP[self._module]:
-            raise ModuleError(self._module, in_ext)
+            raise ExtensionNotSupportedError(self._module, MODULE_EXT_MAP[self._module], in_ext)
 
         result = Raster(path, self._selected_bands)
         result = load_raster(result, self._module, self._selected_bands, bname_word_included)

@@ -4,7 +4,7 @@ from typing import Tuple
 from pathlib import Path
 from esa_snappy import GPF, Product, ProductData
 
-from core.util import read_pickle
+from core.util import read_pickle, assert_bnames
 from core.raster import BandError
 from core.raster.gpf_module import build_read_params, set_meta_to_product, make_meta_dict
 
@@ -59,6 +59,8 @@ def read_gpf_bands_as_dict(product, selected_bands:list[str]=None) -> Tuple[dict
 
     if not selected_bands:
         selected_bands = list(product.getBandNames())
+
+    assert_bnames(selected_bands, product.getBandNames(), msg=f'{selected_bands} is not in {list(product.getBandNames())}')
 
     for band_name in selected_bands:
         band_dict = {}

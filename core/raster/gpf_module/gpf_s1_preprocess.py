@@ -23,8 +23,8 @@ GETASSE30 = "GETASSE30"
 class ORBIT_TYPE(Enum):
     SENTINEL_PRECISE = 'Sentinel Precise (Auto Download)'
     SENTINEL_RESTITUTED = 'Sentinel Restituted (Auto Download)'
-    DORIS_POR = 'Doris Preliminary (ENVISAT)'
-    DORIS_VOR = 'Doris Precise VOR (ENVISAT) (Auto Download)'
+    DORIS_POR = 'DORIS Preliminary POR (ENVISAT)'
+    DORIS_VOR = 'DORIS Precise VOR (ENVISAT) (Auto Download)'
     DELFT_PRECISE = 'DELFT Precise (ENVISAT, ERS1&2) (Auto Download)'
     PRARE_PRECISE = 'PRARE Precise (ERS1&2) (Auto Download)'
     K5_PRECISE = 'Kompsat5 Precise'

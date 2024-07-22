@@ -3,7 +3,7 @@ from pathlib import Path
 from core import OPERATIONS
 from core.operations import Op
 from core.operations import WRITE_OP
-from core.raster import RasterType, Raster, ModuleExtensionError, ExtensionError, EXT_MAP
+from core.raster import RasterType, Raster, ExtensionNotSupportedError, ExtensionMatchingError, EXT_MAP
 from core.raster import write_raster
 
 @OPERATIONS.reg(name=WRITE_OP)
@@ -18,16 +18,16 @@ class Write(Op):
 
         if self._out_ext == '':
             if out_ext == '':
-                raise ModuleExtensionError(module, EXT_MAP[module], out_ext)
+                raise ExtensionNotSupportedError(module, EXT_MAP[module], out_ext)
             else:
                 self._out_ext = out_ext
             self._is_file_specified = False
         else:
             if out_ext != '':
                 if self._out_ext != out_ext:
-                    raise ExtensionError(self._out_ext, out_ext)
+                    raise ExtensionMatchingError(self._out_ext, out_ext)
                 if self._out_ext not in EXT_MAP[module]:
-                    raise ModuleExtensionError(module, EXT_MAP[module], self._out_ext)
+                    raise ExtensionNotSupportedError(module, EXT_MAP[module], self._out_ext)
 
             self._is_file_specified = True
 

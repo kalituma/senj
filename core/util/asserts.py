@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset
 
-def assert_bnames(bnames:list[str], src_list:list[str], msg:str):
+def assert_bnames(bnames:list[Union[str, int]], src_list:list[Union[str, int]], msg:str):
     assert all([bname in src_list for bname in bnames]), msg
 
 def assert_ds_equal(datasets:list["Dataset"]):

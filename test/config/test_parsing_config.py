@@ -2,9 +2,10 @@ import unittest
 from functools import partial
 
 from core import SCHEMA_PATH
-from core.util import PathType, read_yaml, sort_by_name
+from core.util import PathType, read_yaml
+from core.lambda_funcs import sort_by_name
 from core.config import extract_pnodes_pops, validate_in_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_lambda_var_to_func, load_schema_map, parse_config
-from core.graph import build_graph
+from core.graph import build_graph_func
 
 class TestConfigParsing(unittest.TestCase):
     def setUp(self) -> None:
@@ -75,5 +76,5 @@ class TestConfigParsing(unittest.TestCase):
 
     def test_build_graph(self):
         all_config, p_nodes, p_init, p_end, p_link, ops_args = parse_config(self.stack_config, self.schema_map)
-        graph = build_graph(p_nodes, p_init, p_end, p_link, ops_args)
+        graph = build_graph_func(p_nodes, p_init, p_end, p_link, ops_args)
 

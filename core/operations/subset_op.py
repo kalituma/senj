@@ -21,7 +21,7 @@ class Subset(Op):
             'tiePointGridNames': tiePointGridNames,
             'copyMetadata': copyMetadata
         }
-
+        # bounds = [ul_x, ul_y, lr_x, lr_y]
         if bounds:
             assert not bbox, 'Either bounds or bbox should be provided'
             assert len(bounds) == 4, 'bounds should have 4(min_x, min_y, max_x, max_y) elements'
