@@ -1,9 +1,10 @@
 from pathlib import Path
 
 from core import OPERATIONS
+from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError
 from core.operations import Op
 from core.operations import WRITE_OP
-from core.raster import RasterType, Raster, ExtensionNotSupportedError, ExtensionMatchingError, EXT_MAP
+from core.raster import RasterType, Raster, EXT_MAP
 from core.raster import write_raster
 
 @OPERATIONS.reg(name=WRITE_OP)

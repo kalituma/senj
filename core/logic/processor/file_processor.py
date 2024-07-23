@@ -46,7 +46,7 @@ class FileProcessor(Processor):
 
     @check_operation(READ_OP)
     def add_op(self, op):
-        super().add_op(op)
+        return super().add_op(op)
 
     def postprocess(self, x, result_clone:bool=False):
         return x

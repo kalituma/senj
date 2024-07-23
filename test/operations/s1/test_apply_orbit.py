@@ -4,6 +4,7 @@ import numpy as np
 
 from core.raster.gpf_module import ORBIT_TYPE
 from core.util import ProductTypeError
+from core.util.errors import ModuleError
 from core.operations import Read, Write, Subset
 from core.operations.s1 import ApplyOrbit, Calibrate, TopsarDeburst, TerrainCorrection
 
@@ -69,10 +70,10 @@ class TestApplyOrbit(unittest.TestCase):
 
         with self.subTest('try to apply orbit with wrong orbit type'):
             s1_raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-            with self.assertRaises(ValueError):
+            with self.assertRaises(RuntimeError):
                 ApplyOrbit(orbitType='wrong_orbit_type', continueOnFail=False)(s1_raster, context)
 
-        # with self.subTest('try to apply orbit to tif raster'):
-        #     s2_raster = Read(module='gdal')(self.s1_grdh_tif, context)
-        #     with self.assertRaises(ValueError):
-        #         ApplyOrbit(orbitType=ORBIT_TYPE.SENTINEL_PRECISE, continueOnFail=False)(s2_raster, context)
+        with self.subTest('try to apply orbit to tif raster'):
+            s2_raster = Read(module='gdal')(self.s1_grdh_tif, context)
+            with self.assertRaises(ModuleError):
+                ApplyOrbit(orbitType=ORBIT_TYPE.SENTINEL_PRECISE, continueOnFail=False)(s2_raster, context)

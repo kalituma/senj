@@ -1,6 +1,7 @@
 from tqdm import tqdm
 from esa_snappy import Product, ProductUtils, ProductData
-from core.raster import BandError
+
+from core.util.errors import BandError
 from core.raster.gpf_module import create_product_data
 
 

@@ -6,8 +6,9 @@ from pathlib import Path
 from core.util import sort_by_pattern, OperationTypeError
 from core.raster import Raster
 from core.logic import Context
+from core.logic.executor import ProcessingExecutor
 from core.logic.processor import FileProcessor, LinkProcessor
-from core.operations import Read, Write
+from core.operations import Read, Write, Stack
 
 class TestProcessor(unittest.TestCase):
     def setUp(self) -> None:
@@ -84,5 +85,12 @@ class TestProcessor(unittest.TestCase):
                 f_processor.add_op(Write(module='snap', path='a.tif'))
 
     def test_link_processor(self):
+        cxt = Context()
         f_processor_1 = FileProcessor(proc_name="processor_1", path=self.tif_src_1, pattern='*.tif', sort=None,splittable=True).add_op(Read(module='snap'))
         f_processor_2 = FileProcessor(proc_name="processor_1", path=self.tif_src_2, pattern='*.tif', sort=None,splittable=True).add_op(Read(module='snap'))
+        l_processor = LinkProcessor(proc_name="link_processor", processors=[f_processor_1, f_processor_2]).add_op(Stack())
+        executor = ProcessingExecutor(cxt)
+        l_processor.set_executor(executor)
+        with self.subTest('test link processor'):
+            for raster_list in l_processor.preprocess():
+                self.assertEqual(len(raster_list), 2)

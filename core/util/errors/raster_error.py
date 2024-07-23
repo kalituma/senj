@@ -7,8 +7,8 @@ class BandError(Exception):
         super(BandError, self).__init__(msg)
 
 class ModuleError(Exception):
-    def __init__(self, module:str):
-        msg = f'"{module}" module is not supported. Available modules are "GDAL" and "SNAP"'
+    def __init__(self, module:str, available_modules:list[str]):
+        msg = f'"{module}" module is not supported. Available modules are {available_modules}'
         super(ModuleError, self).__init__(msg)
 
 class ExtensionNotSupportedError(Exception):

@@ -1,8 +1,9 @@
 from cerberus import Validator
 
 from core.util import dict_with_key
+from core.util.errors import check_null_error, NullValueError
 from core.raster import RasterType
-from core.config import check_op_type, OP_TYPE, check_null_error, NullValueError
+from core.config import check_op_type, OP_TYPE
 from core.operations import MODULE_EXT_MAP
 
 class WriteValidator(Validator):

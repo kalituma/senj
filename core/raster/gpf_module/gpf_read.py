@@ -5,7 +5,7 @@ from pathlib import Path
 from esa_snappy import GPF, Product, ProductData
 
 from core.util import read_pickle, assert_bnames
-from core.raster import BandError
+from core.util.errors import BandError
 from core.raster.gpf_module import build_read_params, set_meta_to_product, make_meta_dict
 
 def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=None, bname_word_included:bool=False):

@@ -1,4 +1,3 @@
-
 class ProductTypeError(Exception):
     def __init__(self, supported_product:list[str], current_product:str):
         msg = f'Product type should be {[t for t in supported_product]} for {self.__str__}, but got {current_product}'

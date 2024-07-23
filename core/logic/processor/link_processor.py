@@ -9,12 +9,12 @@ if TYPE_CHECKING:
 
 @PROCESSOR.reg(LINK_PROCESSOR)
 class LinkProcessor(Processor):
-    def __init__(self, proc_name:str='', proc_list:list[Processor]=None, splittable:bool=False):
+    def __init__(self, proc_name:str='', processors:list[Processor]=None, splittable:bool=False):
         super().__init__(proc_name=proc_name, splittable=splittable)
-        if proc_list is None:
+        if processors is None:
             self.proc_list = []
         else:
-            self.proc_list = proc_list
+            self.proc_list = processors
 
     def add_linked_process(self, linked_proc:Processor):
         self.proc_list.append(linked_proc)

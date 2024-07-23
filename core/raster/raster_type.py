@@ -1,6 +1,7 @@
+from core.util.errors import ModuleError
 from typing import Union
 from enum import Enum
-from core.raster import ModuleError
+
 
 class RasterType(Enum):
     GDAL = 'gdal'

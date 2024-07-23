@@ -19,7 +19,7 @@ def check_op_type(op_name:str) -> OP_TYPE:
     else:
         raise ValueError(f'{op_name} is not a valid operation')
 
-from .parse_error import *
+
 from .parse_str import *
 from .validate_config import *
 from .parse_config import *

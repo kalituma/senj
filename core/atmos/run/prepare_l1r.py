@@ -79,6 +79,7 @@ def _l1r_postprocess(out, bands, rsr_bands, wave, percentiles_compute, percentil
 
     return out
 
+
 def prepare_l1r(bands, det_bands, gatts, input_path, output_path, percentiles_compute:bool=True, percentiles:set=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
 
     setu = {k: atmos.settings['run'][k] for k in atmos.settings['run']}

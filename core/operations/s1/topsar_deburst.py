@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, TOPSAR_DEBURST_OP
-from core.util import assert_bnames, check_product_type
-from core.raster import Raster, ProductType
+from core.util import assert_bnames, check_product_type, check_module_type
+from core.raster import Raster, RasterType, ProductType
 from core.raster.gpf_module import get_polarization, topsar_deburst
 
 if TYPE_CHECKING:
@@ -17,6 +17,7 @@ class TopsarDeburst(Op):
             'selectedPolarisations': selectedPolarisations
         }
 
+    @check_module_type(RasterType.SNAP)
     @check_product_type(ProductType.S1)
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
         pols = get_polarization(raster.meta_dict)

@@ -52,6 +52,6 @@ def load_raster_gdal(path, selected_bands:list[int]=None):
         meta_dict = read_pickle(meta_path)
     else:
         print(f'No meta file is found for {path}')
-        meta_dict = {}
+        meta_dict = None
 
     return meta_dict, ds, selected_bands

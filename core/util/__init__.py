@@ -1,4 +1,3 @@
-from .util_error import *
 from .sort_funcs import *
 from .funcs import *
 from .op_decorator import *

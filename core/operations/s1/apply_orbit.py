@@ -1,16 +1,14 @@
 from typing import TYPE_CHECKING
 
 from core import OPERATIONS
-from core.util import check_product_type
+from core.util import check_product_type, check_module_type
 from core.operations import Op, APPLYORBIT_OP
-from core.raster import Raster, ProductType
+from core.raster import Raster, RasterType, ProductType
 
 from core.raster.gpf_module import apply_orbit_func, make_meta_dict, ORBIT_TYPE
 
 if TYPE_CHECKING:
     from core.logic.context import Context
-
-
 
 @OPERATIONS.reg(name=APPLYORBIT_OP)
 class ApplyOrbit(Op):
@@ -22,10 +20,10 @@ class ApplyOrbit(Op):
             'continueOnFail': continueOnFail
         }
 
+    @check_module_type(RasterType.SNAP)
     @check_product_type(ProductType.S1)
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
-        assert raster.product_type == ProductType.S1, f'Product type should be Sentinel-1, but got {raster.product_type.value}'
         raster.raw = apply_orbit_func(raster.raw, params=self.ap_params)
         raster.meta_dict = make_meta_dict(raster.raw)
         raster = self.post_process(raster, context)

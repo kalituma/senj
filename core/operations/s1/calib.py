@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, CALIBRATE_OP
 from core.util import assert_bnames
-from core.raster import ProductType
-from core.util import check_product_type
+from core.raster import ProductType, RasterType
+from core.util import check_product_type, check_module_type
 from core.raster import Raster
 from core.raster.gpf_module import calibrate, get_polarization
 
@@ -26,6 +26,7 @@ class Calibrate(Op):
             'outputImageScaleInDb': outputImageScaleInDb
         }
 
+    @check_module_type(RasterType.SNAP)
     @check_product_type(ProductType.S1)
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
