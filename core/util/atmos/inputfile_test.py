@@ -1,17 +1,13 @@
-## def inputfile_test
-## function to test/parse inputfile given to acolite
-## written by Quinten Vanhellemont, RBINS
-## 2022-03-04
-## modifications: 2022-09-05 (QV) remove trailing slash from file paths in txt file
-##                2022-11-14 (QV) changed appending files from txt file to inputfile list
-##                2023-09-12 (QV) added attempt to download from CDSE
-##                2023-09-21 (QV) added attempt to download from EarthExplorer
-##                2023-10-21 (QV) added ECOSTRESS download from EarthExplorer
-##                2024-04-27 (QV) moved APIs 
+import os, mimetypes
+import core.atmos as atmos
+
+from core.atmos.api.cdse import query as cdse_query
+from core.atmos.api.cdse import download as cdse_download
+from core.atmos.api.earthexplorer import query as earth_query
+from core.atmos.api.earthexplorer import download as earth_download
 
 def inputfile_test(inputfile):
-    import os, mimetypes
-    import acolite as ac
+
 
     ## check if a list of files is given
     if type(inputfile) == str:
@@ -19,7 +15,7 @@ def inputfile_test(inputfile):
     elif type(inputfile) == list:
         tmp_files = inputfile
     else:
-        if ac.config['verbosity'] > 0: print('Inputfile {} not recognised'.format(inputfile))
+        if atmos.config['verbosity'] > 0: print('Inputfile {} not recognised'.format(inputfile))
         tmp_files = []
 
     ## run through files
@@ -28,11 +24,11 @@ def inputfile_test(inputfile):
         if len(file) == 0: continue
         file = file.strip() ## strip spaces
         if not os.path.exists(file):
-            if ac.config['verbosity'] > 0: print('Path {} does not exist.'.format(file))
+            if atmos.config['verbosity'] > 0: print('Path {} does not exist.'.format(file))
             ## try and download from CDSE or EarthExplorer
-            if ac.settings['run']['scene_download']:
-                ddir = ac.settings['run']['scene_download_directory']
-                if ddir is None: ddir = ac.settings['run']['output']
+            if atmos.settings['run']['scene_download']:
+                ddir = atmos.settings['run']['scene_download_directory']
+                if ddir is None: ddir = atmos.settings['run']['output']
                 ## finc out data source to use
                 bn = os.path.basename(inputfile)
                 if bn[0:3] in ['S2A', 'S2B', 'S3A', 'S3B']:
@@ -45,19 +41,19 @@ def inputfile_test(inputfile):
                     print('Could not identify download source for scene {}'.format(file))
                     continue
 
-                if ac.config['verbosity'] > 0: print('Attempting download of scene {} from {}.'.format(file, download_source))
-                if ac.config['verbosity'] > 0: print('Querying {}'.format(download_source))
+                if atmos.config['verbosity'] > 0: print('Attempting download of scene {} from {}.'.format(file, download_source))
+                if atmos.config['verbosity'] > 0: print('Querying {}'.format(download_source))
 
                 ## Copernicus Data Space Ecosystem
                 if download_source == 'CDSE':
-                    urls, scenes = ac.api.cdse.query(scene=bn)
-                    if ac.config['verbosity'] > 0: print('Downloading from {}'.format(download_source))
-                    local_scenes = ac.api.cdse.download(urls, output = ddir, verbosity = ac.config['verbosity'])
+                    urls, scenes = cdse_query(scene=bn)
+                    if atmos.config['verbosity'] > 0: print('Downloading from {}'.format(download_source))
+                    local_scenes = cdse_download(urls, output = ddir, verbosity = atmos.config['verbosity'])
                 ## EarthExplorer
                 if download_source == 'EarthExplorer':
-                    entity_list, identifier_list, dataset_list = ac.api.earthexplorer.query(scene=bn)
-                    if ac.config['verbosity'] > 0: print('Downloading from {}'.format(download_source))
-                    local_scenes = ac.api.earthexplorer.download(entity_list, dataset_list, identifier_list, output = ddir, verbosity = ac.config['verbosity'])
+                    entity_list, identifier_list, dataset_list = earth_query(scene=bn)
+                    if atmos.config['verbosity'] > 0: print('Downloading from {}'.format(download_source))
+                    local_scenes = earth_download(entity_list, dataset_list, identifier_list, output = ddir, verbosity = atmos.config['verbosity'])
 
                 if len(local_scenes) == 1:  file = '{}'.format(local_scenes[0])
                 if not os.path.exists(file): continue
@@ -85,6 +81,6 @@ def inputfile_test(inputfile):
                         if os.path.exists(fn):
                             cfiles.append(fn)
                         else:
-                            if ac.config['verbosity'] > 0: print('Path {} does not exist.'.format(fn))
+                            if atmos.config['verbosity'] > 0: print('Path {} does not exist.'.format(fn))
                     if len(cfiles)>0: inputfile_list += cfiles
     return(inputfile_list)

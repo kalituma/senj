@@ -1,12 +1,8 @@
-## def auth
-## gets authentication credentials
-## written by Quinten Vanhellemont, RBINS
-## 2023-09-25
-## modifications:
+import os, requests, json, netrc
+import core.atmos as atmos
 
 def auth(machine):
-    import os, requests, json, netrc
-    import acolite as ac
+
 
     auth = None
     ## get auth from netrc file
@@ -29,9 +25,9 @@ def auth(machine):
 
     ## get auth from config
     if auth is None:
-        if (ac.config['{}_u'.format(machine.upper())] != '') & \
-           (ac.config['{}_p'.format(machine.upper())] != ''):
-            auth = (ac.config['{}_u'.format(machine.upper())], ac.config['{}_p'.format(machine.upper())])
+        if (atmos.config['{}_u'.format(machine.upper())] != '') & \
+           (atmos.config['{}_p'.format(machine.upper())] != ''):
+            auth = (atmos.config['{}_u'.format(machine.upper())], atmos.config['{}_p'.format(machine.upper())])
 
     if auth is None:
         print('Could not determine {} credentials. Please add them to your .netrc file or ACOLITE config file.'.format(machine))

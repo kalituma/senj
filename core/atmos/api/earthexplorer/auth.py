@@ -1,16 +1,13 @@
-## def auth
-## gets authentication token from USGS EarthExplorer API
-## written by Quinten Vanhellemont, RBINS
-## 2023-09-19
-## modifications: 2023-09-25 (QV) changed to separate earthexplorer credentials
-##                2024-04-27 (QV) moved to acolite.api
+import os, requests, json, netrc
+import core.atmos as atmos
+from core.atmos.shared import auth as shared_auth
+
 
 def auth(api_url = None, return_auth = False, netrc_machine = 'earthexplorer'):
-    import os, requests, json, netrc
-    import acolite as ac
+
 
     ## get credentials
-    auth = ac.shared.auth(netrc_machine)
+    auth = shared_auth(netrc_machine)
 
     if auth is None:
         print('Could not determine {} credentials {}_u and {}_p.'.format(netrc_machine.upper(), netrc_machine.upper(), netrc_machine.upper()))
@@ -18,7 +15,7 @@ def auth(api_url = None, return_auth = False, netrc_machine = 'earthexplorer'):
         return()
 
     ## get api URL from config
-    if api_url is None: api_url = ac.config['EARTHEXPLORER_api']
+    if api_url is None: api_url = atmos.config['EARTHEXPLORER_api']
 
     ## get access token
     data = {"username": auth[0], "password": auth[1]}

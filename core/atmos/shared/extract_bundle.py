@@ -1,12 +1,8 @@
-## def extract_bundle
-## extract a given bundle if it is zip or tar
-## written by Quinten Vanhellemont, RBINS
-## 2022-07-21
-## modifications: 2022-10-03 (QV) check if there is only one directory in the unzipped file
+import os, tarfile, zipfile
+
+from core.atmos.shared.common_dir import common_dir
 
 def extract_bundle(bundle, output=None, targ_bundle=None, verbosity=0):
-    import os, tarfile, zipfile
-    import acolite as ac
 
     orig_bundle = os.path.abspath(bundle)
     bn, ex = os.path.splitext(os.path.basename(orig_bundle))
@@ -20,7 +16,7 @@ def extract_bundle(bundle, output=None, targ_bundle=None, verbosity=0):
         try:
             with tarfile.open(orig_bundle) as f:
                 files = f.getnames()
-                file_dir = ac.shared.common_dir(files)
+                file_dir = common_dir(files)
                 if file_dir is None:
                     targ_bundle = '{}/{}'.format(output, bn)
                 else:
@@ -41,7 +37,7 @@ def extract_bundle(bundle, output=None, targ_bundle=None, verbosity=0):
         try:
             with zipfile.ZipFile(orig_bundle, 'r') as f:
                 files= [i.filename for i in f.infolist()]
-                file_dir = ac.shared.common_dir(files)
+                file_dir = common_dir(files)
                 if file_dir is None:
                     targ_bundle = '{}/{}'.format(output, bn)
                 else:

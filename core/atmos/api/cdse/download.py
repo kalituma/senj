@@ -1,21 +1,18 @@
-## def download
-## download urls combinations from CDSE
-## written by Quinten Vanhellemont, RBINS
-## 2023-09-12
-## modifications: 2023-09-19 (QV) retrieve access token per url to avoid time outs
-##                2023-10-22 (QV) added optional scenes list
-##                2024-04-27 (QV) moved to acolite.api
+import os, requests, netrc, time
+
+import core.atmos as atmos
+from core.atmos.shared.extract_bundle import extract_bundle
+from core.atmos.shared.auth import auth as auth_func
 
 def download(urls, scenes = [], output = None, auth = None, auth_url = None, netrc_machine = 'cdse',
                   extract_zip = True, remove_zip = True, override = False, verbosity = 1):
-    import os, requests, netrc, time
-    import acolite as ac
+
 
     ## get authentication URL from config
-    if auth_url is None: auth_url = ac.config['CDSE_auth']
+    if auth_url is None: auth_url = atmos.config['CDSE_auth']
 
     ## get credentials
-    if auth is None: auth = ac.shared.auth(netrc_machine)
+    if auth is None: auth = auth_func(netrc_machine)
 
     if auth is None:
         print('Could not determine CDSE credentials CDSE_u and CDSE_p.')
@@ -114,7 +111,7 @@ def download(urls, scenes = [], output = None, auth = None, auth_url = None, net
         if extract_zip:
             if os.path.exists(zfile):
                 print('Extracting {}'.format(zfile))
-                ac.shared.extract_bundle(zfile, targ_bundle=lfile)
+                extract_bundle(zfile, targ_bundle=lfile)
                 if not os.path.exists(lfile):
                     print('Error extracting {}'.format(zfile))
                 else:

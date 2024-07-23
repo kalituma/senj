@@ -9,6 +9,7 @@ code_path = os.path.dirname(os.path.abspath(__file__))
 PROJECT_PATH = os.path.dirname(code_path)
 ATMOS_CONFIG = os.path.join(PROJECT_PATH, 'config', 'atmos')
 SCHEMA_PATH = os.path.join(PROJECT_PATH, 'config', 'schema')
+ATMOS_SCRATCH_PATH = os.path.join(PROJECT_PATH, 'atmos', 'scratch')
 
 from core.registry import Registry, LAMBDA, PROCESSOR, OPERATIONS
 
