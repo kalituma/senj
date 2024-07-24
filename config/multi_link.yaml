@@ -3,7 +3,7 @@ date_patt: &parse_date_patt '%Y%m%dT%H%M%S'
 
 read_s2_1:
   input:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       reg_exp: *parse_str_patt
@@ -16,7 +16,7 @@ read_s2_1:
 
 read_s2_2:
   input:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       func: '!{sort_by_name}'
@@ -28,7 +28,7 @@ read_s2_2:
 
 read_s2_3:
   input:
-    path : '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path : '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       func: '!{sort_by_name}'
@@ -45,7 +45,7 @@ cal_1:
 
   operations : ['atmos']
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
 
 cal_2:
@@ -54,7 +54,7 @@ cal_2:
 
   operations : ['atmos']
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
 cal_3:
   input:
@@ -62,7 +62,7 @@ cal_3:
 
   operations : ['atmos']
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
 
 subset_1:
@@ -98,7 +98,7 @@ s_cal_2:
 
   operations : ['atmos']
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
 s_cal_3:
   input:
@@ -106,7 +106,7 @@ s_cal_3:
 
   operations : ['atmos']
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
 subset_2_1:
   input:
@@ -154,8 +154,8 @@ write_1:
   operations : ['write']
   write:
     path: [
-      '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/s2_stack_1',
-      '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/s2_stack_2'
+      '$ETRI_DATA/_sentinel_1_2/export/source/s2/s2_stack_1',
+      '$ETRI_DATA/_sentinel_1_2/export/source/s2/s2_stack_2'
     ]
     module: 'snap'
     suffix: [ '_1', '_2' ]

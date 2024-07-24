@@ -46,11 +46,11 @@ k3_split:
   split: # in : list:[FileObj, ...] -> list:[FileObjList, ...]
     axis: -1
   write: # in : list:[FileObjList, ...] or list:[FileObj, ...] or FileObj -> same as input
-    # output: '/home/airs_khw/mount/expand/data/etri/k3_stack.tif'
+    # output: '$ETRI_DATA/k3_stack.tif'
     output_root: [
-      '/home/airs_khw/mount/expand/data/etri/korea/K3_r',
-      '/home/airs_khw/mount/expand/data/etri/korea/K3_g',
-      '/home/airs_khw/mount/expand/data/etri/korea/K3_b'
+      '$ETRI_DATA/korea/K3_r',
+      '$ETRI_DATA/korea/K3_g',
+      '$ETRI_DATA/korea/K3_b'
     ]
     output_affix: [ '_r', '_g', '_b' ]
 #     output_prefix: ['k3_']
@@ -59,7 +59,7 @@ k3_prep:
   input: '{{load_r}}'
   operations: ['write']
   write:
-    output_root: '/home/airs_khw/mount/expand/data/etri/korea/K3_prep'
+    output_root: '$ETRI_DATA/korea/K3_prep'
     output_affix: 'rg_stacked'
 
 k3_stack_2:
@@ -68,5 +68,5 @@ k3_stack_2:
   stack: # in : list:[FileObjList, ...] -> list:[FileObj, ...]
     axis: -1
   write:
-    output_root: '/home/airs_khw/mount/expand/data/etri/korea/K3_stacked'
+    output_root: '$ETRI_DATA/korea/K3_stacked'
     output_affix: 'rg_stacked'

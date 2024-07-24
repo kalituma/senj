@@ -3,7 +3,7 @@ date_patt: &parse_date_patt '%Y%m%dT%H%M%S'
 
 read_s2_1:
   input:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       reg_exp: *parse_str_patt
@@ -16,7 +16,7 @@ read_s2_1:
 
 read_s2_2:
   input:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       func: '!{sort_by_name}'
@@ -38,7 +38,7 @@ stack_s2_1_2:
 
 read_s2_3:
   input:
-    path : '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path : '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       func: '!{sort_by_name}'
@@ -54,7 +54,7 @@ cal_1:
 
   operations : ['atmos']
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
 preprocessing_s2_1:
   input:
@@ -76,7 +76,7 @@ preprocessing_s2_2:
   operations : ['write']
 
   write:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/calibrated/s2/'
+    path: '$ETRI_DATA/_sentinel_1_2/export/calibrated/s2/'
     prefix: 's2_'
     suffix: ''
     module: 'snap'
@@ -99,10 +99,10 @@ preprocessing_s2:
     bounds: [ 126.0, 38.2, 126.2, 38.0 ]
 
   atmos:
-    config: '/home/airs_khw/__develope/temp/etri/pattern/config/atmos/defaults/S2A_MSI.txt'
+    config: '$PROJECT_PATH/config/atmos/defaults/S2A_MSI.txt'
 
   write:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/calibrated/s2/'
+    path: '$ETRI_DATA/_sentinel_1_2/export/calibrated/s2/'
     prefix: 's2_'
     suffix: '_cal'
     module: 'snap'
