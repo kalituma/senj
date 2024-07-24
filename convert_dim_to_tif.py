@@ -2,7 +2,6 @@ from functools import partial
 from core.util import get_files_recursive
 from core.util import sort_by_pattern
 
-
 def convert_dim_to_tif(root):
     str_pattern = '([12]\d{3}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])T(?:0[0-9]|1[0-9]|2[0-3])(?:[0-5][0-9])(?:[0-5][0-9]))'
     date_pattern = '%Y%m%dT%H%M%S'
@@ -11,5 +10,5 @@ def convert_dim_to_tif(root):
 
 
 if __name__ == '__main__':
-    root = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/'
+    root = '$ETRI_DATA/_sentinel_1_2/export/source/s2/'
     convert_dim_to_tif(root)

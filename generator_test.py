@@ -10,11 +10,11 @@ from core.logic.processor import LinkProcessor, FileProcessor
 from core.logic.executor import ProcessingExecutor
 
 def merge_tif():
-    path_1 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.tif'
-    path_2 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.1.tif'
-    path_3 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.2.tif'
+    path_1 = '$ETRI_DATA/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.tif'
+    path_2 = '$ETRI_DATA/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.1.tif'
+    path_3 = '$ETRI_DATA/_sentinel_1_2/export/format/s2/B4_B3_B2_subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.2.tif'
 
-    out_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2/s2.tif'
+    out_path = '$ETRI_DATA/_sentinel_1_2/export/merged/s2/s2.tif'
 
     read_1 = FileProcessor('file_1', path_1) \
         .add_op(Read(module='gdal'))
@@ -38,12 +38,12 @@ def merge_tif():
         print()
 
 def merge():
-    path_1 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim'
-    path_2 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.1.dim'
-    path_3 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.2.dim'
+    path_1 = '$ETRI_DATA/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim'
+    path_2 = '$ETRI_DATA/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.1.dim'
+    path_3 = '$ETRI_DATA/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.2.dim'
 
-    out_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2/s2.dim'
-    # out_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/convert/tif_gdal/'
+    out_path = '$ETRI_DATA/_sentinel_1_2/export/merged/s2/s2.dim'
+    # out_path = '$ETRI_DATA/_sentinel_1_2/export/convert/tif_gdal/'
     read_1 = FileProcessor('file_1', path_1) \
         .add_op(Read(module='snap'))
     read_2 = FileProcessor('file_1', path_2) \
@@ -64,10 +64,10 @@ def merge():
 
 def s1_grd():
 
-    out_path_1 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/convert/s1_dim/grd_gdal.tif'
-    s1_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/s1/S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE'
+    out_path_1 = '$ETRI_DATA/_sentinel_1_2/export/convert/s1_dim/grd_gdal.tif'
+    s1_path = '$ETRI_DATA/_sentinel_1_2/s1/S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE'
 
-    s2_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/s2/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE'
+    s2_path = '$ETRI_DATA/_sentinel_1_2/s2/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE'
     ctx = Context()
     # gdal_obj = Raster(s1_path)
     read_op = Read(module='snap')
@@ -86,8 +86,8 @@ def s1_grd():
     # gdal tif to snap tif
 
 def s1_slc():
-    out_path_1 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/convert/s1_dim/s2_snap_speckle.tif'
-    s2_path = '/home/airs_khw/mount/expand/data/etri/PSInSAR/new/tutorial/input/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
+    out_path_1 = '$ETRI_DATA/_sentinel_1_2/export/convert/s1_dim/s2_snap_speckle.tif'
+    s2_path = '$ETRI_DATA/PSInSAR/new/tutorial/input/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
 
     ctx = Context()
     read_op = Read(module='snap')
@@ -111,9 +111,9 @@ def s1_slc():
     print()
 
 def s2():
-    out_path_1 = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/convert/s2_dim/s2_snap.tif'
-    s2_original_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/s2/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE'
-    s2_dim_path = '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim'
+    out_path_1 = '$ETRI_DATA/_sentinel_1_2/export/convert/s2_dim/s2_snap.tif'
+    s2_original_path = '$ETRI_DATA/_sentinel_1_2/s2/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE'
+    s2_dim_path = '$ETRI_DATA/_sentinel_1_2/export/source/s2/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim'
 
     ctx = Context()
     read_op = Read(module='snap', bands=['B2', 'B3', 'B4'])

@@ -19,7 +19,7 @@ class Registry:
         return len(self._reg_dict)
 
     def __contains__(self, name):
-        return self.get(name) is not None
+        return self[name] is not None
 
     @property
     def reg_name(self):

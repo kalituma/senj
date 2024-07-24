@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from core.raster import Raster, RasterType
     from core.operations import Op
 
-def check_operation(*init_ops:tuple[str]):
+def check_init_operation(*init_ops:tuple[str]):
     def decorator(func:Callable):
         @wraps(func)
         def func_wrapper(self, op:"Op", *args, **kwargs):

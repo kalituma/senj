@@ -55,7 +55,7 @@ def replace_lambda_var_to_func(config:dict) -> dict:
             if not LAMBDA.__contains__(cleaned_func_str):
                 raise ValueError(f'{match.value} is not a registered function')
 
-            match.context.value[match.path.fields[-1]] = LAMBDA.get(cleaned_func_str)
+            match.context.value[match.path.fields[-1]] = LAMBDA[cleaned_func_str]
 
     return config
 def validate_in_path_recur(input_path:Union[str, list]) -> tuple[bool, PathType]:

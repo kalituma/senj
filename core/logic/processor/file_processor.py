@@ -4,7 +4,7 @@ from pathlib import Path
 from core.operations import READ_OP
 
 from core import PROCESSOR
-from core.util import check_operation
+from core.util import check_init_operation
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor
 
@@ -44,7 +44,7 @@ class FileProcessor(Processor):
                 if x.is_file():
                     yield str(x)
 
-    @check_operation(READ_OP)
+    @check_init_operation(READ_OP)
     def add_op(self, op):
         return super().add_op(op)
 

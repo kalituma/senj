@@ -10,7 +10,7 @@ parent: &parent
 read_s2_1:
   <<: *parent
   input:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/source/s2'
     pattern: '*.dim'
     sort:
       reg_exp: *parse_str_patt
@@ -19,7 +19,7 @@ read_s2_1:
 read_s2_2:
   <<: *parent
   input:
-    path: ['/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2', '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/source/s2']
+    path: ['$ETRI_DATA/_sentinel_1_2/export/source/s2', '$ETRI_DATA/_sentinel_1_2/export/source/s2']
 
 read_s2_3:
   <<: *parent

@@ -121,7 +121,7 @@ write_1:
   <<: *parent
   operations : ['write']
   write:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/merged/s2'
 
 write_2:
   <<: *parent
@@ -134,7 +134,7 @@ write_3:
   <<: *parent
   operations: [ 'write' ]
   write:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/merged/s2'
     module: 'snap'
     prefix: 1
 
@@ -142,7 +142,7 @@ write_4:
   <<: *parent
   operations: [ 'write' ]
   write:
-    path: '/home/airs_khw/mount/expand/data/etri/_sentinel_1_2/export/merged/s2'
+    path: '$ETRI_DATA/_sentinel_1_2/export/merged/s2'
     module: 'snap'
     suffix: 1
 
