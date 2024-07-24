@@ -1,3 +1,9 @@
+## def o3_interp
+## gets ozone transmittances
+## written by Quinten Vanhellemont, RBINS
+## 2022-11-17 (split off from gas_transmittance)
+## modifications: 2024-02-26 (QV) added total keyword
+
 import sys
 import numpy as np
 from core import atmos

@@ -1,3 +1,11 @@
+## def emodnet_bathymetry
+## returns EMODNET bathymetry for given lon, lat grid
+##
+## function written by Quinten Vanhellemont, RBINS
+## 2024-04-04
+## modifications:
+
+
 import os
 import numpy as np
 from core import atmos

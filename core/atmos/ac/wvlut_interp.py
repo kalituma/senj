@@ -1,3 +1,18 @@
+## wvlut_interp
+## gives WV transmittance for given sun and view zenith angles, wv and sensor
+## uwv = water vapour in g/cm2
+##
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-10-17
+## modifications: 2017-10-18 (QV) added default uwv
+##                2017-11-28 (QV) moved PP data directory
+##                2018-01-31 (QV) fixed return when no sensor is given
+##                2018-07-18 (QV) changed acolite import name
+##                2021-02-24 (QV) new interpolation, lut is determined here and read generically
+##                2022-11-17 (QV) added 2D interpolation for a given sensor
+##                2023-08-03 (QV) get lut url from ac.config
+##                2024-02-26 (QV) added new lut support (with pressure)
+
 import os, sys
 import scipy.interpolate
 import numpy as np

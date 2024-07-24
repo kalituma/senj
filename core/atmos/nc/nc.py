@@ -1,3 +1,32 @@
+## def nc_write
+## writes dataset to netcdf file
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2016-07
+## modifications: QV 2017-01-18 converted to function
+##                QV 2017-01-25 added attributes keyword to write global attributes to new file
+##                QV 2017-04-18 convert wavelength to float to avoid error in BEAM/SNAP
+##                QV 2017-04-20 added data type check for ndarrays, check for datasets already in file
+##                QV 2017-06-21 added chunking option/setting
+##                QV 2017-11-27 added offset option, and replace_nan option
+##                QV 2017-12-05 made "metadata" a keyword; added dataset_attributes keyword
+##                QV 2017-12-06 added global_dims keyword
+##                QV 2018-03-14 added nan writing for new datasets with offset
+##                QV 2018-04-17 changed to float32 for float datasets, added Rrs to auto_grouping
+##                QV 2018-07-18 changed datatype for writing, to avoid int overflow
+##                QV 2018-07-24 changed global attributes
+##                QV 2020-07-14 added fillvalue keyword
+##                QV 2020-07-22 added update_attributes keyword
+##                QV 2020-07-23 skip fillvalue in ds attributes
+##                QV 2021-02-09 added replace_nan option for data without offset, changed numpy import
+##                QV 2021-06-04 added dataset attributes defaults
+##                QV 2021-07-19 change to using setncattr
+##                QV 2021-12-08 added nc_projection
+##                QV 2022-11-09 added option to update nc_projection
+##                QV 2023-07-12 added discretisation
+##                QV 2024-01-31 added skip_attributes
+##                2024-04-15 (QV) allow passing of netCDF4 Dataset
+##                2024-04-16 (QV) removed NetCDF compression parameters from keywords
+
 from netCDF4 import Dataset
 import time, os
 from math import ceil

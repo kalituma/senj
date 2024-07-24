@@ -7,22 +7,25 @@
 ##                2023-11-21 (QV) added dataset as keyword, added ecostress_type
 ##                2024-04-27 (QV) moved to acolite.api
 
+import os, requests, json, netrc
+import datetime, dateutil.parser
+from osgeo import ogr,osr,gdal
+
+import core.atmos as atmos
+from core.atmos.api.earthexplorer import auth
+from core.atmos.shared import roi_wkt
+
 def query(scene = None, collection = 2, level = 1, dataset = None,
                 landsat_type = None, ecostress_type = None,
                 start_date = None, end_date = None,  roi = None,
                 verbosity = 1, cloud_cover = None,
                 max_results = 1000, api_url = None, attributes = False):
 
-    import os, requests, json, netrc
-    import datetime, dateutil.parser
-    from osgeo import ogr,osr,gdal
-    import acolite as ac
-
     ## get api URL from config
-    if api_url is None: api_url = ac.config['EARTHEXPLORER_api']
+    if api_url is None: api_url = atmos.config['EARTHEXPLORER_api']
 
     ## get access token for query
-    access_token = ac.api.earthexplorer.auth(api_url=api_url)
+    access_token = auth(api_url=api_url)
     if access_token is None:
         print('Could not get EarthExplorer access token!')
         return
@@ -95,7 +98,7 @@ def query(scene = None, collection = 2, level = 1, dataset = None,
 
     ## determine WKT from provided ROI
     wkt = None
-    if (roi is not None): wkt = ac.shared.roi_wkt(roi)
+    if (roi is not None): wkt = roi_wkt(roi)
     if wkt is not None:
         if verbosity > 1: print('Using WKT for query: {}'.format(wkt))
 

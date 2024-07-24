@@ -1,14 +1,11 @@
+from typing import Union
 import os
 
 import core.atmos as atmos
 from core import ATMOS_SCRATCH_PATH
 from core.util.atmos import polygon_from_wkt
-from core.atmos.settings import parse
 
-def load_user_settings(sensor, atmos_setting_path:str):
-    return parse(sensor, atmos_setting_path)
-
-def set_l2w_and_polygon(user_settings):
+def set_l2w_and_polygon(user_settings:dict) -> dict:
 
     if 'l2w_parameters' in user_settings:
         if user_settings['l2w_parameters'] is not None:
@@ -35,18 +32,19 @@ def set_l2w_and_polygon(user_settings):
 
     return user_settings
 
-def set_verbosity_to_config(run_settings):
+def set_verbosity_to_config(run_settings:dict):
     if 'verbosity' in run_settings:
         atmos.config['verbosity'] = int(run_settings['verbosity'])
 
-def update_user_to_run(user_settings, run_settings):
+def update_user_to_run(run_settings:dict, user_settings:dict) -> dict:
     for k in user_settings:
         if k in run_settings:
             run_settings[k] = user_settings[k]
     return run_settings
 
-def set_earthdata_to_env(run_settings):
+def set_earthdata_login_to_env(run_settings:dict):
     for k in ['EARTHDATA_u', 'EARTHDATA_p']:
         kv = run_settings[k] if k in run_settings else atmos.config[k]
         if len(kv) == 0: continue
         os.environ[k] = kv
+

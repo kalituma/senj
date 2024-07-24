@@ -1,3 +1,15 @@
+## def f0_get
+## reads f0 data
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-01-24
+## modifications:
+##                2017-11-28 (QV) moved PP data directory
+##                2018-07-18 (QV) changed acolite import name
+##                2018-09-19 (QV) added encoding
+##                2021-02-05 (QV) changes for acolite-gen
+##                2022-09-28 (QV) added support for bzipped files
+##                2022-11-16 (QV) added printout when file is not found
+
 import numpy as np
 import os, bz2
 from core import atmos

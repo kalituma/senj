@@ -1,3 +1,8 @@
+## def pressure_elevation
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-07-17
+## modifications: 2021-04-07 (QV) changed numpy import
+
 import numpy as np
 def pressure_elevation(x, ratio=False, temperature=None, to_elevation=False):
 

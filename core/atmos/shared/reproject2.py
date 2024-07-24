@@ -4,8 +4,10 @@
 ## QV 2017-07-17
 ## modifications: 2022-01-09 (QV) added radius_of_influence as keyword
 
+from pyresample import image, geometry
+
 def reproject2(data, lon0, lat0, lon1, lat1, fill=-9999, nearest=True, radius_of_influence=100):
-    from pyresample import image, geometry
+
 
     source_def = geometry.SwathDefinition(lons=lon0,lats=lat0)
     target_def = geometry.SwathDefinition(lons=lon1,lats=lat1)

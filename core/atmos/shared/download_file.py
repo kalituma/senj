@@ -1,3 +1,17 @@
+## def download_file
+## download_file with authorisation option
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2018-03-14
+## modifications: 2018-11-19 (QV) added verbosity option, removed the parallel download
+##                2020-04-24 (QV) earthdata login
+##                2021-05-31 (QV) added local directory creation
+##                2022-04-08 (QV) download to scratch directory first
+##                2022-07-07 (QV) added SRTM1 DEM
+##                2022-08-04 (QV) added GED and retry option
+##                2022-08-17 (QV) added .netrc auth, simplified url checks for earthdata
+##                2024-05-01 (QV) added earthdatacloud.nasa.gov check for earthdata
+##                2024-05-22 (QV) use EARTHDATA_urls from config
+
 import requests, time, os, shutil, netrc
 from core import atmos
 

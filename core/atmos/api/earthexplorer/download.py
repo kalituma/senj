@@ -1,7 +1,16 @@
+## def download
+## download scenes from EarthExplorer
+## written by Quinten Vanhellemont, RBINS
+## 2023-09-19
+## modifications: 2023-09-20 (QV) removed lxml and use HTMLparser
+##                2023-11-21 (QV) added ECOSTRESS download
+##                2024-04-27 (QV) moved to acolite.api
+
 import os, requests, json, re, netrc, time
 import core.atmos as atmos
 from core.atmos.api.earthexplorer import auth as earth_auth
 from core.atmos.shared import extract_bundle
+
 def download(entity_list, dataset_list, identifier_list, output = None,
                   extract_tar = True, remove_tar = True, override = False, verbosity = 1):
 

@@ -1,7 +1,20 @@
+## ancillary_download
+## gets ancillary data from the ocean data server
+##
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-10-17
+## modifications:
+##                2018-07-18 (QV) changed acolite import name
+##                2018-11-19 (QV) added verbosity option, fixed the download_file script for the GUI
+##                2020-03-10 (QV) added autoremove for files that are too small
+##                2020-06-23 (QV) changed get url
+##                2021-03-01 (QV) simplified for acg renamed from ancillary_download
+##                2023-10-16 (QV) added GMAO data, moved file size test
+##                2023-12-28 (QV) added GMAO_IT
+
 import os
 import dateutil.parser
 from core import atmos
-
 
 def download(date, local_dir = None,
                        download=True, override = False, verbosity=1,

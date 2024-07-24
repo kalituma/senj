@@ -14,7 +14,7 @@ class RasterType(Enum):
         elif s == 'snap':
             return cls.SNAP
         else:
-            raise ModuleError(s)
+            raise ModuleError(s, available_modules=[str(cls.GDAL), str(cls.SNAP)])
 
     def __str__(self):
         return self.value

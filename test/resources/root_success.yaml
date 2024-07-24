@@ -58,7 +58,7 @@ read_2:
 
 read_3:
   <<: *parent
-  operations : ['read', 'stack']
+  operations : ['read']
   read:
     module: 'snap'
     bands: [ 'B1', 'B2', 'B3' ]

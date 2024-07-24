@@ -1,3 +1,8 @@
+## def rsr_hyper
+## makes hyperspectral RSR based on center wavelength and band width
+## written by Quinten Vanhellemont, RBINS
+## 2021-06-08
+
 from core import atmos
 
 def rsr_hyper(waves, widths, step = 0.25, nm = True):

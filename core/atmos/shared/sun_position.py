@@ -1,3 +1,9 @@
+## def sun position
+## calculate sun position for date and time
+##
+## modifications: QV 2020-04-01 modified for arrays of lon and lat
+##                QV 2021-11-04 return dict with more parameters
+
 import numpy as np
 import dateutil.parser
 

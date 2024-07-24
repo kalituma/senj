@@ -1,3 +1,10 @@
+## def parameter_discretisation
+## gets parameter discretisation, based on parameter_scaling
+##
+## written by Quinten Vanhellemont 2023-07-10
+## modifications:
+##
+
 import numpy as np
 from core import atmos
 

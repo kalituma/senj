@@ -1,3 +1,7 @@
+## simple function to import txt config file
+## QV 2017-05-24
+## Last modifications: 2018-07-25 (QV) changed strip and skip characters
+##                     2023-07-30 (QV) added parse keyword
 
 def import_config(file, parse=False):
     import os

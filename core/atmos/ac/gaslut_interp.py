@@ -1,3 +1,11 @@
+## gaslut_interp
+## returns gas transmittances (-H2O -O3) for given sun and view zenith angles, sensor
+##
+## written by Quinten Vanhellemont, RBINS
+## 2021-06-22
+## modifications: 2022-11-17 (QV) added 2D interpolation for a given sensor, removed waves keyword
+##                2023-08-03 (QV) get lut url from ac.config
+
 import numpy as np
 import os, sys
 import scipy.interpolate

@@ -1,13 +1,24 @@
+## def copernicus_dem_rpc
+## combines copernicus dem files for a given region
+## code from ac.shared.warp_and_merge
+## written by Quinten Vanhellemont, RBINS
+## 2022-09-22
+## modifications: 2022-12-30 (QV) update to use gdal_merge import
+
+
+
 import os
 from osgeo import gdal, gdalconst
 from core import atmos
 
+if gdal.__version__ < '3.3':
+    from osgeo.utils import gdal_merge
+else:
+    from osgeo_utils import gdal_merge
+
 def copernicus_dem_rpc(dct_limit, output=None):
 
-    if gdal.__version__ < '3.3':
-        from osgeo.utils import gdal_merge
-    else:
-        from osgeo_utils import gdal_merge
+
 
     if output == None: output = '{}'.format(atmos.config['scratch_dir'])
     pos = dct_limit['p']((dct_limit['xrange'][0],dct_limit['xrange'][0],\

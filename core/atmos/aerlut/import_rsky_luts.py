@@ -1,7 +1,13 @@
-import os
+## import sky reflectance luts for wind speed range
+## QV 2021-01-31
+## last updates: 2021-02-01 (QV) added sensor support
+##               2021-02-24 (QV) renamed from rsky_read_luts
+##               2021-03-01 (QV) simplified, added wind in lut
+##               2021-10-24 (QV) added get_remote as keyword
+
+
 import numpy as np
 import scipy.interpolate
-from netCDF4 import Dataset
 from core import atmos
 
 def import_rsky_luts(models=[1,2], lutbase='ACOLITE-RSKY-202102-82W', sensor=None,

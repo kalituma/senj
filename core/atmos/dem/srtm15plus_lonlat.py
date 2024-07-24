@@ -1,9 +1,15 @@
-import os
-from pyproj import Proj
-import pyproj
+## def srtm15plus_lonlat
+## returns srtm15plus data for given lon, lat grid
+##
+## SRTM15+ is provided by Tozer et al. 2019 https://doi.org/10.1029/2019EA000658
+## link to dataset: https://topex.ucsd.edu/WWW_html/srtm15_plus.html
+##
+## function written by Quinten Vanhellemont, RBINS
+## 2022-01-09
+## modifications:
+
+
 import numpy as np
-from pyresample.bilinear import NumpyBilinearResampler
-from pyresample import geometry
 
 from core import atmos
 from core.atmos.nc import nc_data

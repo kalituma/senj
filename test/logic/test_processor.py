@@ -3,6 +3,7 @@ import unittest
 from functools import partial
 from pathlib import Path
 
+from core.config import expand_var
 from core.util import sort_by_pattern, OperationTypeError
 from core.raster import Raster
 from core.logic import Context
@@ -12,20 +13,20 @@ from core.operations import Read, Write, Stack
 
 class TestProcessor(unittest.TestCase):
     def setUp(self) -> None:
-        self.resource_path = '../resources'
-        self.tif_src_1 = os.path.join(self.resource_path, 'data', 'tif', 's1', 'gdal', 'src_1')
-        self.tif_src_2 = os.path.join(self.resource_path, 'data', 'tif', 's1', 'gdal', 'src_2')
-        self.safe_src_1 = os.path.join(self.resource_path, 'data', 'safe', 's1', 'list')
+        self.tif_src_1 = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test', 'tif', 's1', 'gdal', 'src_1'))
+        self.tif_src_2 = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test', 'tif', 's1', 'gdal', 'src_2'))
+        self.safe_src_1 = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test', 'safe', 's1', 'list'))
         self.name_date_pattern = '([12]\d{3}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])T(?:0[0-9]|1[0-9]|2[0-3])(?:[0-5][0-9])(?:[0-5][0-9]))'
         self.date_pattern = '%Y%m%dT%H%M%S'
 
     def test_file_processor(self):
-        result_target = ['../resources/data/tif/s1/gdal/src_1/terrain_corrected_0.tif', '../resources/data/tif/s1/gdal/src_1/terrain_corrected_1.tif',
-                         '../resources/data/tif/s1/gdal/src_1/terrain_corrected_10.tif','../resources/data/tif/s1/gdal/src_1/terrain_corrected_11.tif',
-                         '../resources/data/tif/s1/gdal/src_1/terrain_corrected_12.tif','../resources/data/tif/s1/gdal/src_1/terrain_corrected_2.tif']
+        result_target = ['$PROJECT_PATH/data/test/tif/s1/gdal/src_1/terrain_corrected_0.tif', '$PROJECT_PATH/data/test/tif/s1/gdal/src_1/terrain_corrected_1.tif',
+                         '$PROJECT_PATH/data/test/tif/s1/gdal/src_1/terrain_corrected_10.tif','$PROJECT_PATH/data/test/tif/s1/gdal/src_1/terrain_corrected_11.tif',
+                         '$PROJECT_PATH/data/test/tif/s1/gdal/src_1/terrain_corrected_12.tif','$PROJECT_PATH/data/test/tif/s1/gdal/src_1/terrain_corrected_2.tif']
         f_processor = FileProcessor(proc_name="processor_1", path=self.tif_src_1, pattern='*.tif', sort=None, splittable=True)
         with self.subTest('test preprocess'):
             for i, f_path in enumerate(f_processor.preprocess()):
+                result_target[i] = expand_var(result_target[i])
                 self.assertEqual(f_path, result_target[i])
 
         sort_func = lambda x: int(x.stem.split('_')[-1])
@@ -35,14 +36,15 @@ class TestProcessor(unittest.TestCase):
             for i, f_path in enumerate(f_processor.preprocess()):
                 self.assertEqual(f_path, result_target[i])
 
-        result_target = ['../resources/data/safe/s1/list/S1B_IW_SLC__1SDV_20180808T213153_20190807T213220_017485_020E22_1063.SAFE',
-                         '../resources/data/safe/s1/list/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1062.SAFE',
-                         '../resources/data/safe/s1/list/S1B_IW_SLC__1SDV_20190808T213153_20190807T213220_017485_020E22_1061.SAFE']
+        result_target = ['$PROJECT_PATH/data/test/safe/s1/list/S1B_IW_SLC__1SDV_20180808T213153_20190807T213220_017485_020E22_1063.SAFE',
+                         '$PROJECT_PATH/data/test/safe/s1/list/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1062.SAFE',
+                         '$PROJECT_PATH/data/test/safe/s1/list/S1B_IW_SLC__1SDV_20190808T213153_20190807T213220_017485_020E22_1061.SAFE']
 
         sort_func = partial(sort_by_pattern, str_pattern=self.name_date_pattern, date_pattern=self.date_pattern)
         f_processor = FileProcessor(proc_name="processor_safe_1", path=self.safe_src_1, pattern='*.SAFE', sort={'func':sort_func}, splittable=True)
         with self.subTest('test preprocess with SAFE file'):
             for i, f_path in enumerate(f_processor.preprocess()):
+                result_target[i] = expand_var(result_target[i])
                 self.assertEqual(f_path, result_target[i])
 
         result_target = sorted(result_target, key=lambda x: int(x.split('_')[-1].split('.')[0]))

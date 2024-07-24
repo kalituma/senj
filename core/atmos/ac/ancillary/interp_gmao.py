@@ -1,3 +1,10 @@
+## interp_gmao
+## interpolates GMAO GEOS data from hourly files to given lon, lat and time (float)
+##
+## written by Quinten Vanhellemont, RBINS
+## 2023-10-16
+## modifications:
+
 import numpy as np
 import dateutil.parser
 from scipy import interpolate

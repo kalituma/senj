@@ -1,3 +1,12 @@
+## def query
+## queries CDSE for scenes
+## written by Quinten Vanhellemont, RBINS
+## 2023-09-12
+## modifications: 2023-09-20 (QV) moved roi_wkt to function
+##                2024-04-08 (QV) added processor_version
+##                2024-04-27 (QV) moved to acolite.api
+##                2024-05-16 (QV) remove leading T from tile, check tile length
+
 def query(scene = None, collection = None, product = None,
                start_date = None, end_date = None,  roi = None,
                cloud_cover = None, tile = None, processor_version = None, ## S2

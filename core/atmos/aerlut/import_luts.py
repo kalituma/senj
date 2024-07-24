@@ -1,3 +1,20 @@
+## read all luts and set up rgi
+## QV 2020-01-15
+## Last modifications: 2020-07-14 (QV) added sensor option
+##                     2020-07-14 (QV) changed sensor option to a dict per band
+##                     2020-07-22 (QV) added the rsky lut to the lut and rgi - need to update rsky azimuths
+##                     2020-07-25 (QV) added updates to rsky lut
+##                     2021-01-19 (QV) update to new LUTs
+##                     2021-02-01 (QV) added wind speed for rsky lut, removed temp fixes for old luts
+##                     2021-02-03 (QV) added down*up total transmittances
+##                     2021-03-01 (QV) added new rsky luts with integrated wind speed
+##                     2021-06-08 (QV) added lut par subsetting
+##                     2021-10-24 (QV) added get_remote as keyword
+##                     2021-11-09 (QV) added reduce dimensions
+##                     2022-03-03 (QV) increased default reduce dimensions AOT range
+##                     2024-04-25 (QV) check par/add_rsky combination, check wnd dimensions
+##                                     separate function for merging luts - which is not faster (maybe depending on disk speed?)
+
 import scipy.interpolate
 import numpy as np
 from core import atmos

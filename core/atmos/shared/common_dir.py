@@ -1,3 +1,9 @@
+## def common_dir
+## find a common directory name in a list of files
+## written by Quinten Vanhellemont, RBINS
+## 2022-07-21
+## modifications:
+
 import os
 
 def common_dir(files):

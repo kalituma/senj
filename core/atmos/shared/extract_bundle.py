@@ -1,3 +1,9 @@
+## def extract_bundle
+## extract a given bundle if it is zip or tar
+## written by Quinten Vanhellemont, RBINS
+## 2022-07-21
+## modifications: 2022-10-03 (QV) check if there is only one directory in the unzipped file
+
 import os, tarfile, zipfile
 
 from core.atmos.shared.common_dir import common_dir

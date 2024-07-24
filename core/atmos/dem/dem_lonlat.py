@@ -1,5 +1,13 @@
-from core import atmos
+## def dem_lonlat
+## returms dem for given lon lat arrays
+##
+## function written by Quinten Vanhellemont, RBINS
+## 2022-01-09
+## modifications: 2022-07-06 (QV) added Copernicus DEM
+##                2022-07-07 (QV) added SRTM1 DEM
+
 import os
+from core import atmos
 
 def dem_lonlat(lon, lat, source='copernicus30', default='copernicus30'):
 

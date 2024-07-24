@@ -1,3 +1,9 @@
+## def copernicus_dem_find
+## finds Copernicus DEM TIFs or COGs for given limit
+## written by Quinten Vanhellemont, RBINS
+## 2022-07-05
+
+
 import os
 import math
 from core import atmos

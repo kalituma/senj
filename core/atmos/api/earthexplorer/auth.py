@@ -1,7 +1,13 @@
+## def auth
+## gets authentication token from USGS EarthExplorer API
+## written by Quinten Vanhellemont, RBINS
+## 2023-09-19
+## modifications: 2023-09-25 (QV) changed to separate earthexplorer credentials
+##                2024-04-27 (QV) moved to acolite.api
+
 import os, requests, json, netrc
 import core.atmos as atmos
 from core.atmos.shared import auth as shared_auth
-
 
 def auth(api_url = None, return_auth = False, netrc_machine = 'earthexplorer'):
 

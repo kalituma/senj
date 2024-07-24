@@ -2,7 +2,6 @@ import re, os
 from functools import partial
 from pathlib import Path
 
-from core import ENV_MAP
 from core.util import PathType, sort_by_pattern
 
 VAR_PATTERN = '^{{[a-zA-Z0-9_]+}}$'
@@ -13,8 +12,7 @@ def check_path_or_var(path) -> tuple[bool, PathType]:
         if re.match(VAR_PATTERN, path):
             return False, PathType.VAR
 
-        if '$' in path:
-            path = expand_var(path)
+        path = expand_var(path)
 
         p = Path(path)
         path_type = PathType.DIR if p.is_dir() else PathType.FILE

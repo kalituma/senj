@@ -1,3 +1,11 @@
+## def hgt_download
+## download DEM HGT SRTM files
+## written by Quinten Vanhellemont, RBINS
+## 2021-04-21
+## modifications: 2022-01-01 (QV) check if retrieved zipfile is valid
+##                2022-07-06 (QV) check if file exists before deleting
+##                2022-07-07 (QV) added SRTM1 DEM
+
 import zipfile, os
 from core import atmos
 

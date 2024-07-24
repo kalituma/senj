@@ -1,3 +1,9 @@
+## def copernicus_dem_download
+## downloads Copernicus DEM TIFs or COGs from PRISM/AWS
+## written by Quinten Vanhellemont, RBINS
+## 2022-07-05
+## modifications: 2023-09-12 (QV) added new Copernicus PRISM download options
+
 import os, math, tarfile
 from core import atmos
 

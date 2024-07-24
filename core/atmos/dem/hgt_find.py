@@ -1,3 +1,12 @@
+## def hgt_find
+## finds DEM HGT SRTM files covering a given limit
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-07-17
+##                2019-04-24 (QV) added support for zip files
+##                2021-04-07 (QV) changed numpy import
+##                2021-04-21 (QV) added download
+##                2022-07-07 (QV) added SRTM1 DEM
+
 import os
 import numpy as np
 from core import atmos

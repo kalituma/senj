@@ -1,8 +1,14 @@
+## def irradiance
+## compute surface level irradiance for given sun zenith angle, aot and aerosol model
+##
+## QV 2023-05-31
+## modifications: 2024-02-26 (QV) added downward gas transmittance, pressure, multiplication with cosine sun zenith angle
+
+
 from core.util import distance_se
 from core import atmos
 import numpy as np
 import dateutil
-
 
 def irradiance(aot, sza, mod = 2, date = None, apply_cosine = True, settings = {}):
 

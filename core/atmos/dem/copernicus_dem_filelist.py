@@ -1,3 +1,10 @@
+## def copernicus_prism_dem_filelist
+## gets DEM file lists from PRISM server
+## written by Quinten Vanhellemont, RBINS
+## 2023-09-12
+## modifications:
+
+
 import os, requests
 from core import atmos
 

@@ -1,4 +1,13 @@
-import os,sys
+## def ko3_read
+## reads ko3 data
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-04-14
+## modifications:
+##                2017-11-28 (QV) moved PP data directory
+##                2018-07-18 (QV) changed acolite import name
+##                2021-02-24 (QV) renamed from ko3_get
+
+
 import numpy as np
 from core import atmos
 

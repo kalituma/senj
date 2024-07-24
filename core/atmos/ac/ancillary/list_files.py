@@ -1,6 +1,15 @@
+## ancillary_list
+## lists ancillary data from a given date from the ocean data server
+##
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-10-17
+## modifications: 2021-01-31 (QV) added 2020-05-28 limit for TOAST
+##                2021-03-01 (QV) simplified for acg renamed from ancillary_list
+##                2023-10-16 (QV) changed date parsing, added GMAO FP and MERRA2 files
+##                2023-12-28 (QV) added GMAO_IT_MET
+
 import datetime, dateutil.parser
 from core import atmos
-
 
 def list_files(date, file_types = None):
 

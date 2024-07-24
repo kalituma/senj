@@ -62,8 +62,8 @@ lut_url=https://raw.githubusercontent.com/acolite/acolite_luts/main
 
 ## EarthData credentials (will be set to environment variables by acolite)
 ## alternatively use .netrc for machine earthdata
-EARTHDATA_u=$USER_ID
-EARTHDATA_p=$PASSWORD
+EARTHDATA_u=$EARTHDATA_USER_ID
+EARTHDATA_p=$EARTHDATA_PASSWORD
 
 ## URLs to use EarthData credentials for
 EARTHDATA_urls=gsfc.nasa.gov,earthdatacloud.nasa.gov,cr.usgs.gov

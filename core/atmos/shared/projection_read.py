@@ -1,3 +1,11 @@
+## def projection_read
+## gets projection dict from target image file
+## written by Quinten Vanhellemont, RBINS
+## 2021-02-24
+## modifications: 2022-08-06 (QV) added Wkt, set up Proj from Wkt
+##                2022-12-13 (QV) use transform from world file if available
+##                2024-03-28 (QV) x/y range and pixel_size as lists
+
 from pyproj import Proj
 from osgeo import gdal,osr
 import os

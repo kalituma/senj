@@ -1,3 +1,10 @@
+## def hillshade_nc
+## function to compute hillshade from ACOLITE NetCDF (with isodate and lat/lon) containing DEM data
+## written by Quinten Vanhellemont, RBINS
+## QV 2021-11-04
+## modifications: 2022-07-07 (QV) renamed from nc_dem_hillshade, updated sun position function,
+##                                use gdal.Translate with NetCDF for MEM dataset
+
 from osgeo import osr, gdal
 import numpy as np
 from core import atmos

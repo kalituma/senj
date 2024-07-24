@@ -1,3 +1,9 @@
+## def merged_lut
+## separate function to merge atmosphere/interface LUT, saved to NetCDF if store = True
+## written by Quinten Vanhellemont, RBINS
+## 2024-04-25
+## modifications:
+
 import os
 import numpy as np
 from core import atmos

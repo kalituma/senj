@@ -1,3 +1,12 @@
+## def hgt_lonlat
+## gets SRTM DEM for given lon/lat arrays
+## written by Quinten Vanhellemont, RBINS
+## QV 2017-07-17
+## modifications: 2018-12-04 QV added printing of url to download (USGS server requires login so presently not automated)
+##                2021-04-07 (QV) added to generic acolite
+##                2021-04-21 (QV) removed return if tiles are missing (this is also possible since hgt_find does not know which tiles exist)
+##                2022-07-07 (QV) added SRTM1 DEM
+
 import os
 from scipy import interpolate
 import numpy as np

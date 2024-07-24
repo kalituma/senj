@@ -1,3 +1,11 @@
+## def hgt_read
+## reads DEM HGT SRTM files
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-07-17
+##                2019-04-24 (QV) added support for zip files
+##                2021-04-07 (QV) changed numpy import
+##                2022-07-07 (QV) added SRTM1 DEM
+
 import os
 import struct
 import numpy as np

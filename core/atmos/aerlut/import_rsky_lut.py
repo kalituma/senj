@@ -1,3 +1,16 @@
+## import sky reflectance lut
+## QV 2020-03-17
+## last updates: 2020-07-15 (QV) added sensor resampling
+##               2020-07-25 (QV) new default LUT
+##               2021-01-14 (QV) changed input of RSKY LUT
+##               2021-01-19 (QV) added support for bzipped LUTs
+##               2021-01-26 (QV) new default LUT, flip the raa from OSOAA
+##               2021-02-24 (QV) renamed from rsky_read_lut
+##               2021-03-01 (QV) removed separate luts for wind speed
+##               2021-05-31 (QV) added remote lut retrieval
+##               2021-07-20 (QV) added retrieval of generic LUTs
+##                2023-08-03 (QV) get lut url from ac.config
+
 import os
 import numpy as np
 import scipy.interpolate

@@ -1,3 +1,11 @@
+## def hgt_geolocation
+## generates geolocation for DEM HGT SRTM files
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-07-17
+## last update: 2017-07-18 (QV) added grid keyword
+##                2021-04-07 (QV) changed numpy import
+##                2022-07-07 (QV) added SRTM1 DEM
+
 import os
 import numpy as np
 

@@ -1,9 +1,10 @@
+import numpy as np
 from tqdm import tqdm
-from esa_snappy import Product, ProductUtils, ProductData
+from esa_snappy import jpy, Product, Band, ProductUtils, ProductData, PixelPos
 
+from core.util import assert_bnames
 from core.util.errors import BandError
 from core.raster.gpf_module import create_product_data
-
 
 def add_band_to_product(product, bands:dict):
 
@@ -49,3 +50,45 @@ def copy_product(src_product, selected_bands:list=None):
         new_product.addBand(target_band)
 
     return new_product
+
+def get_band_size(band:Band) -> dict:
+
+    band_size = {}
+
+    DIR_POS = jpy.get_type('org.geotools.geometry.DirectPosition2D')
+
+    width = band.getRasterSize().width
+    height = band.getRasterSize().height
+
+    band_size['width'] = width
+    band_size['height'] = height
+
+    affine = band.getGeoCoding().getImageToMapTransform()
+    min_x, max_y = list(affine.transform(DIR_POS(PixelPos(0, 0)), None).getCoordinate())
+    max_x, min_y = list(affine.transform(DIR_POS(PixelPos(width, height)), None).getCoordinate())
+
+    band_size['min_x'], band_size['max_y'] = min_x, max_y
+    band_size['max_x'], band_size['min_y'] = max_x, min_y
+
+    band_size['x_res'] = np.round((max_x - min_x) / width)
+    band_size['y_res'] = np.round((max_y - min_y) / height)
+
+    assert band_size['x_res'] == band_size['y_res'], 'X and Y resolution are not equal.'
+
+    return band_size
+
+def get_size_meta_per_band(product:Product, selected_bands:list=None) -> dict:
+
+    size_meta = {}
+
+    if not selected_bands:
+        selected_bands = list(product.getBandNames())
+
+    assert_bnames(selected_bands, list(product.getBandNames()), 'Selected bands are not in the source product')
+
+    for band_name in selected_bands:
+        band = product.getBand(band_name)
+        cur_size = get_band_size(band)
+        size_meta[band_name] = cur_size
+
+    return size_meta

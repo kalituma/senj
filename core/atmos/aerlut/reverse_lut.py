@@ -1,8 +1,18 @@
-from core import atmos
+## read reverse luts and set up rgi
+## luts are created if they do not exist
+## reverse luts go from rpath -> aot
+## QV 2021-02-03
+## last updates: 2021-05-31 (QV) added remote lut retrieval
+##               2021-10-24 (QV) added pressures and get_remote as keyword to other functions
+##               2021-10-25 (QV) test if the wind dimension is != 1 or missing
+##                2023-08-03 (QV) get lut url from ac.config
+
+import time, os
 import numpy as np
 from netCDF4 import Dataset
 import scipy.interpolate
-import time, os
+
+from core import atmos
 
 def reverse_lut(sensor, lutdw=None, par = 'romix',
                        pct = (1,60), nbins = 20, override = False,

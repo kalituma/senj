@@ -2,6 +2,7 @@ import os
 import unittest
 import numpy as np
 
+from core.config import expand_var
 from core.raster.gpf_module import ORBIT_TYPE
 from core.raster.funcs import read_band_from_raw
 from core.operations import Read, Write, Subset
@@ -12,7 +13,7 @@ from core.logic.context import Context
 
 class TestS1Op(unittest.TestCase):
     def setUp(self) -> None:
-        self.data_root = '../../resources/data'
+        self.data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
         self.s1_safe_grdh_path = os.path.join(self.data_root, 'safe', '',
                                               'S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE')
         self.s1_grdh_subset_target = os.path.join(self.data_root, 'target', 'subset_4_of_S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B_Orb_Cal_TC.dim')

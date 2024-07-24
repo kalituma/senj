@@ -1,3 +1,9 @@
+## def settings_write
+## write "settings" file for ACOLITE based on settings dict
+##
+## Written by Quinten Vanhellemont 2017-11-30
+## Last modifications:
+
 import os, datetime
 
 def write(file, settings):

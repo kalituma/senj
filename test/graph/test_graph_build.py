@@ -14,9 +14,8 @@ class TestConfigParsing(unittest.TestCase):
 
     def test_graph_manager_item(self):
         graph_manager = GraphManager(self.stack_config, self.schema_map)
-        self.assertEqual(list(graph_manager[0].keys()), ['name', 'ops', 'links'])
-        self.assertEqual([op[0] for op in graph_manager[0]['ops']], ['input', 'read'])
-        self.assertEqual(graph_manager[0]['links'], ['stack_s2_1_2'])
+        self.assertEqual(graph_manager[0].ops['ops_order'], ['input', 'read'])
+        self.assertEqual(graph_manager[0].links, ['stack_s2_1_2'])
 
     def test_processor_builder_stack(self):
         graph_manager = GraphManager(self.stack_config, self.schema_map)

@@ -1,3 +1,9 @@
+## def gauss_response
+## compute gaussian rsr for center wave and fwhm
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2018-01-30
+## modifications: 2021-06-07 (QV) changed numpy import added to generic acolite
+
 import numpy as np
 
 def gauss_response(center, fwhm, step=1):

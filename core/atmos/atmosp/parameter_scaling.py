@@ -1,3 +1,12 @@
+## def pscale
+## gets parameter scaling
+##
+## Written by Quinten Vanhellemont 2017-12-05
+## Last modifications: 2018-04-17 (QV) added nan test
+##                2018-07-18 (QV) changed acolite import name
+##                2018-09-10 (QV) added encoding
+##                2021-03-15 (QV) adapted for acg
+
 import numpy as np
 from core import atmos
 

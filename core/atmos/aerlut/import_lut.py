@@ -1,3 +1,18 @@
+## def import_lut
+## imports LUT made with 6SV and converts to NetCDF
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2016-07-05
+## modifications:   2020-07-14 (QV)
+##                  2021-01-16 (QV) added support for bz2 compressed luts
+##                  2021-02-24 (QV) removed obsolete code
+##                  2021-02-25 (QV) changed position of lut files (removed lutid directory), added removal of unzipped file
+##                  2021-03-02 (QV) integrated sensor specific LUTs
+##                  2021-05-31 (QV) added remote lut retrieval
+##                  2021-06-08 (QV) added lut par subsetting
+##                  2021-07-20 (QV) added retrieval of generic LUTs
+##                  2021-10-22 (QV) compute ttot if not in LUT
+##                2023-08-03 (QV) get lut url from ac.config
+
 import os, sys
 import numpy as np
 from core import atmos

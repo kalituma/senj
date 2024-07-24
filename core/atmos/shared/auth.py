@@ -1,3 +1,9 @@
+## def auth
+## gets authentication credentials
+## written by Quinten Vanhellemont, RBINS
+## 2023-09-25
+## modifications:
+
 import os, requests, json, netrc
 import core.atmos as atmos
 

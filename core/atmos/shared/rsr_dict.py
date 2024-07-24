@@ -1,9 +1,14 @@
+## def rsr_dict
+## imports rsr file(s)
+## written by Quinten Vanhellemont, RBINS
+## 2021-02-27
+## modifications: 2022-02-25 (QV) added warning printout
+
 import glob, os
 import numpy as np
 
 from core import atmos
 from core.util import rsr_read
-
 
 def rsr_dict(sensor = None, rsrd = None, wave_range = [0.25,2.55], wave_step = 0.001):
 

@@ -1,5 +1,9 @@
-import os
-from pyproj import Proj
+## def srtm15
+## get srtm15 z for given dct - too slow for large pixel counts
+## written by Quinten Vanhellemont, RBINS
+## 2022-01-07
+## modifications: 2022-01-09 (QV) renamed to reproject
+
 import pyproj
 import numpy as np
 from pyresample.bilinear import NumpyBilinearResampler

@@ -1,3 +1,17 @@
+## ancillary_get
+## downloads and interpolates ancillary data from the ocean data server
+##
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-10-18
+## modifications: 2017-10-24 (QV) added kind keyword
+##                2017-12-05 (QV) added test if data is missing
+##                2018-07-18 (QV) changed acolite import name
+##                2018-11-19 (QV) added verbosity option
+##                2021-03-01 (QV) simplified for acg, renamed from ancillary_get
+##                2022-11-17 (QV) delete series by default
+##                2023-10-16 (QV) added GMAO data, rescale and rename parameters in this function
+##                2023-12-28 (QV) added GMAO_IT
+
 import dateutil.parser, datetime
 import os
 from core import atmos

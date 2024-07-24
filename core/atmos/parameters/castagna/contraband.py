@@ -1,3 +1,12 @@
+## def contraband
+## Computes Castagna et al. 2020 orange contraband  https://doi.org/10.3390/rs12040637
+## and other contrabands
+##
+## written by Quinten Vanhellemont, RBINS
+## 2022-06-21
+## modifications: 2023-03-05 (QV) renamed from orange and added other contrabands for L7 and Pléiades
+##
+
 import os
 from core import atmos
 

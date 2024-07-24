@@ -7,7 +7,7 @@ from core.atmos import shared
 from core.atmos import ac
 from core.atmos import atmosp
 from core.atmos import dem
-from core.atmos import settings as setting
+from core.atmos.setting import parse, load
 from core.atmos import aerlut
 from core.atmos import parameters
 
@@ -53,7 +53,7 @@ with open(config['parameter_cf_attributes'], 'r', encoding='utf-8') as f:
 
 settings = {}
 ## read default processing settings
-settings['defaults'] = setting.parse(None, settings=setting.load(None), merge=False)
+settings['defaults'] = parse(None, settings=load(None), merge=False)
 ## copy defaults to run, run will be updated with user settings and sensor defaults
 settings['run'] = {k:settings['defaults'][k] for k in settings['defaults']}
 

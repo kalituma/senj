@@ -1,9 +1,21 @@
+## ancillary_interp_met
+## interpolates NCEP MET data from 6 hourly files to given lon, lat and time (float)
+##
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-10-17
+## modifications: 2017-10-18 (QV) fixed latitude indexing
+##                           (QV) added bz2 support
+##                2017-10-24 (QV) added option to use nearest neighbour (kind from scipy= ‘linear’, ‘cubic’, ‘quintic’)
+##                2018-03-05 (QV) fixed end of year rollover
+##                2018-03-12 (QV) added file closing to enable file deletion for Windows
+##                2021-03-01 (QV) simplified for acg renamed from ancillary_interp_met
+##                2022-11-17 (QV) added 2D interpolation
+
 import os, bz2
 from pyhdf.SD import SD, SDC
 import numpy as np
 from scipy import interpolate
 from core import atmos
-
 
 def interp_met(files, lon, lat, time, datasets=['z_wind','m_wind','press','rel_hum','p_water'], kind='linear'):
 

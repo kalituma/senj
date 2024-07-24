@@ -1,3 +1,9 @@
+## def projection_geo
+## gets geolocation for generic image/projection dict
+## written by Quinten Vanhellemont, RBINS
+## 2021-02-05
+## modifications: 2021-02-11 (QV) added half pixel offset option
+
 import numpy as np
 
 def projection_geo(dct, xy=False, add_half_pixel=False):

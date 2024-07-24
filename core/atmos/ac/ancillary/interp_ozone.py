@@ -1,9 +1,19 @@
+## ancillary_interp_ozone
+## interpolates NRT ozone data from to given lon, lat
+##
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-10-17
+## modifications: 2017-10-18 (QV) fixed latitude indexing, renamed from ancillary_interp_toast
+##                2017-10-24 (QV) added option to use nearest neighbour (kind from scipy= ‘linear’, ‘cubic’, ‘quintic’)
+##                2018-03-12 (QV) added file closing
+##                2021-03-01 (QV) simplified for acg renamed from ancillary_interp_ozone
+##                2022-11-17 (QV) added 2D interpolation
+
 from pyhdf.SD import SD, SDC
 import numpy as np
 from scipy import interpolate
 
 from core import atmos
-
 
 def interp_ozone(file, lon, lat, dataset='ozone', kind='linear'):
 

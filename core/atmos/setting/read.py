@@ -1,3 +1,12 @@
+## def settings_read
+## read ACOLITE settings from file to "settings" dict
+##
+## Written by Quinten Vanhellemont 2017-11-30
+## Last modifications: 2018-06-06 QV added None check for limit
+##                     2018-09-12 QV added length check for splitting on =
+##                     2018-09-19 QV added encoding
+##                     2020-07-14 QV added strip to parameters
+##                     2022-03-25 QV strip comments on the same line, removed 0/1 from False/True
 
 def read(file):
     import os

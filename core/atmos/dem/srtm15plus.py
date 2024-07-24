@@ -1,5 +1,16 @@
+## def srtm15plus
+## downloads the srtm15plus data, returns local path
+##
+## SRTM15+ is provided by Tozer et al. 2019 https://doi.org/10.1029/2019EA000658
+## link to dataset: https://topex.ucsd.edu/WWW_html/srtm15_plus.html
+##
+## function written by Quinten Vanhellemont, RBINS
+## 2022-01-09
+## modifications: 2024-02-29 (QV) added external dir config
+
 import os
 from core import atmos
+
 def srtm15plus(path=None):
 
     url = 'https://topex.ucsd.edu/pub/srtm15_plus/SRTM15_V2.3.nc'

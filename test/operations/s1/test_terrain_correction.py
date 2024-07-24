@@ -2,6 +2,7 @@ import numpy as np
 import os
 import unittest
 
+from core.config import expand_var
 from core.raster import read_gpf_bands_as_dict
 from core.raster.gpf_module import DemType, InterpolType
 from core.operations import Read, Write
@@ -12,7 +13,7 @@ from core.logic.context import Context
 
 class TestTerrainCorrection(unittest.TestCase):
     def setUp(self) -> None:
-        self.data_root = '../../resources/data'
+        self.data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
         self.s1_safe_slc_path = os.path.join(self.data_root, 'safe', 's1','S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE')
         self.s1_safe_grdh_path = os.path.join(self.data_root, 'safe', 's1', 'S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE')
 

@@ -6,7 +6,7 @@ import dateutil.parser
 from jsonpath_ng.ext import parse
 
 from esa_snappy import jpy
-from esa_snappy import PixelPos, Product
+from esa_snappy import Product
 
 from core.util import tiles_interp, grid_extend, distance_se, projection_geo
 from core.raster.gdal_module import warp_to
@@ -35,12 +35,44 @@ def set_meta_to_product(product:Product, meta_dict:dict):
 
     return product
 
+def read_granule_meta(product:Product) -> dict:
+
+    # read tileid, datastripid, sensing time, horizontal and vertical cs name, horizontal and vertical cs code
+    meta_root = product.getMetadataRoot()
+    granule_par_tag = meta_root.getElement('Granules').getElementAt(0).getName()
+
+    granule_meta = {}
+
+    tile_id = get_metadata_value(meta_root, f'Granules/{granule_par_tag}/General_Info/TILE_ID')
+    granule_meta['TILE_ID'] = tile_id
+    datastrip_id = get_metadata_value(meta_root, f'Granules/{granule_par_tag}/General_Info/DATASTRIP_ID')
+    granule_meta['DATASTRIP_ID'] = datastrip_id
+    sensing_time = get_metadata_value(meta_root, f'Granules/{granule_par_tag}/General_Info/SENSING_TIME')
+    granule_meta['SENSING_TIME'] = sensing_time
+    horizontal_cs_name = get_metadata_value(meta_root,
+                                            f'Granules/{granule_par_tag}/Geometric_Info/Tile_GeoCoding/HORIZONTAL_CS_NAME')
+    granule_meta['HORIZONTAL_CS_NAME'] = horizontal_cs_name
+    horizontal_cs_code = get_metadata_value(meta_root,
+                                            f'Granules/{granule_par_tag}/Geometric_Info/Tile_GeoCoding/HORIZONTAL_CS_CODE')
+    granule_meta['HORIZONTAL_CS_CODE'] = horizontal_cs_code
+
+    grids = _parse_tile_geocoding(meta_root, granule_par_tag)
+    granule_meta['OR_GRIDS'] = grids
+
+    sun, view, view_det = _parse_tile_angle(meta_root, granule_par_tag)
+    granule_meta['SUN'] = sun
+    granule_meta['VIEW'] = view
+    granule_meta['VIEW_DET'] = view_det
+    granule_meta['GRANULE_PARENT'] = granule_par_tag
+
+    return granule_meta
+
 def make_gattr(product:Product):
 
     input_file = str(product.getFileLocation())
 
     product_meta_root = product.getMetadataRoot()
-    gr_meta = read_gr_meta(product_meta_root)
+    gr_meta = read_granule_meta(product_meta_root)
 
     gr_meta['CUR_GRIDS'] = band_size_per_res(product)
 
@@ -229,12 +261,14 @@ def granule_info(meta_root):
 
         return granule_dir[granule_idx]
 
-def metadata_scene(product):
+def metadata_scene(product:Product, metadata:dict) -> tuple[dict, dict]:
+
     product_info_uri = ['Level-1C_User_Product/General_Info/Product_Info',
                         'Level-1C_User_Product/General_Info/Product_Info/Datatake',
                         'Level-1C_User_Product/General_Info/Product_Info/Query_Options',
                         'Level-1C_User_Product/General_Info/Product_Image_Characteristics',
                         'Level-1C_User_Product/General_Info/Product_Image_Characteristics/Reflectance_Conversion']
+
 
     product_info_tags = [
         ['PRODUCT_START_TIME', 'PRODUCT_STOP_TIME', 'PRODUCT_URI', 'PROCESSING_LEVEL', 'PRODUCT_TYPE',
@@ -255,6 +289,35 @@ def metadata_scene(product):
             child_uri = f'{uri}/{attr_tag}'
             value = get_metadata_value(meta_root, child_uri)
             meta[attr_tag] = value
+
+    special_uri = product_info_uri[3]
+    special_tag = 'Special_Values'
+
+    special_par = get_metadata_recursive(meta_root, f'{special_uri}')
+    for special in special_par.getElements():
+        if special.getName() != special_tag:
+            continue
+        fill = special.getAttribute('SPECIAL_VALUE_TEXT').getData().getElemString()
+        fill_value = special.getAttribute('SPECIAL_VALUE_INDEX').getData().getElemString()
+        meta[fill] = fill_value
+
+
+    product_info_uri = [
+        '$.Level-1C_User_Product.General_Info.Product_Info',
+        '$.Level-1C_User_Product.General_Info.Product_Info.Datatake',
+        '$.Level-1C_User_Product.General_Info.Product_Info.Query_Options',
+        '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics',
+        '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics.Reflectance_Conversion'
+    ]
+
+    reflectance_metadata = {}
+    find_product = lambda x: [field.value for field in parse(x).find(metadata)]
+
+    for i, uri in enumerate(product_info_uri):
+        info_node = find_product(uri)[0]
+        for attr_tag in product_info_tags[i]:
+            value = info_node[attr_tag]
+            reflectance_metadata[attr_tag] = value
 
     # special values
     special_uri = product_info_uri[3]
@@ -291,7 +354,13 @@ def metadata_scene(product):
         step = get_metadata_value(spectral, 'Spectral_Response/STEP')
         values = get_metadata_value(spectral, 'Spectral_Response/VALUES')
         rsr = [float(rs) for rs in values.split(' ')]
-        wave = np.linspace(float(banddata['Wavelength'][band]['MIN']), float(banddata['Wavelength'][band]['MAX']), int((float(banddata['Wavelength'][band]['MAX']) - float(banddata['Wavelength'][band]['MIN'])) / float(step) + 1))
+
+        wave = np.linspace(
+            float(banddata['Wavelength'][band]['MIN']), \
+            float(banddata['Wavelength'][band]['MAX']), \
+            int((float(banddata['Wavelength'][band]['MAX']) - float(banddata['Wavelength'][band]['MIN'])) / float(step) + 1)
+        )
+
         banddata['RSR'][band] = {'response': rsr, 'wave': wave}
 
     if len(banddata['BandNames']) == 0:
@@ -325,42 +394,6 @@ def metadata_scene(product):
         banddata[rad_tag][band] = float(t.getData().getElemString())
 
     return meta, banddata
-
-def band_size_per_res(product:Product) -> dict:
-
-    DIR_POS = jpy.get_type('org.geotools.geometry.DirectPosition2D')
-
-    cur_size = {
-        '10': {},
-        '20': {},
-        '60': {}
-    }
-
-    for res in cur_size:
-        if res == '10':
-            band_tag = 'B2'
-        elif res == '20':
-            band_tag = 'B11'
-        else:
-            band_tag = 'B1'
-
-
-        width = product.getBand(band_tag).getRasterSize().width
-        height = product.getBand(band_tag).getRasterSize().height
-
-        affine = product.getBand(band_tag).getGeoCoding().getImageToMapTransform()
-        min_x, max_y = list(affine.transform(DIR_POS(PixelPos(0, 0)), None).getCoordinate())
-        max_x, min_y = list(affine.transform(DIR_POS(PixelPos(width, height)), None).getCoordinate())
-
-        cur_size[res]['NCOLS'] = width
-        cur_size[res]['NROWS'] = height
-        cur_size[res]['ULX'] = min_x
-        cur_size[res]['ULY'] = max_y
-        cur_size[res]['XDIM'] = np.round((max_x - min_x) / width)
-        cur_size[res]['YDIM'] = -np.round((max_y - min_y) / height)
-        cur_size[res]['RESOLUTION'] = cur_size[res]['XDIM']
-
-    return cur_size
 
 def _parse_tile_geocoding(meta_root, granule_par_tag):
     grids = {'10': {}, '20': {}, '60': {}}
@@ -447,32 +480,8 @@ def _parse_tile_angle(meta_root, granule_par_tag):
 
     return sun, view, view_det
 
-def read_gr_meta(meta_root):
-    # read tileid, datastripid, sensing time, horizontal and vertical cs name, horizontal and vertical cs code
-    granule_par_tag = meta_root.getElement('Granules').getElementAt(0).getName()
 
-    grmeta = {}
 
-    tile_id = get_metadata_value(meta_root, f'Granules/{granule_par_tag}/General_Info/TILE_ID')
-    grmeta['TILE_ID'] = tile_id
-    datastrip_id = get_metadata_value(meta_root, f'Granules/{granule_par_tag}/General_Info/DATASTRIP_ID')
-    grmeta['DATASTRIP_ID'] = datastrip_id
-    sensing_time = get_metadata_value(meta_root, f'Granules/{granule_par_tag}/General_Info/SENSING_TIME')
-    grmeta['SENSING_TIME'] = sensing_time
-    horizontal_cs_name = get_metadata_value(meta_root,
-                                            f'Granules/{granule_par_tag}/Geometric_Info/Tile_GeoCoding/HORIZONTAL_CS_NAME')
-    grmeta['HORIZONTAL_CS_NAME'] = horizontal_cs_name
-    horizontal_cs_code = get_metadata_value(meta_root,
-                                            f'Granules/{granule_par_tag}/Geometric_Info/Tile_GeoCoding/HORIZONTAL_CS_CODE')
-    grmeta['HORIZONTAL_CS_CODE'] = horizontal_cs_code
+def get_res_per_band(product:Product) -> dict:
+    pass
 
-    grids = _parse_tile_geocoding(meta_root, granule_par_tag)
-    grmeta['OR_GRIDS'] = grids
-
-    sun, view, view_det = _parse_tile_angle(meta_root, granule_par_tag)
-    grmeta['SUN'] = sun
-    grmeta['VIEW'] = view
-    grmeta['VIEW_DET'] = view_det
-    grmeta['GRANULE_PARENT'] = granule_par_tag
-
-    return grmeta

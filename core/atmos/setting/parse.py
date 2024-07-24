@@ -1,3 +1,12 @@
+## def parse
+## parses acolite settings files and merges with defaults
+## written by Quinten Vanhellemont, RBINS
+## 2021-03-09
+## modifications: 2022-03-28 (QV) moved int and float lists to external files
+##                2023-01-02 (QV) test which is the lowest level of output path that needs to be created
+##                2023-10-31 (QV) check if luts_pressures is a list
+##                2024-03-30 (QV) convert tuples to lists
+
 import os
 from core import atmos
 

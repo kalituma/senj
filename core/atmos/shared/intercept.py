@@ -1,3 +1,10 @@
+## def intercept
+## sorts data and compute intercept using first # pixels
+## written by Quinten Vanhellemont, RBINS
+## 2021-03-01
+## modifications:
+##
+
 import numpy as np
 import scipy.stats
 

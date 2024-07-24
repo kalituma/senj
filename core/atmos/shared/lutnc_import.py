@@ -1,3 +1,10 @@
+## lutnc_import
+## generic netcdf lut import
+##
+## written by Quinten Vanhellemont, RBINS
+## 2021-02-24
+## modifications: 2022-03-23 (QV) added sensor specific lut support
+
 import os, sys
 
 def lutnc_import(lutnc):

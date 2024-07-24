@@ -1,3 +1,11 @@
+## def similarity_read
+## reads similarity spectrum
+## written by Quinten Vanhellemont, RBINS for the PONDER project
+## 2017-12
+## modifications: 2018-04-17 (QV) added to acolite function
+##                2018-07-18 (QV) changed acolite import name
+##                2021-04-15 (QV) added to new generic acolite
+
 import numpy as np
 from core import atmos
 

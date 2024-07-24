@@ -6,7 +6,6 @@ from core import atmos, PROJECT_PATH
 from core.raster.gpf_module import projection_from_meta, get_src_param, warp_to, build_angles, copy_dct_to_atts
 from core.util import rsr_convolute_dict, rsr_read
 
-
 def _l1r_postprocess(out, bands, rsr_bands, wave, percentiles_compute, percentiles, warp_option_for_angle, setu, gatts):
 
     gains = setu['gains']
