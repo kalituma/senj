@@ -49,16 +49,19 @@ class Write(Op):
         if self._is_file_specified:
             basename = Path(self._path).stem
             ext = self._out_ext
-            output_path = str(Path(self._path).parent / f'{self._prefix}{basename}{suffix}.{ext}')
+            output_dir = str(Path(self._path).parent)
         else:
             basename = Path(raster.path).stem
             if self._out_ext:
                 ext = self._out_ext
             else:
                 ext = Path(raster.path).suffix
-            output_path = str(Path(self._path) / f'{self._prefix}{basename}{suffix}.{ext}')
+            output_dir = str(Path(self._path))
 
-        write_raster(raster, output_path, self._module)
+        output_stem = f'{self._prefix}{basename}{suffix}'
+        output_ext = ext
+
+        output_paths = write_raster(raster, output_dir, output_stem, output_ext, self._module)
         raster = None
         print(f'{output_path} is saved')
         return output_path

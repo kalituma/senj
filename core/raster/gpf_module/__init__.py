@@ -74,6 +74,7 @@ from .product_to_ds import *
 from .projection_meta import *
 
 from .gpf_meta import *
+from .gpf_meta_dict_query import *
 
 from .gpf_constructor import *
 from .gpf_copy import *

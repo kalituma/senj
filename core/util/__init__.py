@@ -18,3 +18,4 @@ from .read_band import *
 from .cv2_denoise import *
 from .percentile_norm import *
 from .asserts import *
+from .dict_compare import *

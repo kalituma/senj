@@ -1,6 +1,6 @@
 from pathlib import Path
 from core.raster import Raster, RasterType
-from core.raster.gpf_module import write_gpf, write_meta_for_product, is_bigtiff_gpf
+from core.raster.gpf_module import write_gpf, write_metadata, is_bigtiff_gpf
 from core.raster.gdal_module import copy_ds, is_bigtiff_gdal
 from core.raster.funcs import wrap_up_raster, update_raster_to_raw
 
@@ -21,7 +21,7 @@ def write_raster(raster:Raster, out_path:str, out_module:"RasterType"):
             compress = True
         else:
             compress = False
-        write_meta_for_product(raster.meta_dict, out_path)
+        write_metadata(raster.meta_dict, out_path)
         raster.raw = copy_ds(raster.raw, "GTiff", selected_bands, is_bigtiff=is_bigtiff, compress=compress, out_path=out_path)
 
     elif raster.module_type == RasterType.SNAP:
@@ -33,7 +33,7 @@ def write_raster(raster:Raster, out_path:str, out_module:"RasterType"):
                 format_type = 'GeoTIFF-BigTIFF'
             else:
                 format_type = 'GeoTIFF'
-            write_meta_for_product(raster.meta_dict, out_path)
+            write_metadata(raster.meta_dict, out_path)
             write_gpf(raster.raw, out_path, format_type)
         else:
             raise ValueError(f'Extension {ext} is not supported in SNAP module')

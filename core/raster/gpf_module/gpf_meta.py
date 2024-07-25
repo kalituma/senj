@@ -35,7 +35,7 @@ def set_meta_to_product(product:Product, meta_dict:dict):
 
     return product
 
-def read_granule_meta(product:Product) -> dict:
+def read_granules_meta_from_product(product:Product) -> dict:
 
     # read tileid, datastripid, sensing time, horizontal and vertical cs name, horizontal and vertical cs code
     meta_root = product.getMetadataRoot()
@@ -72,7 +72,7 @@ def make_gattr(product:Product):
     input_file = str(product.getFileLocation())
 
     product_meta_root = product.getMetadataRoot()
-    gr_meta = read_granule_meta(product_meta_root)
+    gr_meta = read_granules_meta_from_product(product_meta_root)
 
     gr_meta['CUR_GRIDS'] = band_size_per_res(product)
 
@@ -240,6 +240,11 @@ def find_sensor_name(spacecraft_name):
     else:
         return None
 
+def get_index_str_to_band_str() -> dict:
+
+    return {'0': 'B1', '1': 'B2', '2': 'B3', '3': 'B4', '4': 'B5', '5': 'B6', '6': 'B7',
+                             '7': 'B8', '8': 'B8A', '9': 'B9', '10': 'B10', '11': 'B11', '12': 'B12'}
+
 def granule_info(meta_root):
 
     granule_uri = 'Level-1C_User_Product/General_Info/Product_Info/Product_Organisation/Granule_List/Granule'
@@ -261,14 +266,194 @@ def granule_info(meta_root):
 
         return granule_dir[granule_idx]
 
-def metadata_scene(product:Product, metadata:dict) -> tuple[dict, dict]:
+def get_band_info_meta(meta_dict:dict):
+
+    banddata = {}
+    banddata['BandNames'] = {}
+    banddata['Resolution'] = {}
+    banddata['Wavelength'] = {}
+    banddata['RSR'] = {}
+
+    find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
+
+    img_characteristics_uri = '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics'
+    reflectance_conv_uri = '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics.Reflectance_Conversion'
+
+    spectral_uri = f'{img_characteristics_uri}.Spectral_Information_List.Spectral_Information'
+    spec_info_list = find_meta_dict(spectral_uri)[0]
+
+    for spec_info in spec_info_list:
+        bandi = spec_info['bandId']
+        phy_band = spec_info['physicalBand']
+        res = spec_info['RESOLUTION']
+        banddata['BandNames'][bandi] = phy_band
+        banddata['Resolution'][phy_band] = res
+        banddata['Wavelength'][phy_band] = {key: float(value) for key, value in spec_info['Wavelength'].items()}
+
+        step = spec_info['Spectral_Response']['STEP']
+        values = spec_info['Spectral_Response']['VALUES']
+        rsr = [float(rs) for rs in values.split(' ')]
+
+        wave = np.linspace(
+            float(banddata['Wavelength'][phy_band]['MIN']), \
+            float(banddata['Wavelength'][phy_band]['MAX']), \
+            int((float(banddata['Wavelength'][phy_band]['MAX']) - float(banddata['Wavelength'][phy_band]['MIN'])) / float(step) + 1)
+        )
+
+        banddata['RSR'][phy_band] = {'response': rsr, 'wave': wave}
+
+    if len(banddata['BandNames']) == 0:
+        banddata['BandNames'] = get_index_str_to_band_str()
+
+    if 'F0' not in banddata:
+        banddata['F0'] = {}
+
+    f_uri = f'{reflectance_conv_uri}.Solar_Irradiance_List.SOLAR_IRRADIANCE'
+    f0_list = find_meta_dict(f_uri)[0]
+
+    for bi, f in enumerate(f0_list):
+        band = banddata['BandNames'][f'{bi}']
+        banddata['F0'][band] = float(f)
+
+    phy_tag = 'PHYSICAL_GAINS'
+    phy_gain_uri = f'{img_characteristics_uri}.{phy_tag}'
+    phy_gain_list = find_meta_dict(phy_gain_uri)[0]
+    for bi, t in enumerate(phy_gain_list):
+        if phy_tag not in banddata:
+            banddata[phy_tag] = {}
+        band = banddata['BandNames'][f'{bi}']
+        banddata[phy_tag][band] = float(t)
+
+    rad_tag = 'RADIO_ADD_OFFSET'
+    rad_uri = f'{img_characteristics_uri}.Radiometric_Offset_List.{rad_tag}'
+    rad_list = find_meta_dict(rad_uri)[0]
+    for bi, t in enumerate(rad_list):
+        if rad_tag not in banddata:
+            banddata[rad_tag] = {}
+        band = banddata['BandNames'][f'{bi}']
+        banddata[rad_tag][band] = float(t)
+
+    return banddata
+
+def get_band_info_meta_from_product(product:Product) -> dict:
+
+    meta_root = product.getMetadataRoot()
+
+    banddata = {}
+    banddata['BandNames'] = {}
+    banddata['Resolution'] = {}
+    banddata['Wavelength'] = {}
+    banddata['RSR'] = {}
+
+    img_characteristics_uri = 'Level-1C_User_Product/General_Info/Product_Image_Characteristics'
+    spectral_uri = f'{img_characteristics_uri}/Spectral_Information_List'
+
+    spectral_subs = 'Spectral_Information'
+    spectral_par = get_metadata_recursive(meta_root, spectral_uri)
+
+    for spectral in spectral_par.getElements():
+        if spectral.getName() != spectral_subs:
+            continue
+        bandi = spectral.getAttribute('bandId').getData().getElemString()
+        band = spectral.getAttribute('physicalBand').getData().getElemString()
+        res = spectral.getAttribute('RESOLUTION').getData().getElemString()
+        banddata['BandNames'][bandi] = band
+        banddata['Resolution'][band] = res
+        banddata['Wavelength'][band] = {tag: float(get_metadata_value(spectral, f'Wavelength/{tag}')) for tag in
+                                        ['CENTRAL', 'MIN', 'MAX']}
+
+        step = get_metadata_value(spectral, 'Spectral_Response/STEP')
+        values = get_metadata_value(spectral, 'Spectral_Response/VALUES')
+        rsr = [float(rs) for rs in values.split(' ')]
+
+        wave = np.linspace(
+            float(banddata['Wavelength'][band]['MIN']), \
+            float(banddata['Wavelength'][band]['MAX']), \
+            int((float(banddata['Wavelength'][band]['MAX']) - float(banddata['Wavelength'][band]['MIN'])) / float(
+                step) + 1)
+        )
+
+        banddata['RSR'][band] = {'response': rsr, 'wave': wave}
+
+    if len(banddata['BandNames']) == 0:
+        banddata['BandNames'] = get_index_str_to_band_str()
+
+    f_uri_root = 'Level-1C_User_Product/General_Info/Product_Image_Characteristics/Reflectance_Conversion'
+    f_uri = f'{f_uri_root}/Solar_Irradiance_List'
+
+    if 'F0' not in banddata: banddata['F0'] = {}
+
+    for bi, f in enumerate(get_metadata_recursive(meta_root, f_uri).getAttributes()):
+        band = banddata['BandNames'][f'{bi}']
+        banddata['F0'][band] = float(f.getData().getElemString())
+
+    phy_uri = f'{img_characteristics_uri}'
+    phy_tag = 'PHYSICAL_GAINS'
+    cnt = 0
+    for t in get_metadata_recursive(meta_root, phy_uri).getAttributes():
+        if phy_tag not in banddata: banddata[phy_tag] = {}
+        if t.getName() != phy_tag:
+            continue
+        band = banddata['BandNames'][f'{cnt}']
+        banddata[phy_tag][band] = float(t.getData().getElemString())
+        cnt += 1
+
+    rad_uri = f'{img_characteristics_uri}/Radiometric_Offset_List'
+    rad_tag = 'RADIO_ADD_OFFSET'
+    for bi, t in enumerate(get_metadata_recursive(meta_root, rad_uri).getAttributes()):
+        if rad_tag not in banddata: banddata[rad_tag] = {}
+        if t.getName() != rad_tag:
+            continue
+        band = banddata['BandNames'][f'{bi}']
+        banddata[rad_tag][band] = float(t.getData().getElemString())
+
+    return banddata
+
+def get_reflectance_meta(meta_dict:dict) -> dict:
+
+    product_info_uri = [
+        '$.Level-1C_User_Product.General_Info.Product_Info',
+        '$.Level-1C_User_Product.General_Info.Product_Info.Datatake',
+        '$.Level-1C_User_Product.General_Info.Product_Info.Query_Options',
+        '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics',
+        '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics.Reflectance_Conversion'
+    ]
+
+    product_info_tags = [
+        ['PRODUCT_START_TIME', 'PRODUCT_STOP_TIME', 'PRODUCT_URI', 'PROCESSING_LEVEL', 'PRODUCT_TYPE',
+         'PROCESSING_BASELINE', 'GENERATION_TIME'],
+        ['SPACECRAFT_NAME', 'DATATAKE_SENSING_START', 'SENSING_ORBIT_NUMBER', 'SENSING_ORBIT_DIRECTION'],
+        ['PRODUCT_FORMAT'],
+        ['QUANTIFICATION_VALUE'],
+        ['U']
+    ]
+
+    reflectance_metadata = {}
+    find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
+
+    for i, uri in enumerate(product_info_uri):
+        info_node = find_meta_dict(uri)[0]
+        for attr_tag in product_info_tags[i]:
+            value = info_node[attr_tag]
+            reflectance_metadata[attr_tag] = value
+
+    # special values
+    special_uri = product_info_uri[3]
+    special_tag = 'Special_Values'
+
+    special_nodes = find_meta_dict(special_uri)[0][special_tag]
+    for special_node in special_nodes:
+        reflectance_metadata[special_node['SPECIAL_VALUE_TEXT']] = special_node['SPECIAL_VALUE_INDEX']
+
+    return reflectance_metadata
+
+def get_reflectance_meta_from_product(product:Product) -> dict:
 
     product_info_uri = ['Level-1C_User_Product/General_Info/Product_Info',
                         'Level-1C_User_Product/General_Info/Product_Info/Datatake',
                         'Level-1C_User_Product/General_Info/Product_Info/Query_Options',
                         'Level-1C_User_Product/General_Info/Product_Image_Characteristics',
                         'Level-1C_User_Product/General_Info/Product_Image_Characteristics/Reflectance_Conversion']
-
 
     product_info_tags = [
         ['PRODUCT_START_TIME', 'PRODUCT_STOP_TIME', 'PRODUCT_URI', 'PROCESSING_LEVEL', 'PRODUCT_TYPE',
@@ -282,13 +467,13 @@ def metadata_scene(product:Product, metadata:dict) -> tuple[dict, dict]:
 
     meta_root = product.getMetadataRoot()
 
-    meta = {}
+    reflectance_meta = {}
 
     for i, uri in enumerate(product_info_uri):
         for attr_tag in product_info_tags[i]:
             child_uri = f'{uri}/{attr_tag}'
             value = get_metadata_value(meta_root, child_uri)
-            meta[attr_tag] = value
+            reflectance_meta[attr_tag] = value
 
     special_uri = product_info_uri[3]
     special_tag = 'Special_Values'
@@ -299,101 +484,9 @@ def metadata_scene(product:Product, metadata:dict) -> tuple[dict, dict]:
             continue
         fill = special.getAttribute('SPECIAL_VALUE_TEXT').getData().getElemString()
         fill_value = special.getAttribute('SPECIAL_VALUE_INDEX').getData().getElemString()
-        meta[fill] = fill_value
+        reflectance_meta[fill] = fill_value
 
-
-    product_info_uri = [
-        '$.Level-1C_User_Product.General_Info.Product_Info',
-        '$.Level-1C_User_Product.General_Info.Product_Info.Datatake',
-        '$.Level-1C_User_Product.General_Info.Product_Info.Query_Options',
-        '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics',
-        '$.Level-1C_User_Product.General_Info.Product_Image_Characteristics.Reflectance_Conversion'
-    ]
-
-    reflectance_metadata = {}
-    find_product = lambda x: [field.value for field in parse(x).find(metadata)]
-
-    for i, uri in enumerate(product_info_uri):
-        info_node = find_product(uri)[0]
-        for attr_tag in product_info_tags[i]:
-            value = info_node[attr_tag]
-            reflectance_metadata[attr_tag] = value
-
-    # special values
-    special_uri = product_info_uri[3]
-    special_tag = 'Special_Values'
-
-    special_par = get_metadata_recursive(meta_root, f'{special_uri}')
-    for special in special_par.getElements():
-        if special.getName() != special_tag:
-            continue
-        fill = special.getAttribute('SPECIAL_VALUE_TEXT').getData().getElemString()
-        fill_value = special.getAttribute('SPECIAL_VALUE_INDEX').getData().getElemString()
-        meta[fill] = fill_value
-
-    banddata = {}
-    banddata['BandNames'] = {}
-    banddata['Resolution'] = {}
-    banddata['Wavelength'] = {}
-    banddata['RSR'] = {}
-
-    spectral_uri = f'{product_info_uri[3]}/Spectral_Information_List'
-    spectral_subs = 'Spectral_Information'
-    spectral_par = get_metadata_recursive(meta_root, spectral_uri)
-
-    for spectral in spectral_par.getElements():
-        if spectral.getName() != spectral_subs:
-            continue
-        bandi = spectral.getAttribute('bandId').getData().getElemString()
-        band = spectral.getAttribute('physicalBand').getData().getElemString()
-        res = spectral.getAttribute('RESOLUTION').getData().getElemString()
-        banddata['BandNames'][bandi] = band
-        banddata['Resolution'][band] = res
-        banddata['Wavelength'][band] = {tag:float(get_metadata_value(spectral, f'Wavelength/{tag}')) for tag in ['CENTRAL', 'MIN', 'MAX']}
-
-        step = get_metadata_value(spectral, 'Spectral_Response/STEP')
-        values = get_metadata_value(spectral, 'Spectral_Response/VALUES')
-        rsr = [float(rs) for rs in values.split(' ')]
-
-        wave = np.linspace(
-            float(banddata['Wavelength'][band]['MIN']), \
-            float(banddata['Wavelength'][band]['MAX']), \
-            int((float(banddata['Wavelength'][band]['MAX']) - float(banddata['Wavelength'][band]['MIN'])) / float(step) + 1)
-        )
-
-        banddata['RSR'][band] = {'response': rsr, 'wave': wave}
-
-    if len(banddata['BandNames']) == 0:
-        banddata['BandNames'] = {'0': 'B1', '1': 'B2', '2': 'B3', '3': 'B4', '4': 'B5', '5': 'B6', '6': 'B7',
-                                 '7': 'B8', '8': 'B8A', '9': 'B9', '10': 'B10', '11': 'B11', '12': 'B12'}
-
-
-    f_uri = f'{product_info_uri[4]}/Solar_Irradiance_List'
-    if 'F0' not in banddata: banddata['F0'] = {}
-    for bi, f in enumerate(get_metadata_recursive(meta_root, f_uri).getAttributes()):
-        band = f'B{bi}'
-        banddata['F0'][band] = float(f.getData().getElemString())
-
-    phy_uri = f'{product_info_uri[3]}'
-    phy_tag = 'PHYSICAL_GAINS'
-    for bi, t in enumerate(get_metadata_recursive(meta_root, phy_uri).getAttributes()):
-        if phy_tag not in banddata: banddata[phy_tag] = {}
-        if t.getName() != phy_tag:
-            continue
-
-        band = f'B{bi}'
-        banddata[phy_tag][band] = float(t.getData().getElemString())
-
-    rad_uri = f'{product_info_uri[3]}/Radiometric_Offset_List'
-    rad_tag = 'RADIO_ADD_OFFSET'
-    for bi, t in enumerate(get_metadata_recursive(meta_root, rad_uri).getAttributes()):
-        if rad_tag not in banddata: banddata[rad_tag] = {}
-        if t.getName() != rad_tag:
-            continue
-        band = banddata['BandNames'][f'{bi}']
-        banddata[rad_tag][band] = float(t.getData().getElemString())
-
-    return meta, banddata
+    return reflectance_meta
 
 def _parse_tile_geocoding(meta_root, granule_par_tag):
     grids = {'10': {}, '20': {}, '60': {}}

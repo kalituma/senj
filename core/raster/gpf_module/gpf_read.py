@@ -76,29 +76,3 @@ def read_gpf_bands_as_dict(product, selected_bands:list[str]=None) -> Tuple[dict
         result[band_name] = band_dict
 
     return result, selected_bands
-
-def read_det(product, bands:list[str]=None):
-
-    if bands is None:
-        bands = DET_BANDS
-
-    f = product.getFileLocation()
-    det_dict = {}
-    if '.SAFE' in f.toString():
-        for band_name in bands:
-            det_name_frame = f'B_detector_footprint_{band_name}'
-            det_band = product.getBand(det_name_frame)
-            det_band.readRasterDataFully()
-            b_width = det_band.getRasterWidth()
-            b_height = det_band.getRasterHeight()
-            det_dict[band_name] = np.array(det_band.getRasterData().getElems()).reshape(b_height, b_width)
-    elif '.dim' in f.toString():
-        par_loc = f.toString().replace('.dim', '.data')
-        for band_name in bands:
-            band_num = int(band_name[1:])
-            det_loc_frame = f'{par_loc}/ORI_DET/MSK_DETFOO_B{band_num:02}.jp2'
-            ds = gdal.Open(det_loc_frame)
-            arr = ds.ReadAsArray()
-            det_dict[band_name] = arr
-
-    return det_dict

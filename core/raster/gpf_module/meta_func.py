@@ -63,7 +63,7 @@ def build_meta_dict(element, meta_dict=None):
 
     prev_sub_name = ''
     for sub in element.getElements():
-
+        elem_dict = None
         if sub.getNumElements() > 0:
             curr_name = sub.getName()
             if curr_name == prev_sub_name:
@@ -71,9 +71,11 @@ def build_meta_dict(element, meta_dict=None):
                     elem_arr = []
                     elem_arr.append(meta_dict[prev_sub_name])
                     meta_dict[prev_sub_name] = elem_arr
-                meta_dict[curr_name].append(build_meta_dict(sub, None))
+                elem_dict = build_meta_dict(sub, None)
+                meta_dict[curr_name].append(elem_dict)
             else:
-                meta_dict[sub.getName()] = build_meta_dict(sub, None)
+                elem_dict = build_meta_dict(sub, None)
+                meta_dict[sub.getName()] = elem_dict
 
             prev_sub_name = sub.getName()
 
@@ -95,10 +97,14 @@ def build_meta_dict(element, meta_dict=None):
                 prev_att_name = sub_att.getName()
 
             if sub.getName() in meta_dict:
-                if isinstance(meta_dict[sub.getName()], dict):
-                    meta_dict[sub.getName()].update(att_dict)
+                if not elem_dict:
+                    if isinstance(meta_dict[sub.getName()], dict):
+                        meta_dict[sub.getName()] = [meta_dict[sub.getName()]]
+                        meta_dict[sub.getName()].append(att_dict.copy())
+                    elif isinstance(meta_dict[sub.getName()], list):
+                        meta_dict[sub.getName()].append(att_dict.copy())
                 else:
-                    meta_dict[sub.getName()][-1].update(att_dict)
+                    elem_dict.update(att_dict)
             else:
                 meta_dict[sub.getName()] = att_dict.copy()
 
