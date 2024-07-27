@@ -1,21 +1,27 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from core.operations import Op
 from core.operations import OPERATIONS, SPLIT_OP
+from core.raster.funcs import split_raster
+
+if TYPE_CHECKING:
+    from core.raster import Raster
+    from core.logic import Context
 
 @OPERATIONS.reg(name=SPLIT_OP)
 class Split(Op):
-    def __init__(self, axis:int):
+    def __init__(self, axis:int=0, bands:list=None):
         super().__init__(SPLIT_OP)
         self.axis = axis
+        self.bands = bands
 
-    def __call__(self, *args):
-        prev_result = args[0]
-        assert isinstance(prev_result[0], np.ndarray), 'SplitOp requires a numpy array'
+    def __call__(self, raster:"Raster", context:"Context", *args):
 
-        arr = prev_result[0]
-        att = prev_result[1]
-        arr = np.split(arr, arr.shape[self.axis], axis=self.axis)
-        new_atts = self.post_process(**att)
-        result = [(arr_, dict(new_atts)) for arr_ in arr]
-        return result
+        results = split_raster(raster, self.bands)
+
+        for res in results:
+            res.op_history.append(self.name)
+
+        return results

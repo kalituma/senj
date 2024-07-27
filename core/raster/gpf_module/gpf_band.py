@@ -3,7 +3,7 @@ from tqdm import tqdm
 from esa_snappy import jpy, Product, Band, ProductUtils, ProductData, PixelPos
 
 from core.util import assert_bnames
-from core.util.errors import BandError
+from core.util.errors import ContainedBandError
 from core.raster.gpf_module import create_product_data
 
 def add_band_to_product(product, bands:dict):
@@ -33,7 +33,7 @@ def copy_product(src_product, selected_bands:list=None):
         matched_band = src_product.getBandNames()
 
     if len(matched_band) == 0:
-        raise BandError(list(matched_band))
+        raise ContainedBandError(list(matched_band))
 
     target_band = src_product.getBand(matched_band[0])
     width, height = target_band.getRasterWidth(), target_band.getRasterHeight()
@@ -77,7 +77,7 @@ def get_band_size(band:Band) -> dict:
 
     return band_size
 
-def get_size_meta_per_band(product:Product, selected_bands:list=None) -> dict:
+def get_size_meta_per_band_gpf(product:Product, selected_bands:list=None) -> dict:
 
     size_meta = {}
 

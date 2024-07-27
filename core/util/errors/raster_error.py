@@ -1,10 +1,10 @@
-class BandError(Exception):
+class ContainedBandError(Exception):
     def __init__(self, bands:list[str]):
         if len(bands) == 0:
             msg = 'No band names found in the product'
         else:
             msg = f'No band names found in the product : {bands}'
-        super(BandError, self).__init__(msg)
+        super(ContainedBandError, self).__init__(msg)
 
 class ModuleError(Exception):
     def __init__(self, module:str, available_modules:list[str]):
@@ -24,3 +24,7 @@ class ExtensionMatchingError(Exception):
         msg = f'{src_ext} is not matched with {tar_ext}'
         super(ExtensionMatchingError, self).__init__(msg)
 
+class NotHaveSameBandShapeError(Exception):
+    def __init__(self, raster_name:str):
+        msg = f'Band shape is not same in {raster_name}'
+        super(NotHaveSameBandShapeError, self).__init__(msg)

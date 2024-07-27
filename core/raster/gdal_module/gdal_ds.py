@@ -82,7 +82,7 @@ def copy_ds(src_ds, target_ds_type, selected_bands:list=None, out_path:str=None,
     driver = gdal.GetDriverByName(target_ds_type)
 
     if selected_bands:
-        bands = read_gdal_bands(src_ds, selected_bands)
+        no_data_vals, bands = read_gdal_bands(src_ds, selected_bands)
 
         tar_ds = create_ds(
             target_ds_type, src_ds.RasterXSize, src_ds.RasterYSize,
@@ -91,7 +91,12 @@ def copy_ds(src_ds, target_ds_type, selected_bands:list=None, out_path:str=None,
             out_path, is_bigtiff, compress
         )
 
-        tar_ds.WriteArray(bands)
+        if bands.ndim == 2:
+            bands = np.expand_dims(bands, axis=0)
+
+        for i, no_data in enumerate(no_data_vals):
+            tar_ds.GetRasterBand(i+1).SetNoDataValue(no_data)
+            tar_ds.GetRasterBand(i+1).WriteArray(bands[i])
     else:
         tar_ds = driver.CreateCopy(out_path, src_ds)
 

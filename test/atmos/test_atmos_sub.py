@@ -3,8 +3,8 @@ import unittest
 from datetime import datetime
 
 from core.config import expand_var
-from core.util.atmos import inputfile_test
 import core.atmos as atmos
+from core.atmos.run import build_l1r
 
 from core.atmos.setting import parse
 from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run, set_earthdata_login_to_env
@@ -12,12 +12,13 @@ from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run
 from core.util import compare_nested_dicts_with_arrays
 from core.raster.gpf_module import write_metadata, read_pickle, read_gpf_bands_as_dict
 from core.raster.gpf_module import find_granules_meta, read_granules_meta_from_product, \
-    get_size_meta_per_band, get_reflectance_meta, get_reflectance_meta_from_product, \
+    get_size_meta_per_band_gpf, get_reflectance_meta, get_reflectance_meta_from_product, \
     get_band_info_meta, get_band_info_meta_from_product
 
+from core.raster.gdal_module import read_gdal_bands_as_dict, get_size_meta_per_band_gdal
+
 from core.logic.context import Context
-from core.operations.read_op import Read
-from core.operations.write_op import Write
+from core.operations import Read
 
 class TestAtmosSubFuncs(unittest.TestCase):
     def setUp(self) -> None:
@@ -38,20 +39,6 @@ class TestAtmosSubFuncs(unittest.TestCase):
         set_earthdata_login_to_env(atmos.settings['run'])
         setu = atmos.settings['run'].copy()
 
-    def test_read_det(self):
-
-        out_path = os.path.join(self.project_path, 'data', 'test', 'target', 's2', 'input')
-        # s2_raster = Read(module='snap')(self.s2_safe_path, Context())
-        s2_dim_raster = Read(module='snap')(self.s2_dim_path, Context())
-        # size_meta = get_size_meta_per_band(s2_raster)
-        Write(path=out_path, out_ext='tif', module='gdal', bands=['B1','B2','B3','B4','B5','B6',
-                                                   'B_detector_footprint_B1','B_detector_footprint_B2',
-                                                   'B_detector_footprint_B3','B_detector_footprint_B4',
-                                                   'B_detector_footprint_B5','B_detector_footprint_B6'])(s2_dim_raster, Context())
-        print()
-
-        # read_gpf_bands_as_dict(s2_raster.raw, selected_bands=[])
-
 
     def test_build_meta(self):
 
@@ -59,8 +46,8 @@ class TestAtmosSubFuncs(unittest.TestCase):
         s2_dim_raster = Read(module='snap')(self.s2_dim_path, Context())
 
         with self.subTest(msg='band_size_metadata'):
-            size_meta_per_band = get_size_meta_per_band(s2_raster.raw)
-            size_meta_per_band_dim = get_size_meta_per_band(s2_dim_raster.raw)
+            size_meta_per_band = get_size_meta_per_band_gpf(s2_raster.raw)
+            size_meta_per_band_dim = get_size_meta_per_band_gpf(s2_dim_raster.raw)
             size_meta_target = read_pickle(os.path.join(self.s2_target_path, 's2', 'metadata', 'size_meta_safe.pkl'))
             self.assertNotEqual(size_meta_per_band, size_meta_per_band_dim)
             self.assertTrue(compare_nested_dicts_with_arrays(size_meta_per_band, size_meta_target))
@@ -99,3 +86,19 @@ class TestAtmosSubFuncs(unittest.TestCase):
             self.assertTrue(compare_nested_dicts_with_arrays(band_meta, product_band_meta))
             self.assertTrue(compare_nested_dicts_with_arrays(band_meta, dim_band_meta))
             self.assertTrue(compare_nested_dicts_with_arrays(band_meta, band_meta_target))
+
+    def test_build_l1r(self):
+        input_dir = os.path.join(self.project_path, 'data', 'test', 'target', 's2', 'safe_splitted')
+        band_path = os.path.join(input_dir, 'out_0_B2_B3_B4.tif')
+        det_path = os.path.join(input_dir, 'out_1_B_detector_footprint_B2_B_detector_footprint_B3_B_detector_footprint_B4.tif')
+
+        read_op = Read(module='gdal')
+        bands = read_op(band_path, Context())
+        det = read_op(det_path, Context())
+
+        band_raster_dict, selected_bands = read_gdal_bands_as_dict(bands.raw)
+        det_raster_dict, selected_det = read_gdal_bands_as_dict(det.raw)
+
+        with self.subTest(msg='test L1R'):
+            l1r = build_l1r(band_raster_dict, det_raster_dict, bands.meta_dict)
+            self.assertEqual(l1r['output'], 'L1R')

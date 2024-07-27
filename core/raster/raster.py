@@ -10,22 +10,40 @@ class Raster:
 
     def __init__(self, path:str=None, band_names:list[Union[str, int]]=None):
 
-        self._module_type = None
-        self._path = path
-        self._selected_bands = band_names
+        self._module_type:RasterType = None
+        self._path:str = path
+        self._selected_bands:list[Union[str, int]] = band_names
 
-        self._raw = None
-        self._meta_dict = None
-        self._bands_data = None
-        self._product_type = ProductType.UNKNOWN
-        self._is_band_cached = False
+        self._raw:Union[ProductType, Dataset] = None
+        self._meta_dict:dict = None
+        self._bands_data:dict = None
+        self._product_type:ProductType = ProductType.UNKNOWN
+        self._is_band_cached:bool = False
 
-        self._warp_options = None
+        self._warp_options:dict = None
 
-        self.op_history = []
+        self.op_history:list = []
 
         if not Path(path).exists():
             raise FileNotFoundError(f'{path} does not exist')
+
+    @staticmethod
+    def from_raster(raster:T, **kwargs):
+        new_raster = Raster(raster.path)
+
+        for key, value in vars(raster).items():
+            if key in ['_meta_dict', 'op_history', '_warp_options']:
+                if value:
+                    setattr(new_raster, key, value.copy())
+            elif key in ['_module_type', '_path', '_product_type']:
+                setattr(new_raster, key, value)
+            else:
+                continue
+
+        for key, value in kwargs.items():
+            setattr(new_raster, key, value)
+
+        return new_raster
 
     def __getitem__(self, item):
         return self.bands[item]
@@ -35,6 +53,9 @@ class Raster:
 
     def __len__(self):
         return len(self.bands)
+
+    def __str__(self):
+        return f'Raster : {self.path} processed from {self.op_history[0]} to {self.op_history[-1]}'
 
     def get_band_names(self):
         if self.module_type == RasterType.GDAL:
@@ -159,18 +180,3 @@ class Raster:
     @is_band_cached.setter
     def is_band_cached(self, is_cached):
         self._is_band_cached = is_cached
-
-    @staticmethod
-    def from_raster(raster: T, **kwargs):
-
-        new_raster = Raster(raster.path, raster.selected_bands)
-
-        for key, value in vars(raster).items():
-            if key in ['op_history']:
-                continue
-            setattr(new_raster, key, value)
-
-        for key, value in kwargs.items():
-            setattr(new_raster, key, value)
-
-        return new_raster

@@ -3,7 +3,7 @@ import unittest
 
 from core.config import expand_var
 from core.raster import ProductType
-from core.util.errors import BandError, ModuleError, ExtensionNotSupportedError
+from core.util.errors import ContainedBandError, ModuleError, ExtensionNotSupportedError
 from core.operations import Read
 from core.logic.context import Context
 
@@ -46,7 +46,7 @@ class TestReadOp(unittest.TestCase):
     def test_read_snap_fail(self):
 
         with self.subTest('wrong band name'):
-            with self.assertRaises(BandError):
+            with self.assertRaises(ContainedBandError):
                 Read(module='snap', bands=['VV'])(self.s1_safe_grdh_path, Context(), bname_word_included=False)
 
         with self.subTest('wrong module'):
@@ -54,15 +54,15 @@ class TestReadOp(unittest.TestCase):
                 Read(module='jpg', bands=['Sigma0_VV'])(self.s1_tif_snap_path, Context())
 
         with self.subTest('wrong band name'):
-            with self.assertRaises(BandError):
+            with self.assertRaises(ContainedBandError):
                 Read(module='snap', bands=['Delta0_VV'])(self.s1_tif_snap_path, Context())
 
         with self.subTest('try to read snap tif band with integer index'):
-            with self.assertRaises(BandError):
+            with self.assertRaises(ContainedBandError):
                 Read(module='snap', bands=[2])(self.s1_tif_snap_path, Context())
 
         with self.subTest('try to read gdal tif band with string name'):
-            with self.assertRaises(BandError):
+            with self.assertRaises(ContainedBandError):
                 Read(module='snap', bands=['Sigma0_VV'])(self.s1_tif_gdal_path, Context())
 
     def test_read_gdal(self):

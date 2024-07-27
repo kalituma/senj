@@ -1,11 +1,13 @@
 from pathlib import Path
 
 from core import OPERATIONS
-from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError
+from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
 from core.operations import Op
 from core.operations import WRITE_OP
 from core.raster import RasterType, Raster, EXT_MAP
 from core.raster import write_raster
+from core.raster.funcs import has_same_band_shape
+
 
 @OPERATIONS.reg(name=WRITE_OP)
 class Write(Op):
@@ -61,7 +63,13 @@ class Write(Op):
         output_stem = f'{self._prefix}{basename}{suffix}'
         output_ext = ext
 
-        output_paths = write_raster(raster, output_dir, output_stem, output_ext, self._module)
+        output_path = f'{output_dir}/{output_stem}.{output_ext}'
+
+        if has_same_band_shape(raster):
+            write_raster(raster, output_path, self._module)
+        else:
+            raise NotHaveSameBandShapeError(str(raster))
+
         raster = None
         print(f'{output_path} is saved')
         return output_path

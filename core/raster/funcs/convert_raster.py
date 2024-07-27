@@ -1,5 +1,6 @@
 from typing import Union
 from pathlib import Path
+from core.util import assert_bnames
 from core.raster import RasterType, Raster, raster_type
 from core.raster.gpf_module import find_proj_from_band, create_product, add_band_to_product, find_gt_from_band, copy_product
 from core.raster.gdal_module import create_ds_with_dict, copy_ds
@@ -9,8 +10,7 @@ def wrap_up_raster(raster_obj:Raster, selected_bands, out_module:Union[RasterTyp
 
     if selected_bands is not None:
         src_bands = raster_obj.get_band_names()
-        for bname in selected_bands:
-            assert bname in src_bands, f'{bname} is not in the raw bands'
+        assert_bnames(selected_bands, src_bands, f'selected bands{selected_bands} should be in source bands({src_bands})')
 
     previous_module_type = raster_obj.module_type
     out_module_type = raster_type(out_module)

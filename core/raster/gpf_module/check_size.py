@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.raster import Raster
+    from esa_snappy import Product
+
 def is_bigtiff_gpf(product):
     product_size = product.getRasterDataNode(product.getBandNames()[0]).getRasterWidth() * \
                    product.getRasterDataNode(product.getBandNames()[0]).getRasterHeight() * \

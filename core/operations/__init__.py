@@ -9,6 +9,7 @@ MODULE_EXT_MAP = {
 #io
 READ_OP = 'read'
 WRITE_OP = 'write'
+MULTI_WRITE_OP = 'multi_write'
 
 #dim
 STACK_OP = 'stack'
@@ -35,6 +36,7 @@ NL_DENOISING_OP = 'nl_mean_denoising'
 from .ops import *
 from .read_op import *
 from .write_op import *
+from .multi_write_op import *
 from .subset_op import *
 from .stack_op import *
 from .split_op import *
