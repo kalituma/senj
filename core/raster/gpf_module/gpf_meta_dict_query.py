@@ -92,7 +92,7 @@ def build_view_angles_meta(meta_dict_query):
 
     return view, view_det
 
-def find_granules_meta(meta_dict:dict) -> dict:
+def find_grids_and_angle_meta(meta_dict:dict) -> dict:
 
     find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
 
@@ -112,3 +112,16 @@ def find_granules_meta(meta_dict:dict) -> dict:
     granule_meta['GRANULE_PARENT'] = list(find_meta_dict('$.Granules')[0].keys())[0]
 
     return granule_meta
+
+def get_granule_info(meta_dict:dict) -> str:
+    granule_uri = '$.Level-1C_User_Product..Granule_List.Granule'
+    find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
+    granule_dict = find_meta_dict(granule_uri)[0]
+    if len(granule_dict['IMAGE_FILE']) > 1:
+        granule_info = granule_dict['IMAGE_FILE'][0].split('/')[1]
+    else:
+        granule_info = ''
+
+    return granule_info
+
+

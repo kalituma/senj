@@ -3,7 +3,7 @@ import numpy as np
 import scipy.ndimage
 
 from core import atmos, PROJECT_PATH
-from core.raster.gpf_module import projection_from_meta, get_src_param, warp_to, build_angles, copy_dct_to_atts
+from core.raster.gpf_module import get_src_param, warp_to, copy_dct_to_atts
 from core.util import rsr_convolute_dict, rsr_read
 
 def _l1r_postprocess(out, bands, rsr_bands, wave, percentiles_compute, percentiles, warp_option_for_angle, setu, gatts):
@@ -93,7 +93,7 @@ def prepare_l1r(bands, det_bands, gatts, input_path, output_path, percentiles_co
     geometry_type = setu['geometry_type']
     geometry_res = setu['geometry_res']
     gr_meta = gatts['gr_meta']
-    or_dct, cur_dct = projection_from_meta(gr_meta, s2_target_res=int(s2_target_res))
+    or_dct, cur_dct = projection_from_granule_meta(gr_meta, s2_target_res=int(s2_target_res))
 
     or_global_dims = or_dct['dimensions']
     cur_global_dims = cur_dct['dimensions']

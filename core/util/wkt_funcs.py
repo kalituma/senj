@@ -29,3 +29,8 @@ def epsg_to_wkt(epsg:int):
     spatial_ref = osr.SpatialReference()
     spatial_ref.ImportFromEPSG(epsg)
     return spatial_ref.ExportToWkt()
+
+def epsg_to_proj4(epsg:int):
+    spatial_ref = osr.SpatialReference()
+    spatial_ref.ImportFromEPSG(epsg)
+    return spatial_ref.ExportToProj4()

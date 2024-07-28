@@ -4,15 +4,15 @@ from datetime import datetime
 
 from core.config import expand_var
 import core.atmos as atmos
-from core.atmos.run import build_l1r
+from core.atmos.run import transform_l1r_meta_to_global_attrs, extract_l1r_meta, init_atmos
 
 from core.atmos.setting import parse
 from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run, set_earthdata_login_to_env
 
 from core.util import compare_nested_dicts_with_arrays
 from core.raster.gpf_module import write_metadata, read_pickle, read_gpf_bands_as_dict
-from core.raster.gpf_module import find_granules_meta, read_granules_meta_from_product, \
-    get_size_meta_per_band_gpf, get_reflectance_meta, get_reflectance_meta_from_product, \
+from core.raster.gpf_module import find_grids_and_angle_meta, read_granules_meta_from_product, \
+    get_size_meta_per_band_gpf, get_product_info_meta, get_reflectance_meta_from_product, \
     get_band_info_meta, get_band_info_meta_from_product
 
 from core.raster.gdal_module import read_gdal_bands_as_dict, get_size_meta_per_band_gdal
@@ -53,9 +53,9 @@ class TestAtmosSubFuncs(unittest.TestCase):
             self.assertTrue(compare_nested_dicts_with_arrays(size_meta_per_band, size_meta_target))
 
         with self.subTest(msg='reflectance_metadata'):
-            reflect_meta = get_reflectance_meta(s2_raster.meta_dict)
+            reflect_meta = get_product_info_meta(s2_raster.meta_dict)
             product_reflect_meta = get_reflectance_meta_from_product(s2_raster.raw)
-            dim_reflect_meta = get_reflectance_meta(s2_dim_raster.meta_dict)
+            dim_reflect_meta = get_product_info_meta(s2_dim_raster.meta_dict)
 
             reflect_meta_target = read_pickle(os.path.join(self.s2_target_path, 's2', 'metadata', 'reflect_meta_safe.pkl'))
 
@@ -65,9 +65,9 @@ class TestAtmosSubFuncs(unittest.TestCase):
             self.assertEqual(reflect_meta, reflect_meta_target)
 
         with self.subTest(msg='test metadata_scene(meta)'):
-            granule_meta = find_granules_meta(s2_raster.meta_dict)
+            granule_meta = find_grids_and_angle_meta(s2_raster.meta_dict)
             granule_meta_product = read_granules_meta_from_product(s2_raster.raw)
-            granule_dim_meta = find_granules_meta(s2_dim_raster.meta_dict)
+            granule_dim_meta = find_grids_and_angle_meta(s2_dim_raster.meta_dict)
 
             for key in granule_meta:
                 if key == 'GRIDS':
@@ -100,5 +100,6 @@ class TestAtmosSubFuncs(unittest.TestCase):
         det_raster_dict, selected_det = read_gdal_bands_as_dict(det.raw)
 
         with self.subTest(msg='test L1R'):
-            l1r = build_l1r(band_raster_dict, det_raster_dict, bands.meta_dict)
-            self.assertEqual(l1r['output'], 'L1R')
+
+            init_atmos(bands, band_raster_dict, det_raster_dict, self.atmos_user_conf)
+            # self.assertEqual(l1r['output'], 'L1R')

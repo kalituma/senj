@@ -22,7 +22,6 @@ RESAMPLING_METHODS = {
 }
 
 from .warp_to import *
-from .wkt_funcs import *
 
 from .op_funcs import *
 from .gdal_funcs import *

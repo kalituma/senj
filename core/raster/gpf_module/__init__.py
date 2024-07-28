@@ -71,7 +71,6 @@ from .gpf_op_params import *
 from .check_size import *
 from .meta_func import *
 from .product_to_ds import *
-from .projection_meta import *
 
 from .gpf_meta import *
 from .gpf_meta_dict_query import *
