@@ -75,18 +75,18 @@ def create_ds_with_dict(raster_bands:dict[int], gdal_format,
     mem_ds.FlushCache()
     return mem_ds
 
-def copy_ds(src_ds, target_ds_type, selected_bands:list=None, out_path:str=None, is_bigtiff=False, compress=False):
+def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=None, is_bigtiff=False, compress=False):
     if not out_path:
         out_path = ''
 
     driver = gdal.GetDriverByName(target_ds_type)
 
-    if selected_bands:
-        no_data_vals, bands = read_gdal_bands(src_ds, selected_bands)
+    if selected_index:
+        no_data_vals, bands = read_gdal_bands(src_ds, selected_index)
 
         tar_ds = create_ds(
             target_ds_type, src_ds.RasterXSize, src_ds.RasterYSize,
-            len(selected_bands), src_ds.GetRasterBand(1).DataType,
+            len(selected_index), src_ds.GetRasterBand(1).DataType,
             src_ds.GetProjection(), src_ds.GetGeoTransform(), src_ds.GetMetadata(),
             out_path, is_bigtiff, compress
         )

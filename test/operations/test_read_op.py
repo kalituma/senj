@@ -14,14 +14,16 @@ class TestReadOp(unittest.TestCase):
         self.s1_dim_path = os.path.join(self.data_root, 'dim', 's1', 'src_1', 'terrain_corrected_0.dim')
         self.s1_safe_slc_path = os.path.join(self.data_root, 'safe', 's1', 'S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE')
         self.s2_safe_path = os.path.join(self.data_root, 'safe', 's2', 'S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE')
-
         self.s1_tif_snap_path = os.path.join(self.data_root, 'tif', 's1', 'snap', 'src_1', 'terrain_corrected_0.tif')
         self.s1_tif_gdal_path = os.path.join(self.data_root, 'tif', 's1', 'gdal', 'src_1', 'terrain_corrected_0.tif')
-        self.s2_without_meta = os.path.join(self.data_root, 's2merge_1_stack_subset.tif')
+
 
 
     def test_read_snap(self):
         context = Context()
+
+        s2_without_meta = os.path.join(self.data_root, 's2merge_1_stack_subset.tif')
+
         with self.subTest('read safe file with band-word included option'):
             raster = Read(module='snap', bands=['VV'])(self.s1_safe_grdh_path, context, bname_word_included=True)
             self.assertEqual(raster.selected_bands, ['Amplitude_VV', 'Intensity_VV'])
@@ -38,8 +40,12 @@ class TestReadOp(unittest.TestCase):
             raster = Read(module='snap')(self.s2_safe_path, context)
             self.assertEqual(len(raster.get_band_names()), 163)
 
+        # with self.subTest('read tif using snap'):
+        #     result_raster = Read(module='snap')(self.s1_tif_snap_path, context)
+
+
         with self.subTest('read tif not having meta using snap'):
-            result_raster = Read(module='snap')(self.s2_without_meta, context)
+            result_raster = Read(module='snap')(s2_without_meta, context)
             self.assertEqual(result_raster.meta_dict, None)
             self.assertEqual(result_raster.product_type, ProductType.UNKNOWN)
 

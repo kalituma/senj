@@ -30,7 +30,7 @@ class Read(Op):
             raise ExtensionNotSupportedError(self._module, MODULE_EXT_MAP[self._module], in_ext)
 
         result = Raster(path, self._selected_bands)
-        result = load_raster(result, self._module, self._selected_bands, bname_word_included)
+        result = load_raster(result, self._module, result.selected_bands, bname_word_included)
         result = self.post_process(result, context)
 
         return result

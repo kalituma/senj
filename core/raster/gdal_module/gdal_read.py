@@ -23,12 +23,14 @@ def read_gdal_bands(ds, selected_bands:list[int]=None) -> tuple[list, np.ndarray
     nodata_vals = [ds.GetRasterBand(i).GetNoDataValue() for i in selected_bands]
     return nodata_vals, arr
 
-def read_gdal_bands_as_dict(ds, selected_bands:list[int]=None) -> Tuple[dict, list[int]]:
+def read_gdal_bands_as_dict(ds, selected_bands:list[int]=None, band_name_map:dict=None) -> Tuple[dict, list[int]]:
 
     nodata_vals, arr = read_gdal_bands(ds, selected_bands)
 
     if selected_bands is None:
         selected_bands = list(range(1, ds.RasterCount + 1))
+
+
 
     if arr.ndim == 2:
         arr_dict = { b_num : { 'value': arr, 'no_data': no_data } for b_num, no_data in zip(selected_bands, nodata_vals) }

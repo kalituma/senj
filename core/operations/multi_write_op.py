@@ -10,7 +10,6 @@ from core.raster import RasterType, Raster, EXT_MAP
 class MultiWrite(Op):
     def __init__(self, path:str, module:str, out_ext:str=''):
         super().__init__(MULTI_WRITE_OP)
-
         self._path = path
         self._module = module
         self._out_ext = out_ext

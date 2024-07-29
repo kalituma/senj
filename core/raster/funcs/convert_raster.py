@@ -4,9 +4,9 @@ from core.util import assert_bnames
 from core.raster import RasterType, Raster, raster_type
 from core.raster.gpf_module import find_proj_from_band, create_product, add_band_to_product, find_gt_from_band, copy_product
 from core.raster.gdal_module import create_ds_with_dict, copy_ds
-from core.raster.funcs import read_band_from_raw
+from core.raster.funcs import read_band_from_raw, set_raw_metadict, update_meta_band_map
 
-def wrap_up_raster(raster_obj:Raster, selected_bands, out_module:Union[RasterType, str]) -> Raster:
+def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union[RasterType, str]) -> Raster:
 
     if selected_bands is not None:
         src_bands = raster_obj.get_band_names()
@@ -17,9 +17,18 @@ def wrap_up_raster(raster_obj:Raster, selected_bands, out_module:Union[RasterTyp
 
     if previous_module_type == out_module_type:
         if out_module_type == RasterType.SNAP:
-            raster_obj.raw = copy_product(raster_obj.raw, selected_bands)
+            raw = copy_product(raster_obj.raw, selected_bands)
         elif out_module_type == RasterType.GDAL:
-            raster_obj.raw = copy_ds(raster_obj.raw, 'MEM', selected_bands)
+            if selected_bands:
+                selected_index = raster_obj.band_names_to_indices(selected_bands)
+            else:
+                selected_index = None
+            raw = copy_ds(raster_obj.raw, 'MEM', selected_index=selected_index)
+        else:
+            raise NotImplementedError(f'Raster type {out_module_type.__str__()} is not implemented')
+
+        update_meta_band_map(raster_obj.meta_dict, selected_bands)
+        raster_obj = set_raw_metadict(raster_obj, raw=raw, meta_dict=raster_obj.meta_dict,selected_bands=selected_bands)
     else:
         raster_obj = convert_raster_func(raster_obj, out_module_type)
     raster_obj.del_bands_cache()

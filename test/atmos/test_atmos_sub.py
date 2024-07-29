@@ -10,6 +10,7 @@ from core.atmos.setting import parse
 from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run, set_earthdata_login_to_env
 
 from core.util import compare_nested_dicts_with_arrays
+from core.raster.funcs import read_band_from_raw
 from core.raster.gpf_module import write_metadata, read_pickle, read_gpf_bands_as_dict
 from core.raster.gpf_module import find_grids_and_angle_meta, read_granules_meta_from_product, \
     get_size_meta_per_band_gpf, get_product_info_meta, get_reflectance_meta_from_product, \
@@ -96,10 +97,11 @@ class TestAtmosSubFuncs(unittest.TestCase):
         bands = read_op(band_path, Context())
         det = read_op(det_path, Context())
 
-        band_raster_dict, selected_bands = read_gdal_bands_as_dict(bands.raw)
-        det_raster_dict, selected_det = read_gdal_bands_as_dict(det.raw)
+        band_raster_dict, selected_bands = read_band_from_raw(bands.raw, band_name_map={ 1: 'B2', 2: 'B3', 3: 'B4' })
+        det_raster_dict, selected_det = read_band_from_raw(det.raw, band_name_map={ 1: 'B_detector_footprint_B2',
+                                                                                    2: 'B_detector_footprint_B3',
+                                                                                    3: 'B_detector_footprint_B4' })
 
         with self.subTest(msg='test L1R'):
-
             init_atmos(bands, band_raster_dict, det_raster_dict, self.atmos_user_conf)
             # self.assertEqual(l1r['output'], 'L1R')

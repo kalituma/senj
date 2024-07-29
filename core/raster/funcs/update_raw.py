@@ -1,7 +1,7 @@
 from core.util import assert_bnames
 from core.raster import Raster, RasterType
 from core.raster.gdal_module import read_gdal_bands_as_dict, create_ds_with_dict
-from core.raster.gpf_module import copy_to_raw_gpf, read_gpf_bands_as_dict
+from core.raster.gpf_module import copy_cached_to_raw_gpf, read_gpf_bands_as_dict
 
 def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
     # cache to raw
@@ -27,7 +27,7 @@ def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
         raise NotImplementedError(f'Raster type {module_type} is not implemented')
     return raster_obj
 
-def update_raster_to_raw(raster_obj:Raster, selected_bands=None):
+def update_cached_to_raw(raster_obj:Raster, selected_bands=None):
     # raw to cache
     if raster_obj.is_band_cached:
         if selected_bands is None:
@@ -39,7 +39,7 @@ def update_raster_to_raw(raster_obj:Raster, selected_bands=None):
 
         if module_type == RasterType.SNAP:
             for b_name in selected_bands:
-                copy_to_raw_gpf(raster_obj.raw, b_name, raster_obj.bands[b_name])
+                copy_cached_to_raw_gpf(raster_obj.raw, b_name, raster_obj.bands[b_name])
 
         elif module_type == RasterType.GDAL:
             assert raster_obj.cached_bands_have_same_shape(), 'All selected bands should have the same shape'

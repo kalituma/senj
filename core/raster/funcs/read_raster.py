@@ -1,9 +1,9 @@
 from typing import Union
-from core.raster import RasterType, Raster
+from core.raster import RasterType, Raster, ProductType
 
 from core.raster.gdal_module import load_raster_gdal
 from core.raster.gpf_module import load_raster_gpf
-from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, check_product_type
+from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, set_raw_metadict
 
 
 def load_raster(raster:Raster, in_module:RasterType, selected_bands:list[Union[str, int]]=None, bname_word_included:bool=False):
@@ -29,18 +29,18 @@ def load_raster(raster:Raster, in_module:RasterType, selected_bands:list[Union[s
         raise NotImplementedError(f'Module type({in_module}) is not implemented for the input process.')
 
     if selected_bands:
-        raster.selected_bands = new_selected_bands
-    raster.meta_dict = meta_dict
-    raster.raw = raw
-    raster.product_type = check_product_type(meta_dict)
+        raster = set_raw_metadict(raster, raw=raw, meta_dict=meta_dict, selected_bands=new_selected_bands)
+    else:
+        raster = set_raw_metadict(raster, raw=raw, meta_dict=meta_dict)
+
     return raster
 
-def read_band_from_raw(raster:Raster, selected_band:list[Union[str, int]]) -> Raster:
+def read_band_from_raw(raster:Raster, selected_band:list[Union[str, int]]=None, band_name_map:dict=None) -> Raster:
 
     module_type = raster.module_type
 
     if module_type == RasterType.GDAL:
-        raster.bands, raster.selected_bands = read_gdal_bands_as_dict(raster.raw, selected_band)
+        raster.bands, raster.selected_bands = read_gdal_bands_as_dict(raster.raw, selected_band, band_name_map)
     elif module_type == RasterType.SNAP:
         raster.bands, raster.selected_bands = read_gpf_bands_as_dict(raster.raw, selected_band)
     else:
