@@ -21,7 +21,10 @@ def get_polarization(meta_dict:dict) -> Union[list[str], None]:
     return pols
 
 def make_meta_dict(product:Product):
-    return build_meta_dict(product.getMetadataRoot())
+    meta_dict = build_meta_dict(product.getMetadataRoot())
+    meta_dict['band_to_index'] = {band: i + 1 for i, band in enumerate(product.getBandNames())}
+    meta_dict['index_to_band'] = {i + 1: band for i, band in enumerate(product.getBandNames())}
+    return meta_dict
 
 def set_meta_to_product(product:Product, meta_dict:dict):
 
@@ -29,9 +32,10 @@ def set_meta_to_product(product:Product, meta_dict:dict):
 
     meta_root = product.getMetadataRoot()
     for key, _ in meta_dict.items():
-        if not meta_root.containsElement(key):
-            sub_elem = set_meta_recursive(metadata_element(key), meta_dict[key])
-            meta_root.addElement(sub_elem)
+        if key != 'band_to_index' and key != 'index_to_band':
+            if not meta_root.containsElement(key):
+                sub_elem = set_meta_recursive(metadata_element(key), meta_dict[key])
+                meta_root.addElement(sub_elem)
 
     return product
 

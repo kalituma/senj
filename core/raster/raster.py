@@ -36,7 +36,7 @@ class Raster:
         new_raster = Raster(raster.path)
 
         for key, value in vars(raster).items():
-            if key in ['op_history', '_warp_options']:
+            if key in ['op_history', '_warp_options', '_index_to_band', '_band_to_index']:
                 if value:
                     setattr(new_raster, key, value.copy())
             elif key in ['_module_type', '_path', '_product_type']:
@@ -61,28 +61,38 @@ class Raster:
     def __str__(self):
         return f'Raster : {self.path} processed from {self.op_history[0]} to {self.op_history[-1]}'
 
-    def _init_band_map(self):
+    def _init_band_map_raw(self):
+        assert self._index_to_band is None and self._band_to_index is None, 'Band map should be initialized only once.'
+
         bnames = self.get_band_names()
 
         if self.meta_dict:
-            self.meta_dict['index_to_band'] = {i+1: b for i, b in enumerate(bnames)}
-            self.meta_dict['band_to_index'] = {b: i+1 for i, b in enumerate(bnames)}
-            self._update_band_map_from_meta()
+            self.meta_dict['index_to_band'], self.meta_dict['band_to_index'] = self._produce_band_map(bnames)
+            self._copy_band_map_from_meta()
         else:
-            self._index_to_band = {i + 1: b for i, b in enumerate(bnames)}
-            self._band_to_index = {b: i + 1 for i, b in enumerate(bnames)}
+            self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
 
-    def _update_band_map_from_meta(self):
+    def _update_band_map_selected_bands(self):
+        self._index_to_band, self._band_to_index = self._produce_band_map(self.selected_bands)
+
+    def _copy_band_map_from_meta(self):
         self._index_to_band = self.meta_dict['index_to_band']
         self._band_to_index = self.meta_dict['band_to_index']
 
+    def _produce_band_map(self, band_names:list[str]):
+        return {i+1: b for i, b in enumerate(band_names)}, {b: i+1 for i, b in enumerate(band_names)}
+
     def get_band_names(self) -> list[str]:
-        # before call this function, meta_dict should be updated.
+
+        # priority : 1. map 2. meta 3. raw
+        # before get band names by calling this function, meta_dict should be always updated.
+
+        if self._index_to_band is not None and self._band_to_index is not None:
+            return list(self._index_to_band.values())
 
         if self.module_type == RasterType.GDAL:
             band_indices = list(range(1, self.raw.RasterCount+1))
             bnames = self._get_band_names_from_meta(band_indices)
-
         elif self.module_type == RasterType.SNAP:
             bnames = list(self.raw.getBandNames())
         else:
@@ -96,10 +106,10 @@ class Raster:
         except Exception as e:
             return [f'band_{index}' for index in indices]
 
-    def indices_to_band_names(self, indices:list[int]) -> list[str]:
+    def index_to_band_name(self, indices:list[int]) -> list[str]:
         return [self._index_to_band[i] for i in indices]
 
-    def band_names_to_indices(self, band_names:list[str]) -> list[int]:
+    def band_name_to_index(self, band_names:list[str]) -> list[int]:
         return [self._band_to_index[b] for b in band_names]
 
     def get_tie_point_grid_names(self) -> Union[list[str], None]:
@@ -136,13 +146,15 @@ class Raster:
     def cached_bands_have_same_shape(self):
         return all([self.bands[band].shape == self.bands[self.selected_bands[0]].shape for band in self.selected_bands])
 
-    def proj(self):
+    def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'
 
         if self.module_type == RasterType.GDAL:
             return self.raw.GetProjection()
         elif self.module_type == RasterType.SNAP:
             return self.raw.getSceneCRS().toWKT()
+        else:
+            raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
 
     @property
     def selected_bands(self):
@@ -169,10 +181,15 @@ class Raster:
         self._meta_dict = meta_dict
 
         if self._index_to_band is None and self._band_to_index is None:
-            self._init_band_map()
+            if self.meta_dict:
+                self._copy_band_map_from_meta()
+            else:
+                self._init_band_map_raw()
         else:
             if self._meta_dict is not None:
-                self._update_band_map_from_meta()
+                self._copy_band_map_from_meta()
+            elif self._selected_bands is not None:
+                self._update_band_map_selected_bands()
 
     @property
     def path(self):

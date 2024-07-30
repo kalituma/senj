@@ -3,7 +3,7 @@ from core.raster import RasterType, Raster, ProductType
 
 from core.raster.gdal_module import load_raster_gdal
 from core.raster.gpf_module import load_raster_gpf
-from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, set_raw_metadict
+from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, set_raw_metadict, get_band_name_and_index
 
 
 def load_raster(raster:Raster, in_module:RasterType, selected_bands:list[Union[str, int]]=None, bname_word_included:bool=False):
@@ -35,12 +35,13 @@ def load_raster(raster:Raster, in_module:RasterType, selected_bands:list[Union[s
 
     return raster
 
-def read_band_from_raw(raster:Raster, selected_band:list[Union[str, int]]=None, band_name_map:dict=None) -> Raster:
+def read_band_from_raw(raster:Raster, selected_band:list[Union[str, int]]=None) -> Raster:
 
     module_type = raster.module_type
 
     if module_type == RasterType.GDAL:
-        raster.bands, raster.selected_bands = read_gdal_bands_as_dict(raster.raw, selected_band, band_name_map)
+        _, index = get_band_name_and_index(raster, selected_band)
+        raster.bands, raster.selected_bands = read_gdal_bands_as_dict(raster.raw, band_names=raster.get_band_names(), selected_index=index)
     elif module_type == RasterType.SNAP:
         raster.bands, raster.selected_bands = read_gpf_bands_as_dict(raster.raw, selected_band)
     else:

@@ -46,13 +46,13 @@ def create_ds_with_arr(arr:np.ndarray, gdal_format,
 
     return mem_ds
 
-def create_ds_with_dict(raster_bands:dict[int], gdal_format,
+def create_ds_with_dict(raster_bands:dict[str], gdal_format,
                         proj_wkt:str, transform:tuple,
-                        selected_bands:list[int]=None, metadata=None,
+                        selected_band:list[str]=None, metadata=None,
                         out_path='', is_bigtiff=False, compress=False):
 
-    if selected_bands:
-        s_bands = { bname : raster_bands[bname] for bname in selected_bands}
+    if selected_band:
+        s_bands = {bname : raster_bands[bname] for bname in selected_band}
     else:
         s_bands = raster_bands
 
@@ -67,7 +67,7 @@ def create_ds_with_dict(raster_bands:dict[int], gdal_format,
                        metadata=metadata, out_path=out_path,
                        is_bigtiff=is_bigtiff, compress=compress)
 
-    for b_idx, band_elem_dict in s_bands.items():
+    for b_idx, (band_name, band_elem_dict) in zip(range(1, band_num+1), s_bands.items()):
         b = mem_ds.GetRasterBand(b_idx)
         b.SetNoDataValue(band_elem_dict['no_data'])
         b.WriteArray(band_elem_dict['value'])
@@ -95,7 +95,8 @@ def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=
             bands = np.expand_dims(bands, axis=0)
 
         for i, no_data in enumerate(no_data_vals):
-            tar_ds.GetRasterBand(i+1).SetNoDataValue(no_data)
+
+            tar_ds.GetRasterBand(i+1).SetNoDataValue(no_data if no_data is not None else 0)
             tar_ds.GetRasterBand(i+1).WriteArray(bands[i])
     else:
         tar_ds = driver.CreateCopy(out_path, src_ds)

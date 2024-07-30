@@ -1,4 +1,4 @@
-from .copy_raster import *
+from .band_name_index import *
 from .update_raw import *
 from .bigtiff import *
 from .product_type import *

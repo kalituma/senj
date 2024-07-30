@@ -11,7 +11,7 @@ from core.atmos.run import extract_l1r_meta, transform_l1r_meta_to_global_attrs,
 if TYPE_CHECKING:
     from core.raster import Raster
 
-def init_atmos(target_raster: "Raster", band_dict:dict, det_dict:dict, atmos_conf_path, selected_bands:list[str]=None):
+def apply_atmos(target_raster: "Raster", target_band_names:list[str], target_det_names:list[str], target_band_slot:list[str], atmos_conf_path:str):
 
     time_start = datetime.now()
     atmos.settings['run']['runid'] = time_start.strftime('%Y%m%d_%H%M%S')
@@ -21,7 +21,7 @@ def init_atmos(target_raster: "Raster", band_dict:dict, det_dict:dict, atmos_con
     set_earthdata_login_to_env(atmos.settings['run'])
 
     # read_det(product, selected_bands)
-    l1r_meta = extract_l1r_meta(target_raster, selected_bands)
+    l1r_meta = extract_l1r_meta(target_raster, target_band_slot)
     l1r = build_l1r(band_dict, det_dict, l1r_meta)
 
 

@@ -19,12 +19,15 @@ def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
         updated_bands = read_gpf_bands_as_dict(raster_obj.raw, selected_bands)
         for bname in selected_bands:
             raster_obj.bands[bname] = updated_bands[bname]
+
     elif module_type == RasterType.GDAL:
         updated_bands = read_gdal_bands_as_dict(raster_obj.raw, selected_bands)
         for bname in selected_bands:
             raster_obj.bands[bname] = updated_bands[bname]
+
     else:
         raise NotImplementedError(f'Raster type {module_type} is not implemented')
+
     return raster_obj
 
 def update_cached_to_raw(raster_obj:Raster, selected_bands=None):

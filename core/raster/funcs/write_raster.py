@@ -25,7 +25,7 @@ def write_raster(raster:Raster, out_path:str, out_module:"RasterType"):
         if raster.meta_dict:
             write_metadata(raster.meta_dict, out_path)
 
-        raster.raw = copy_ds(raster.raw, "GTiff", selected_index=selected_bands, is_bigtiff=is_bigtiff, compress=compress, out_path=out_path)
+        raster.raw = copy_ds(raster.raw, "GTiff", is_bigtiff=is_bigtiff, compress=compress, out_path=out_path)
 
     elif raster.module_type == RasterType.SNAP:
         if ext == 'dim':

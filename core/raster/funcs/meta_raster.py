@@ -15,10 +15,11 @@ def update_meta_band_map(meta_dict:dict, selected_band:list[Union[str, int]]) ->
 
     assert 'band_to_index' in meta_dict and 'index_to_band' in meta_dict, 'band_to_index and index_to_band should be in meta_dict'
 
-    assert len(selected_band) > 0, 'selected_band should have at least one band'
-
     new_meta = meta_dict.copy()
+    if selected_band is None:
+        return new_meta
 
+    assert len(selected_band) > 0, 'selected_band should have at least one band'
     is_index = all([isinstance(b, int) for b in selected_band])
 
     if is_index:

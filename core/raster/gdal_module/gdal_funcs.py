@@ -45,13 +45,13 @@ def gt_from_gatts(gatts, band_name):
 def _check_info_equal(gtiff_1, gtiff_2):
     return gtiff_1.gt_proj == gtiff_2.gt_proj and gtiff_1.gt_arr.shape == gtiff_2.gt_arr.shape
 
-def get_size_meta_per_band_gdal(ds, selected_bands=None):
+def get_size_meta_per_band_gdal(ds, selected_index=None):
     size_meta = {}
 
-    if not selected_bands:
-        selected_bands = list(range(1, ds.RasterCount + 1))
+    if not selected_index:
+        selected_index = list(range(1, ds.RasterCount + 1))
 
-    for band_num in selected_bands:
+    for band_num in selected_index:
         band = ds.GetRasterBand(band_num)
         band_meta = {}
         band_meta['width'] = band.XSize

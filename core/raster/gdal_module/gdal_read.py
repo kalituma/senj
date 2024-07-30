@@ -14,6 +14,7 @@ def read_tif(path):
     return ds
 
 def read_gdal_bands(ds, selected_bands:list[int]=None) -> tuple[list, np.ndarray]:
+
     if not selected_bands:
         selected_bands = list(range(1, ds.RasterCount + 1))
 
@@ -23,21 +24,21 @@ def read_gdal_bands(ds, selected_bands:list[int]=None) -> tuple[list, np.ndarray
     nodata_vals = [ds.GetRasterBand(i).GetNoDataValue() for i in selected_bands]
     return nodata_vals, arr
 
-def read_gdal_bands_as_dict(ds, selected_bands:list[int]=None, band_name_map:dict=None) -> Tuple[dict, list[int]]:
+def read_gdal_bands_as_dict(ds, band_names:list[str], selected_index:list[int]=None) -> Tuple[dict, list[str]]:
 
-    nodata_vals, arr = read_gdal_bands(ds, selected_bands)
+    nodata_vals, arr = read_gdal_bands(ds, selected_index)
 
-    if selected_bands is None:
-        selected_bands = list(range(1, ds.RasterCount + 1))
+    if selected_index is None:
+        selected_index = list(range(1, ds.RasterCount + 1))
 
-
+    selected_band_names = [band_names[band_index - 1] for band_index in selected_index]
 
     if arr.ndim == 2:
-        arr_dict = { b_num : { 'value': arr, 'no_data': no_data } for b_num, no_data in zip(selected_bands, nodata_vals) }
+        arr_dict = { bname : { 'value': arr, 'no_data': no_data } for bname, no_data in zip(selected_band_names, nodata_vals) }
     else:
-        arr_dict = { b_num : { 'value': arr[i], 'no_data': no_data } for i, (b_num, no_data) in enumerate(zip(selected_bands, nodata_vals)) }
+        arr_dict = { bname : { 'value': arr[i], 'no_data': no_data } for i, (bname, no_data) in enumerate(zip(selected_band_names, nodata_vals)) }
 
-    return arr_dict, selected_bands
+    return arr_dict, selected_band_names
 
 def load_raster_gdal(path, selected_bands:list[int]=None):
 

@@ -19,7 +19,6 @@ class Split(Op):
 
     def __call__(self, raster:"Raster", context:"Context", *args) -> list["Raster"]:
 
-
         results = split_raster(raster, self.bands)
 
         for res in results:
