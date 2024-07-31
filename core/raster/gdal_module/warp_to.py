@@ -8,8 +8,8 @@ gdal_types = {
 
 def warp_to(source, data, warp_to, rpc_dem=None, type='float'):
 
-    xSrc = source['xdim']
-    ySrc = source['ydim']
+    xSrc = int(source['xdim'])
+    ySrc = int(source['ydim'])
     gt = source['ul_x'], source['pixel_size'], 0.0,\
          source['ul_y'], 0.0, -source['pixel_size']
     if 'Wkt' in source:

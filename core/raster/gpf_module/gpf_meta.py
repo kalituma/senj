@@ -39,7 +39,7 @@ def set_meta_to_product(product:Product, meta_dict:dict):
 
     return product
 
-def read_granules_meta_from_product(product:Product) -> dict:
+def read_grid_angle_meta_from_product(product:Product) -> dict:
 
     # read tileid, datastripid, sensing time, horizontal and vertical cs name, horizontal and vertical cs code
     meta_root = product.getMetadataRoot()
@@ -61,7 +61,7 @@ def read_granules_meta_from_product(product:Product) -> dict:
     granule_meta['HORIZONTAL_CS_CODE'] = horizontal_cs_code
 
     grids = _parse_tile_geocoding(meta_root, granule_par_tag)
-    granule_meta['OR_GRIDS'] = grids
+    granule_meta['GRIDS'] = grids
 
     sun, view, view_det = _parse_tile_angle(meta_root, granule_par_tag)
     granule_meta['SUN'] = sun
@@ -76,7 +76,7 @@ def make_gattr(product:Product):
     input_file = str(product.getFileLocation())
 
     product_meta_root = product.getMetadataRoot()
-    gr_meta = read_granules_meta_from_product(product_meta_root)
+    gr_meta = read_grid_angle_meta_from_product(product_meta_root)
 
     gr_meta['CUR_GRIDS'] = band_size_per_res(product)
 
@@ -415,7 +415,7 @@ def _parse_tile_geocoding(meta_root, granule_par_tag):
 
         for tag in tags:
             value = elem.getAttribute(tag).getData().getElemString()
-            grids[res][tag] = int(value)
+            grids[res][tag] = float(value)
 
     return grids
 

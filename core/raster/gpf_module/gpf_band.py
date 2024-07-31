@@ -51,7 +51,7 @@ def copy_product(src_product, selected_bands:list=None):
 
     return new_product
 
-def get_band_size(band:Band) -> dict:
+def _get_band_grid(band:Band) -> dict:
 
     band_size = {}
 
@@ -70,14 +70,15 @@ def get_band_size(band:Band) -> dict:
     band_size['min_x'], band_size['max_y'] = min_x, max_y
     band_size['max_x'], band_size['min_y'] = max_x, min_y
 
-    band_size['x_res'] = np.round((max_x - min_x) / width)
-    band_size['y_res'] = np.round((max_y - min_y) / height)
+    band_size['x_res'] = (max_x - min_x) / width
+    band_size['y_res'] = (max_y - min_y) / height
+    band_size['projection'] = band.getGeoCoding().getMapCRS().toWKT()
 
     assert band_size['x_res'] == band_size['y_res'], 'X and Y resolution are not equal.'
 
     return band_size
 
-def get_size_meta_per_band_gpf(product:Product, selected_bands:list=None) -> dict:
+def get_band_grid_size_gpf(product:Product, selected_bands:list=None) -> dict:
 
     size_meta = {}
 
@@ -88,7 +89,7 @@ def get_size_meta_per_band_gpf(product:Product, selected_bands:list=None) -> dic
 
     for band_name in selected_bands:
         band = product.getBand(band_name)
-        cur_size = get_band_size(band)
-        size_meta[band_name] = cur_size
+        grid_size = _get_band_grid(band)
+        size_meta[band_name] = grid_size
 
     return size_meta

@@ -1,27 +1,20 @@
 import numpy as np
 from typing import Union, TYPE_CHECKING
 import dateutil.parser
-from datetime import datetime
+import scipy.ndimage
 
-
-from core.raster import RasterType
 import core.atmos as atmos
+from core.atmos.meta import build_angles
 from core.util import distance_se, rsr_convolute_dict, tiles_interp, grid_extend, distance_se, projection_geo
 from core.atmos.shared import f0_get
-
-from core.atmos.meta import get_angles_from_meta, get_sensor_type, \
-    projection_from_granule_meta, get_gains_offsets_with_rsr, get_waves_mu
-
-from core.raster.gpf_module import find_grids_and_angle_meta, get_size_meta_per_band_gpf, \
-    get_product_info_meta, get_band_info_meta, get_granule_info
-from core.raster.gdal_module import get_size_meta_per_band_gdal
+from core.atmos.meta import get_angles_from_meta, get_sensor_type, projection_from_granule_meta, get_gains_offsets_with_rsr, get_waves_mu
+from core.raster.gpf_module import find_grids_and_angle_meta, get_product_info_meta, get_band_info_meta, get_granule_info, get_src_param, warp_to
+from core.raster.funcs import get_band_grid_size
 
 if TYPE_CHECKING:
-    from esa_snappy import Product
-    from osgeo import gdal
     from core.raster import Raster
 
-def extract_l1r_meta(raster: "Raster", selected_bands=None) -> dict:
+def extract_l1r_meta(raster: "Raster", selected_band:list[str]=None) -> dict:
 
     assert raster.meta_dict, 'Raster meta data is not available.'
 
@@ -30,13 +23,7 @@ def extract_l1r_meta(raster: "Raster", selected_bands=None) -> dict:
     granule_info = get_granule_info(meta_dict)
     granule_meta = find_grids_and_angle_meta(meta_dict) # Grid, Sun, View
     granule_meta['granule_info'] = granule_info
-
-    if raster.module_type == RasterType.SNAP:
-        size_meta_per_band = get_size_meta_per_band_gpf(raster.raw, selected_bands)
-    elif raster.module_type == RasterType.GDAL:
-        size_meta_per_band = get_size_meta_per_band_gdal(raster.raw, selected_bands)
-    else:
-        raise NotImplementedError(f'{raster.module_type} is not implemented.')
+    size_meta_per_band = get_band_grid_size(raster, selected_band)
 
     product_info = get_product_info_meta(meta_dict) # Time, Spacecraft, Orbit
     sensor_response = get_band_info_meta(meta_dict) # Wavelength, RSR
@@ -55,7 +42,6 @@ def transform_l1r_meta_to_global_attrs(l1r_meta:dict) -> tuple[dict, dict]:
     setu = {k: atmos.settings['run'][k] for k in atmos.settings['run']}
 
     sensor = get_sensor_type(l1r_meta['product_info'])
-
 
     dtime = dateutil.parser.parse(l1r_meta['granule_meta']['SENSING_TIME'])
     doy = dtime.strftime('%j')
@@ -99,13 +85,16 @@ def transform_l1r_meta_to_global_attrs(l1r_meta:dict) -> tuple[dict, dict]:
     if 'zone' in proj_dict:
         global_attrs['scene_zone'] = proj_dict['zone']
 
+    global_attrs['index_to_band'] = rsr_bands
+    global_attrs['proj_dict'] = proj_dict
+    global_attrs['wave_names'] = w_names
+    global_attrs['wave_mu'] = w_mu
+
     return global_attrs, setu
 
-def build_l1r(bands:dict, det_bands:dict, l1r_meta:dict,
-                                       percentiles_compute=True,
-                                       percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
-
-    assert bands.keys() == det_bands.keys(), 'Band and detector band keys do not match.'
+def build_l1r(bands:dict, det_band:np.ndarray, det_size:dict, l1r_meta:dict,
+              percentiles_compute=True,
+              percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
 
     global_attrs, user_settings = transform_l1r_meta_to_global_attrs(l1r_meta)
 
@@ -121,7 +110,41 @@ def build_l1r(bands:dict, det_bands:dict, l1r_meta:dict,
     )
 
     granule_meta = l1r_meta['granule_meta']
-    geometry_res = user_settings['geometry_res']
+    geometry_type = user_settings['geometry_type']
 
-    # build angle
-    # build_
+    det_res = int(det_size['x_res'])
+
+    l1r = {}
+    # l1r = build_angles(selected_res=det_res, det_band=det_band,
+    #                          granule_meta=l1r_meta['granule_meta'],
+    #                          geometry_type=geometry_type, warp_option=warp_option_for_angle,
+    #                          index_to_band=global_attrs['index_to_band'], proj_dict=global_attrs['proj_dict'])
+
+    nodata = int(l1r_meta['product_info']['NODATA'])
+    quant = float(l1r_meta['product_info']['QUANTIFICATION_VALUE'])
+
+    dilate = user_settings['s2_dilate_blackfill']
+    dilate_iterations = user_settings['s2_dilate_blackfill_iterations']
+
+    band_info = l1r_meta['sensor_response']
+    wave_names = global_attrs['wave_names']
+    wave_mu = global_attrs['wave_mu']
+
+    l1r['out'] = {}
+    for band_name, band in bands.items():
+        band_value = band['value']
+        b_res = int(band_info['Resolution'][band_name])
+
+        if band_name in wave_names:
+            src_params = get_src_param(granule_meta, b_res)
+            band_value = warp_to(src_params, band_value, warp_to=warp_option_for_angle).astype(np.float32)
+
+            band_mask = band_value == nodata
+            if dilate:
+                band_mask = scipy.ndimage.binary_dilation(band_mask, iterations=dilate_iterations)
+
+            if 'RADIO_ADD_OFFSET' in band_info:
+                band_value += band_info['RADIO_ADD_OFFSET'][band_name]
+
+            band_value /= quant
+            band_value[band_mask] = np.nan

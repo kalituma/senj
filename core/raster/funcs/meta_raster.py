@@ -2,7 +2,9 @@ from typing import Union
 from warnings import warn
 from core.util import assert_bnames
 from core.raster import Raster, RasterType
-from core.raster.funcs import check_product_type
+from core.raster.funcs import check_product_type, get_band_name_and_index
+from core.raster.gpf_module import get_band_grid_size_gpf
+from core.raster.gdal_module import get_band_grid_size_gdal
 
 def set_raw_metadict(raster:Raster, raw, meta_dict:dict, selected_bands:list[Union[str, int]]=None):
     raster.raw = raw
@@ -37,3 +39,14 @@ def update_meta_band_map(meta_dict:dict, selected_band:list[Union[str, int]]) ->
         new_meta['index_to_band'] = {i+1: b for i, b in enumerate(selected_band)}
 
     return new_meta
+
+def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
+
+    if raster.module_type == RasterType.SNAP:
+        return get_band_grid_size_gpf(raster.raw, selected_bands=selected_bands)
+    elif raster.module_type == RasterType.GDAL:
+        _, index = get_band_name_and_index(raster, selected_bands)
+        all_band_name = raster.get_band_names()
+        return get_band_grid_size_gdal(raster.raw, band_name=all_band_name, selected_index=index)
+    else:
+        raise NotImplementedError(f'{raster.module_type} is not implemented.')
