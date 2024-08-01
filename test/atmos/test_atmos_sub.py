@@ -6,7 +6,8 @@ from datetime import datetime
 from core.config import expand_var
 import core.atmos as atmos
 
-from core.atmos.run import transform_l1r_meta_to_global_attrs, extract_l1r_meta, apply_atmos
+from core.atmos.run import l1r_meta_to_global_attrs, meta_dict_to_l1r_meta, apply_atmos
+from core.atmos.run.l1r import preprocess_l1r_band
 from core.atmos.meta import build_angles
 
 from core.atmos.setting import parse
@@ -16,12 +17,8 @@ from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickl
 
 from core.raster.funcs import read_band_from_raw, get_band_grid_size
 
-from core.raster.gpf_module import write_metadata, read_gpf_bands_as_dict
 from core.raster.gpf_module import find_grids_and_angle_meta, read_grid_angle_meta_from_product, \
-    get_band_grid_size_gpf, get_product_info_meta, get_reflectance_meta_from_product, \
-    get_band_info_meta, get_band_info_meta_from_product
-
-from core.raster.gdal_module import read_gdal_bands_as_dict, get_band_grid_size_gdal
+    get_product_info_meta, get_reflectance_meta_from_product, get_band_info_meta, get_band_info_meta_from_product
 
 from core.logic.context import Context
 from core.operations import Read
@@ -116,12 +113,12 @@ class TestAtmosSubFuncs(unittest.TestCase):
 
         selected_bands = None
         # l1r
-        l1r_meta = extract_l1r_meta(b1_60, selected_band=selected_bands)
+        l1r_meta = meta_dict_to_l1r_meta(b1_60, selected_band=selected_bands)
 
         det_size = l1r_meta['size_meta_per_band']['B_detector_footprint_B1']
         det_res = int(det_size['x_res'])
 
-        global_attrs, user_settings = transform_l1r_meta_to_global_attrs(l1r_meta)
+        global_attrs, user_settings = l1r_meta_to_global_attrs(l1r_meta)
 
         band_dict = {bname: b1_60[bname] for bname in ['B1']}
         det_dict = {dname: b1_60[dname] for dname in ['B_detector_footprint_B1']}
@@ -149,7 +146,54 @@ class TestAtmosSubFuncs(unittest.TestCase):
         self.assertTrue(np.isclose(np.mean(out_angle['vza']), 4.0797715))
         self.assertTrue(np.isclose(np.mean(out_angle['raa']), 44.08653))
 
+    def test_preprocess_l1r_band(self):
+        context = Context()
+        b1_60 = Read(module='gdal')(self.res_60_path, context)
+        b2_10 = Read(module='gdal')(self.res_10_path, context)
+        b3_20 = Read(module='gdal')(self.res_20_path, context)
+
+        b1_60 = read_band_from_raw(b1_60)
+
+        b1_bands = {bname: b1_60[bname] for bname in ['B1']}
+
+        l1r_meta = meta_dict_to_l1r_meta(b1_60)
+        global_attrs, user_settings = l1r_meta_to_global_attrs(l1r_meta)
+
+        warp_option_for_angle = (
+            global_attrs['scene_proj4_string'],
+            [
+                min(global_attrs['scene_xrange']), min(global_attrs['scene_yrange']),
+                max(global_attrs['scene_xrange']), max(global_attrs['scene_yrange'])
+            ],
+            global_attrs['scene_pixel_size'][0],
+            global_attrs['scene_pixel_size'][1],
+            'average'  # resampling method
+        )
+
+        percentiles_compute = True
+        percentiles = (0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)
+
+        band_out = preprocess_l1r_band(bands=b1_bands, user_settings=user_settings, l1r_meta=l1r_meta,
+                                       global_attrs=global_attrs, warp_option_for_angle=warp_option_for_angle,
+                                       percentiles_compute=percentiles_compute, percentiles=percentiles)
+
+        self.assertTrue(np.isclose(np.mean(band_out['B1']['data']), 0.13849235))
+
     def test_build_l1r(self):
+        context = Context()
+        b1_60 = Read(module='gdal')(self.res_60_path, context)
+        b2_10 = Read(module='gdal')(self.res_10_path, context)
+        b3_20 = Read(module='gdal')(self.res_20_path, context)
+
+        b1_60 = read_band_from_raw(b1_60)
+        b2_10 = read_band_from_raw(b2_10)
+        b3_20 = read_band_from_raw(b3_20)
+
+        band_dict = {bslot: b1_60[bname] for bname, bslot in zip(target_band_names, target_band_slot)}
+        det_band = b1_60[target_det_name]['value']
+        det_size = l1r_meta['size_meta_per_band'][target_det_name]
+
+    def test_atmos_full(self):
 
         context = Context()
         b1_60 = Read(module='gdal')(self.res_60_path, context)
@@ -161,6 +205,9 @@ class TestAtmosSubFuncs(unittest.TestCase):
         b3_20 = read_band_from_raw(b3_20)
 
         with self.subTest(msg='test L1R'):
-            apply_atmos(b1_60, target_band_names=['B1'], target_det_name='B_detector_footprint_B1',
+            l1r, global_attrs = apply_atmos(b1_60, target_band_names=['B1'], target_det_name='B_detector_footprint_B1',
                         target_band_slot=['B1'], atmos_conf_path=self.atmos_user_conf)
+
+            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.pkl'))
+            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.pkl'))
             # self.assertEqual(l1r['output'], 'L1R')

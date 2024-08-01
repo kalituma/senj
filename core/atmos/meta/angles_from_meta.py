@@ -1,16 +1,6 @@
 from core.util import tiles_interp, grid_extend, projection_geo
 from core.raster.gpf_module import get_src_param, warp_to
 import numpy as np
-from jsonpath_ng.ext import parse
-
-# class BandIDToName:
-#     def __init__(self, band_id_to_name_map:dict):
-#         self.band_id_to_name_map = band_id_to_name_map
-#
-#
-# def band_id_to_band_name(band_id_to_nam:dict) -> BandIDToName:
-#
-#     find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
 
 def get_grid_width_height(grid_dict:dict, selected_resolution:str) -> tuple[int, int]:
     return grid_dict['GRIDS'][f'{selected_resolution}']['NCOLS'], grid_dict['GRIDS'][f'{selected_resolution}']['NROWS']

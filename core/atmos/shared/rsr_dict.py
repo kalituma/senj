@@ -8,7 +8,7 @@ import glob, os
 import numpy as np
 
 from core import atmos
-from core.util import rsr_read
+from core.util import rsr_read, rsr_convolute_dict
 
 def rsr_dict(sensor = None, rsrd = None, wave_range = [0.25,2.55], wave_step = 0.001):
 
@@ -33,7 +33,7 @@ def rsr_dict(sensor = None, rsrd = None, wave_range = [0.25,2.55], wave_step = 0
 
     for fsensor in rsrd:
         ## compute band weighted wavelengths and band names
-        rsrd[fsensor]['wave_mu'] = atmos.shared.rsr_convolute_dict(waves, waves, rsrd[fsensor]['rsr'], wave_range=wave_range, wave_step=wave_step)
+        rsrd[fsensor]['wave_mu'] = rsr_convolute_dict(waves, waves, rsrd[fsensor]['rsr'], wave_range=wave_range, wave_step=wave_step)
         rsrd[fsensor]['wave_nm'] = {b:rsrd[fsensor]['wave_mu'][b]*1000 for b in rsrd[fsensor]['wave_mu']}
         rsrd[fsensor]['wave_name'] = {b:'{:.0f}'.format(rsrd[fsensor]['wave_nm'][b]) for b in rsrd[fsensor]['wave_nm']}
         if 'rsr_bands' not in rsrd[fsensor]:

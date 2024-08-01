@@ -21,7 +21,7 @@ def interp_gmao(files, lon, lat, isodate, datasets = ['PS', 'TO3', 'TQV', 'U10M'
 
     ## input geolocation dimensions
     dim = np.atleast_1d(lon).shape
-    onedim = ((len(dim) == 1) & (dim[0] == 1))
+    onedim = len(dim) == 1 and dim[0] == 1
 
     ## run through files
     interp_data = {ds:[] for ds in datasets}
@@ -66,12 +66,13 @@ def interp_gmao(files, lon, lat, isodate, datasets = ['PS', 'TO3', 'TQV', 'U10M'
                                                                     nearest=kind=='nearest', radius_of_influence=10e5))
 
     ## add check for year for files[-1]?
-    if (ftimes[-1] == 0.) & \
-        ((jdates[-1] == jdates[0]+1) | (jdates[0] >= 365 & jdates[-1] == 1)): ftimes[-1] = 24.0
+    if ftimes[-1] == 0. and (jdates[-1] == jdates[0]+1) or (jdates[0] >= 365 and jdates[-1] == 1):
+        ftimes[-1] = 24.0
 
     ## do interpolation in time
     anc_data = {}
-    if (ftime >= ftimes[0]) & (ftime <= ftimes[-1]):
+    if ftime >= ftimes[0] and ftime <= ftimes[-1]:
+
         ## linear interpolation weigths
         ip = np.interp(ftime, ftimes, np.arange(len(ftimes)))
         i0 = int(np.floor(ip))
@@ -81,4 +82,5 @@ def interp_gmao(files, lon, lat, isodate, datasets = ['PS', 'TO3', 'TQV', 'U10M'
         for dataset in datasets:
             ti = (w0 * interp_data[dataset][i0]) + (w1 * interp_data[dataset][i1])
             anc_data[dataset] = {"interp":ti, "series":interp_data[dataset]}
-    return(anc_data)
+
+    return anc_data

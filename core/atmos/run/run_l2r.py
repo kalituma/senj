@@ -2,212 +2,103 @@ import os, time, datetime
 import numpy as np
 import scipy.ndimage, scipy.interpolate
 import skimage.measure
+
 from core import atmos
+from core.atmos.setting import parse
+from core.atmos.run.l2r import check_blackfill_skip, load_rsrd, load_ancillary_data, get_dem_pressure
 
-def apply_l2r(l1r, gatts, settings=None):
 
-    data_mem = {}
-    l2r = {}
-    rhos_to_band_name = {}
-    l2r['bands'] = {}
-    l2r['inputs'] = {}
+def apply_l2r(l1r:dict, global_attrs:dict):
 
-    l2r_datasets = []
+    # data_mem = {}
+    # l2r = {}
+    # rhos_to_band_name = {}
+    # l2r['bands'] = {}
+    # l2r['inputs'] = {}
+    #
+    # l2r_datasets = []
 
-    if settings is not None:
-        atmos.settings['user'] = atmos.setting.parse(None, settings=settings, merge=False)
-        for k in atmos.settings['user']:
-            atmos.settings['run'][k] = atmos.settings['user'][k]
-    setu = atmos.setting.parse(gatts['sensor'], settings=atmos.settings['user'])
-    for k in setu:
-        atmos.settings['run'][k] = setu[k]
+    user_settings = parse(global_attrs['sensor'], settings=atmos.settings['user'])
 
-    if setu['dsf_exclude_bands'] != None:
-        if type(setu['dsf_exclude_bands']) != list:
-            setu['dsf_exclude_bands'] = [setu['dsf_exclude_bands']]
+    for k in user_settings:
+        atmos.settings['run'][k] = user_settings[k]
+
+    if user_settings['dsf_exclude_bands'] != None:
+        if type(user_settings['dsf_exclude_bands']) != list:
+            user_settings['dsf_exclude_bands'] = [user_settings['dsf_exclude_bands']]
     else:
-        setu['dsf_exclude_bands'] = []
+        user_settings['dsf_exclude_bands'] = []
 
     band_ds = l1r['bands'].copy()
-    rhot_ds = [band_ds[key]['att']['rhot_ds'] for key in band_ds]
+    rhot_names = [band_ds[key]['att']['rhot_ds'] for key in band_ds]
     rhot_bands = {
-        rhot_name: band_ds[key]['data'] for key, rhot_name in zip(band_ds.keys(), rhot_ds)
+        rhot_name: band_ds[key]['data'] for key, rhot_name in zip(band_ds.keys(), rhot_names)
     }
-    l1r_datasets = list(l1r.keys())[:-1] + rhot_ds
+    l1r_band_list = list(l1r.keys())[:-1] + rhot_names
 
-
-    if setu['blackfill_skip']:
-        rhot_wv = [int(band_ds[key]['att']['rhot_ds'].split('_')[-1]) for key in band_ds.keys()]  ## use last element of rhot name as wavelength
-        bi, bw = atmos.shared.closest_idx(rhot_wv, setu['blackfill_wave'])
-        closest_bkey = list(band_ds.keys())[bi]
-
-        blackfill_target = 1.0 * band_ds[closest_bkey]['data']
-        npx = blackfill_target.shape[0] * blackfill_target.shape[1]
-        # nbf = npx - len(np.where(np.isfinite(band_data))[0])
-        nbf = npx - len(np.where(np.isfinite(blackfill_target) * (blackfill_target > 0))[0])
-        del blackfill_target
-        if (nbf / npx) >= float(setu['blackfill_max']):
-            print(f'Skipping scene as crop is {100 * nbf / npx:.0f}% blackfill')
+    if user_settings['blackfill_skip']:
+        if check_blackfill_skip(band_ds, user_settings):
             return ()
 
-    print(f'Running acolite for {setu["inputfile"]}')
+    # print(f'Running acolite for {setu["inputfile"]}')
 
-    dim_key = list(band_ds.keys())[-1]
-    gatts['data_dimensions'] = band_ds[dim_key]['data'].shape
-    gatts['data_elements'] = gatts['data_dimensions'][0] * gatts['data_dimensions'][1]
+    first_band_key = list(band_ds.keys())[-1]
+    global_attrs['data_dimensions'] = band_ds[first_band_key]['data'].shape
+    global_attrs['data_elements'] = global_attrs['data_dimensions'][0] * global_attrs['data_dimensions'][1]
 
-    rsrd = atmos.shared.rsr_dict(gatts['sensor'])
+    rsrd, is_hyper = load_rsrd(global_attrs)
 
-    hyper = False
-    ## hyperspectral
-    if gatts['sensor'] in atmos.config['hyper_sensors']:
-        hyper = True
-        rsr = atmos.shared.rsr_hyper(gatts['band_waves'], gatts['band_widths'], step=0.1)
-        rsrd = atmos.shared.rsr_dict(rsrd={gatts['sensor']: {'rsr': rsr}})
-        del rsr
+    if global_attrs['sensor'] in rsrd:
+        rsrd = rsrd[global_attrs['sensor']]
     else:
-        rsrd = atmos.shared.rsr_dict(gatts['sensor'])
-
-    if gatts['sensor'] in rsrd:
-        rsrd = rsrd[gatts['sensor']]
-    else:
-        print(f'Could not find {gatts["sensor"]} RSR')
+        print(f'Could not find {global_attrs["sensor"]} RSR')
         return()
 
-    gatts['uoz'] = setu['uoz_default']
-    gatts['uwv'] = setu['uwv_default']
-    gatts['wind'] = setu['wind']
-    gatts['pressure'] = setu['pressure']
+    # gatts['uoz'] = setu['uoz_default']
+    # gatts['uwv'] = setu['uwv_default']
+    # gatts['wind'] = setu['wind']
+    # gatts['pressure'] = setu['pressure']
 
-    if (setu['ancillary_data']) & ((('lat' in l1r) & ('lon' in l1r)) | (('lat' in l1r) & ('lon' in l1r))):
-        if ('lat' in l1r) & ('lon' in l1r):
-            clon = np.nanmedian(l1r['lon'])
-            clat = np.nanmedian(l1r['lat'])
-        else:
-            clon = gatts['lon']
-            clat = gatts['lat']
-        print(f'Getting ancillary data for {gatts["isodate"]} {clon:.3f}E {clat:.3f}N')
-        anc = atmos.ac.ancillary.get(gatts['isodate'], clon, clat, verbosity=1)
+    uoz = user_settings['uoz_default']
+    uwv = user_settings['uwv_default']
+    wind = user_settings['wind']
+    pressure = user_settings['pressure']
 
-        for k in ['uoz', 'uwv', 'wind', 'pressure']:
-            if (k == 'pressure'):
-                if (setu['pressure'] != setu['pressure_default']): continue
-            if (k == 'wind') & (setu['wind'] is not None): continue
-            if k in anc:
-                gatts[k] = 1.0 * anc[k]
+    #load_ancillary_data : ['uoz', 'uwv', 'wind', 'pressure']
+    global_attrs = load_ancillary_data(l1r, l1r_band_list, global_attrs, user_settings)
 
-        del clon, clat, anc
-    else:
-        if (setu['s2_auxiliary_default']) & (gatts['sensor'][0:2] == 'S2') & (gatts['sensor'][4:] == 'MSI'):
-            ## get mid point values from AUX ECMWFT
-            if 'AUX_ECMWFT_msl_values' in gatts:
-                gatts['pressure'] = gatts['AUX_ECMWFT_msl_values'][int(len(gatts['AUX_ECMWFT_msl_values'])/2)]/100 # convert from Pa to hPa
-            if 'AUX_ECMWFT_tco3_values' in gatts:
-                gatts['uoz'] = gatts['AUX_ECMWFT_tco3_values'][int(len(gatts['AUX_ECMWFT_tco3_values'])/2)] ** -1 * 0.0021415 # convert from kg/m2 to cm-atm
-            if 'AUX_ECMWFT_tcwv_values' in gatts:
-                gatts['uwv'] = gatts['AUX_ECMWFT_tcwv_values'][int(len(gatts['AUX_ECMWFT_tcwv_values'])/2)]/10 # convert from kg/m2 to g/cm2
-            if 'AUX_ECMWFT__0u_values' in gatts and 'AUX_ECMWFT__0v_values' in gatts:  # S2Resampling, msiresampling
-                u_wind = gatts['AUX_ECMWFT__0u_values'][int(len(gatts['AUX_ECMWFT__0u_values'])/2)]
-                v_wind = gatts['AUX_ECMWFT__0v_values'][int(len(gatts['AUX_ECMWFT__0v_values'])/2)]
-                gatts['wind'] = np.sqrt(u_wind * u_wind + v_wind * v_wind)
-
-            ## interpolate to scene centre
-            if setu['s2_auxiliary_interpolate']:
-                if ('lat' in l1r_datasets) & ('lon' in l1r_datasets):
-                    clon = np.nanmedian(l1r['lon'])
-                    clat = np.nanmedian(l1r['lon'])
-                else:
-                    clon = gatts['lon']
-                    clat = gatts['lat']
-                ## pressure
-                aux_par = 'ECMWFT_msl'
-                if f'AUX_{aux_par}_values' in gatts:
-                    lndi = scipy.interpolate.LinearNDInterpolator((gatts[f'AUX_{aux_par}_longitudes'],
-                                                                   gatts[f'AUX_{aux_par}_latitudes']),
-                                                                   gatts[f'AUX_{aux_par}_values'])
-                    gatts['pressure'] = lndi(clon, clat)/100 # convert from Pa to hPa
-                    del lndi
-                elif 'msl' in l1r_datasets:  # S2Resampling, msiresampling
-                    lndi = l1r['msl']
-                    gatts['pressure'] = lndi(lndi.len/2, lndi.len/2) / 100  # convert from Pa to hPa
-                    del lndi
-                ## ozone
-                aux_par = 'ECMWFT_tco3'
-                if f'AUX_{aux_par}_values' in gatts:
-                    lndi = scipy.interpolate.LinearNDInterpolator((gatts[f'AUX_{aux_par}_longitudes'],
-                                                                   gatts[f'AUX_{aux_par}_latitudes']),
-                                                                   gatts[f'AUX_{aux_par}_values'])
-                    gatts['uoz'] = lndi(clon, clat)**-1 * 0.0021415 # convert from kg/m2 to cm-atm
-                    del lndi
-                ## water vapour
-                aux_par = 'ECMWFT_tcwv'
-                if f'AUX_{aux_par}_values' in gatts:
-                    lndi = scipy.interpolate.LinearNDInterpolator((gatts[f'AUX_{aux_par}_longitudes'],
-                                                                   gatts[f'AUX_{aux_par}_latitudes']),
-                                                                   gatts[f'AUX_{aux_par}_values'])
-                    gatts['uwv'] = lndi(clon, clat)/10 # convert from kg/m2 to g/cm2
-                    del lndi
-                elif 'tcwv' in l1r_datasets:
-                    lndi = l1r['tcwv']
-                    gatts['uwv'] = lndi(lndi.len/2, lndi.len/2) / 10  # convert from kg/m2 to g/cm2
-                    del lndi
-                del clon, clat
-
-        ## elevation provided
-    if setu['elevation'] is not None:
-        setu['pressure'] = atmos.ac.pressure_elevation(setu['elevation'])
-        gatts['pressure'] = setu['pressure']
-        print(gatts['pressure'])
+    ## elevation provided
+    if user_settings['elevation'] is not None:
+        user_settings['pressure'] = atmos.ac.pressure_elevation(user_settings['elevation'])
+        global_attrs['pressure'] = user_settings['pressure']
+        # print(global_attrs['pressure'])
 
     ## dem pressure
-    if setu['dem_pressure']:
-        print(f'Extracting {setu["dem_source"]} DEM data')
-        if ('lat' in l1r_datasets) & ('lon' in l1r_datasets):
-            dem = atmos.dem.dem_lonlat(l1r['lon'], l1r['lat'], source=setu['dem_source'])
-        else:
-            dem = atmos.dem.dem_lonlat(gatts['lon'], gatts['lon'], source=setu['dem_source'])
+    if user_settings['dem_pressure']:
+        # print(f'Extracting {user_settings["dem_source"]} DEM data')
+        l1r, l1r_band_list, global_attrs = get_dem_pressure(l1r, l1r_band_list, global_attrs, user_settings)
 
-        if dem is not None:
-            dem_pressure = atmos.ac.pressure_elevation(dem)
-
-            if setu['dem_pressure_resolved']:
-                l1r['data_mem']['pressure'] = dem_pressure
-                gatts['pressure'] = np.nanmean(l1r['data_mem']['pressure'])
-            else:
-                l1r['data_mem']['pressure'] = np.nanpercentile(dem_pressure, setu['dem_pressure_percentile'])
-                gatts['pressure'] = l1r['data_mem']['pressure']
-            l1r_datasets.append('pressure')
-
-            if setu['dem_pressure_write']:
-                l1r['data_mem']['dem'] = dem.astype(np.float32)
-                l1r['data_mem']['dem_pressure'] = dem_pressure
-        else:
-            print('Could not determine elevation from {} DEM data'.format(setu['dem_source']))
-
-        dem = None
-        dem_pressure = None
-
-    print(f'default uoz: {setu["uoz_default"]:.2f} uwv: {setu["uwv_default"]:.2f} pressure: {setu["pressure_default"]:.2f}')
-    print(f'current uoz: {gatts["uoz"]:.2f} uwv: {gatts["uwv"]:.2f} pressure: {gatts["pressure"]:.2f}')
+    # print(f'default uoz: {user_settings["uoz_default"]:.2f} uwv: {user_settings["uwv_default"]:.2f} pressure: {user_settings["pressure_default"]:.2f}')
+    # print(f'current uoz: {global_attrs["uoz"]:.2f} uwv: {global_attrs["uwv"]:.2f} pressure: {global_attrs["pressure"]:.2f}')
 
     ## which LUT data to read
-    if (setu['dsf_interface_reflectance']):
-        if (setu['dsf_interface_option'] == 'default'):
+    if (user_settings['dsf_interface_reflectance']):
+        if (user_settings['dsf_interface_option'] == 'default'):
             par = 'romix+rsky_t'
-        elif (setu['dsf_interface_option'] == '6sv'):
+        elif (user_settings['dsf_interface_option'] == '6sv'):
             par = 'romix+rsurf'
             print(par)
     else:
         par = 'romix'
 
     ## set wind to wind range
-    if gatts['wind'] is None: gatts['wind'] = setu['wind_default']
+    if global_attrs['wind'] is None: global_attrs['wind'] = user_settings['wind_default']
     if par == 'romix+rsurf':
-        gatts['wind'] = max(2, gatts['wind'])
-        gatts['wind'] = min(20, gatts['wind'])
+        global_attrs['wind'] = max(2, global_attrs['wind'])
+        global_attrs['wind'] = min(20, global_attrs['wind'])
     else:
-        gatts['wind'] = max(0.1, gatts['wind'])
-        gatts['wind'] = min(20, gatts['wind'])
+        global_attrs['wind'] = max(0.1, global_attrs['wind'])
+        global_attrs['wind'] = min(20, global_attrs['wind'])
 
     ## get mean average geometry
     geom_ds = ['sza', 'vza', 'raa', 'pressure', 'wind']
@@ -217,35 +108,35 @@ def apply_l2r(l1r, gatts, settings=None):
 
     if 'sza' in l1r_datasets:
         sza = l1r['sza']
-        high_sza = np.where(sza > setu['sza_limit'])
+        high_sza = np.where(sza > user_settings['sza_limit'])
         if len(high_sza[0]) > 0:
             print('Warning: SZA out of LUT range')
             print(f'Mean SZA: {np.nanmean(sza):.3f}')
-            if (setu['sza_limit_replace']):
-                sza[high_sza] = setu['sza_limit']
-                print(f'Mean SZA after replacing SZA > {setu["sza_limit"]}: {np.nanmean(sza):.3f}')
+            if (user_settings['sza_limit_replace']):
+                sza[high_sza] = user_settings['sza_limit']
+                print(f'Mean SZA after replacing SZA > {user_settings["sza_limit"]}: {np.nanmean(sza):.3f}')
         del sza, high_sza
 
-    geom_mean = {k: np.nanmean(l1r[k]) if k in l1r_datasets else gatts[k] for k in geom_ds}
+    geom_mean = {k: np.nanmean(l1r[k]) if k in l1r_datasets else global_attrs[k] for k in geom_ds}
 
-    if (geom_mean['sza'] > setu['sza_limit']):
+    if (geom_mean['sza'] > user_settings['sza_limit']):
         print('Warning: SZA out of LUT range')
         print(f'Mean SZA: {geom_mean["sza"]:.3f}')
-        if (setu['sza_limit_replace']):
-            geom_mean['sza'] = setu['sza_limit']
-            print(f'Mean SZA after replacing SZA > {setu["sza_limit"]}: {geom_mean["sza"]:.3f}')
+        if (user_settings['sza_limit_replace']):
+            geom_mean['sza'] = user_settings['sza_limit']
+            print(f'Mean SZA after replacing SZA > {user_settings["sza_limit"]}: {geom_mean["sza"]:.3f}')
 
-    if (geom_mean['vza'] > setu['vza_limit']):
+    if (geom_mean['vza'] > user_settings['vza_limit']):
         print('Warning: VZA out of LUT range')
         print(f'Mean VZA: {geom_mean["vza"]:.3f}')
-        if (setu['vza_limit_replace']):
-            geom_mean['vza'] = setu['vza_limit']
-            print(f'Mean VZA after replacing VZA > {setu["vza_limit"]}: {geom_mean["vza"]:.3f}')
+        if (user_settings['vza_limit_replace']):
+            geom_mean['vza'] = user_settings['vza_limit']
+            print(f'Mean VZA after replacing VZA > {user_settings["vza_limit"]}: {geom_mean["vza"]:.3f}')
 
     ## get gas transmittance
     tg_dict = atmos.ac.gas_transmittance(geom_mean['sza'], geom_mean['vza'],
-                                      uoz=gatts['uoz'], uwv=gatts['uwv'],
-                                      rsr=rsrd['rsr'])
+                                         uoz=global_attrs['uoz'], uwv=global_attrs['uwv'],
+                                         rsr=rsrd['rsr'])
 
     ## make bands dataset
     for bi, b_k in enumerate(rsrd['rsr_bands']):
@@ -258,36 +149,36 @@ def apply_l2r(l1r, gatts, settings=None):
             band_ds[band_key]['att']['rhot_ds'] = f'rhot_{band_ds[band_key]["att"]["wave_name"]}'
             band_ds[band_key]['att']['rhos_ds'] = f'rhos_{band_ds[band_key]["att"]["wave_name"]}'
 
-            if setu['add_band_name']:
+            if user_settings['add_band_name']:
                 band_ds[band_key]["att"]['rhot_ds'] = f'rhot_{b_k}_{band_ds[band_key]["att"]["wave_name"]}'
                 band_ds[band_key]["att"]['rhos_ds'] = f'rhos_{b_k}_{band_ds[band_key]["att"]["wave_name"]}'
-            if setu['add_detector_name']:
-                dsname = rhot_ds[bi][5:]
+            if user_settings['add_detector_name']:
+                dsname = rhot_names[bi][5:]
                 band_ds[band_key]["att"]['rhot_ds'] = f'rhot_{dsname}'
                 band_ds[band_key]["att"]['rhos_ds'] = f'rhos_{dsname}'
 
             for k in tg_dict:
                 if k not in ['wave']:
                     band_ds[band_key]['att'][k] = tg_dict[k][b_k]
-                    if setu['gas_transmittance'] is False:
+                    if user_settings['gas_transmittance'] is False:
                         band_ds[band_key]['att'][k] = 1.0
             band_ds[band_key]['att']['wavelength'] = band_ds[band_key]['att']['wave_nm']
     ## end bands dataset
     del band_ds, tg_dict
 
     ## atmospheric correction
-    if setu['aerosol_correction'] == 'dark_spectrum':
+    if user_settings['aerosol_correction'] == 'dark_spectrum':
         ac_opt = 'dsf'
-    elif setu['aerosol_correction'] == 'exponential':
+    elif user_settings['aerosol_correction'] == 'exponential':
         ac_opt = 'exp'
     else:
-        print(f'Option aerosol_correction {setu["aerosol_correction"]} not configured')
+        print(f'Option aerosol_correction {user_settings["aerosol_correction"]} not configured')
         ac_opt = 'dsf'
     print(f'Using {ac_opt.upper()} atmospheric correction')
 
-    if setu['resolved_geometry'] & hyper:
+    if user_settings['resolved_geometry'] & hyper:
         print('Resolved geometry for hyperspectral sensors currently not supported')
-        setu['resolved_geometry'] = False
+        user_settings['resolved_geometry'] = False
 
     use_revlut = False
     per_pixel_geometry = False
@@ -314,24 +205,24 @@ def apply_l2r(l1r, gatts, settings=None):
 
     ## for tiled processing track tile positions and average geometry
     tiles = []
-    if 'dsf_tile_dimensions' not in setu: setu['dsf_tile_dimensions'] = None
-    if (setu['dsf_aot_estimate'] == 'tiled') & (setu['dsf_tile_dimensions'] is not None):
-        ni = np.ceil(gatts['data_dimensions'][0]/setu['dsf_tile_dimensions'][0]).astype(int)
-        nj = np.ceil(gatts['data_dimensions'][1]/setu['dsf_tile_dimensions'][1]).astype(int)
+    if 'dsf_tile_dimensions' not in user_settings: user_settings['dsf_tile_dimensions'] = None
+    if (user_settings['dsf_aot_estimate'] == 'tiled') & (user_settings['dsf_tile_dimensions'] is not None):
+        ni = np.ceil(global_attrs['data_dimensions'][0] / user_settings['dsf_tile_dimensions'][0]).astype(int)
+        nj = np.ceil(global_attrs['data_dimensions'][1] / user_settings['dsf_tile_dimensions'][1]).astype(int)
         if (ni <= 1) | (nj <= 1):
-            print(f'Scene too small for tiling ({ni}x{nj} tiles of {setu["dsf_tile_dimensions"][0]}x{setu["dsf_tile_dimensions"][1]} pixels), using fixed processing')
-            setu['dsf_aot_estimate'] = 'fixed'
+            print(f'Scene too small for tiling ({ni}x{nj} tiles of {user_settings["dsf_tile_dimensions"][0]}x{user_settings["dsf_tile_dimensions"][1]} pixels), using fixed processing')
+            user_settings['dsf_aot_estimate'] = 'fixed'
         else:
             ntiles = ni*nj
-            print('Processing with {} tiles ({}x{} tiles of {}x{} pixels)'.format(ntiles, ni, nj, setu['dsf_tile_dimensions'][0], setu['dsf_tile_dimensions'][1]))
+            print('Processing with {} tiles ({}x{} tiles of {}x{} pixels)'.format(ntiles, ni, nj, user_settings['dsf_tile_dimensions'][0], user_settings['dsf_tile_dimensions'][1]))
 
             ## compute tile dimensions
             for ti in range(ni):
                 for tj in range(nj):
-                    subti = [setu['dsf_tile_dimensions'][0]*ti, setu['dsf_tile_dimensions'][0]*(ti+1)]
-                    subti[1] = np.min((subti[1], gatts['data_dimensions'][0]))
-                    subtj = [setu['dsf_tile_dimensions'][1]*tj, setu['dsf_tile_dimensions'][1]*(tj+1)]
-                    subtj[1] = np.min((subtj[1], gatts['data_dimensions'][1]))
+                    subti = [user_settings['dsf_tile_dimensions'][0] * ti, user_settings['dsf_tile_dimensions'][0] * (ti + 1)]
+                    subti[1] = np.min((subti[1], global_attrs['data_dimensions'][0]))
+                    subtj = [user_settings['dsf_tile_dimensions'][1] * tj, user_settings['dsf_tile_dimensions'][1] * (tj + 1)]
+                    subtj[1] = np.min((subtj[1], global_attrs['data_dimensions'][1]))
                     tiles.append((ti, tj, subti, subtj))
 
             ## create tile geometry datasets
@@ -355,7 +246,7 @@ def apply_l2r(l1r, gatts, settings=None):
     ## end tiling
 
     ## set up image segments
-    if setu['dsf_aot_estimate'] == 'segmented':
+    if user_settings['dsf_aot_estimate'] == 'segmented':
         segment_data = {}
         first_key = list(rhot_bands.keys())[0]
         finite_mask = np.isfinite(rhot_bands[first_key])
@@ -367,7 +258,7 @@ def apply_l2r(l1r, gatts, settings=None):
             #if segment == 0: continue
             seg_sub = np.where((segment_mask == segment) & (finite_mask))
             #if len(seg_sub[0]) == 0: continue
-            if len(seg_sub[0]) < max(1, setu['dsf_minimum_segment_size']):
+            if len(seg_sub[0]) < max(1, user_settings['dsf_minimum_segment_size']):
                 print('Skipping segment of {} pixels'.format(len(seg_sub[0])))
                 continue
             segment_data[segment] = {'segment': segment, 'sub': seg_sub}
@@ -375,12 +266,12 @@ def apply_l2r(l1r, gatts, settings=None):
         if len(segment_data) <= 1:
             print('Image segmentation only found {} segments'.format(len(segment_data)))
             print('Proceeding with dsf_aot_estimate=fixed')
-            setu['dsf_aot_estimate'] = 'fixed'
+            user_settings['dsf_aot_estimate'] = 'fixed'
         else:
-            if setu['verbosity'] > 3:
+            if user_settings['verbosity'] > 3:
                 print(f'Found {len(segment_data)} segments')
             for segment in segment_data:
-                if setu['verbosity'] > 4:
+                if user_settings['verbosity'] > 4:
                     print(f'Segment {segment}/{len(segment_data)}: {len(segment_data[segment]["sub"][0])} pixels')
             ## convert geometry and ancillary data
             for ds in geom_ds:
@@ -391,24 +282,24 @@ def apply_l2r(l1r, gatts, settings=None):
                 data_mem['{}_segmented'.format(ds)] = np.asarray(data_mem['{}_segmented'.format(ds)]).flatten()
     ## end segmenting
 
-    if (not setu['resolved_geometry']) & (setu['dsf_aot_estimate'] != 'tiled'):
+    if (not user_settings['resolved_geometry']) & (user_settings['dsf_aot_estimate'] != 'tiled'):
         use_revlut = False
-    if setu['dsf_aot_estimate'] in ['fixed', 'segmented']:
+    if user_settings['dsf_aot_estimate'] in ['fixed', 'segmented']:
         use_revlut = False
     if hyper:
         use_revlut = False
 
     ## set LUT dimension parameters to correct shape if resolved processing
-    if (use_revlut) & (per_pixel_geometry) & (setu['dsf_aot_estimate'] == 'resolved'):
+    if (use_revlut) & (per_pixel_geometry) & (user_settings['dsf_aot_estimate'] == 'resolved'):
         for ds in geom_ds:
             if len(np.atleast_1d(data_mem[ds]))!=1:
                 continue
-            print(f'Reshaping {ds} to {gatts["data_dimensions"][0]}x{gatts["data_dimensions"][1]} pixels for resolved processing')
-            data_mem[ds] = np.repeat(data_mem[ds], gatts['data_elements']).reshape(gatts['data_dimensions'])
+            print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]} pixels for resolved processing')
+            data_mem[ds] = np.repeat(data_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
     ## do not allow LUT boundaries ()
     left, right = np.nan, np.nan
-    if setu['dsf_allow_lut_boundaries']:
+    if user_settings['dsf_allow_lut_boundaries']:
         left, right = None, None
 
     ## setup output file
@@ -470,19 +361,19 @@ def apply_l2r(l1r, gatts, settings=None):
     #                 gem.data_mem[k] = None
 
     t0 = time.time()
-    print(f'Loading LUTs {setu["luts"]}')
+    print(f'Loading LUTs {user_settings["luts"]}')
     ## load reverse lut romix -> aot
     if use_revlut:
-        revl = atmos.aerlut.reverse_lut(gatts['sensor'], par=par, rsky_lut=setu['dsf_interface_lut'], base_luts=setu['luts'])
+        revl = atmos.aerlut.reverse_lut(global_attrs['sensor'], par=par, rsky_lut=user_settings['dsf_interface_lut'], base_luts=user_settings['luts'])
 
     ## load aot -> atmospheric parameters lut
     ## QV 2022-04-04 interface reflectance is always loaded since we include wind in the interpolation below
     ## not necessary for runs with par == romix, to be fixed
     lutdw = atmos.aerlut.import_luts(add_rsky=True, par=(par if par == 'romix+rsurf' else 'romix+rsky_t'),
-                                  sensor=None if hyper else gatts['sensor'],
-                                  rsky_lut=setu['dsf_interface_lut'],
-                                  base_luts=setu['luts'], pressures=setu['luts_pressures'],
-                                  reduce_dimensions=setu['luts_reduce_dimensions'])
+                                     sensor=None if hyper else global_attrs['sensor'],
+                                     rsky_lut=user_settings['dsf_interface_lut'],
+                                     base_luts=user_settings['luts'], pressures=user_settings['luts_pressures'],
+                                     reduce_dimensions=user_settings['luts_reduce_dimensions'])
     luts = list(lutdw.keys())
     print(f'Loading LUTs took {(time.time() - t0):.1f} s')
 
@@ -495,17 +386,17 @@ def apply_l2r(l1r, gatts, settings=None):
 
     if (ac_opt == 'dsf'):
         ## user supplied aot
-        if (setu['dsf_fixed_aot'] is not None):
-            setu['dsf_aot_estimate'] = 'fixed'
+        if (user_settings['dsf_fixed_aot'] is not None):
+            user_settings['dsf_aot_estimate'] = 'fixed'
             aot_lut = None
             for l_i, lut_name in enumerate(luts):
-                if lut_name == setu['dsf_fixed_lut']:
+                if lut_name == user_settings['dsf_fixed_lut']:
                     aot_lut = np.array(l_i)
                     aot_lut.shape += (1, 1)  ## make 1,1 dimensions
             if aot_lut is None:
-                print(f'LUT {setu["dsf_fixed_lut"]} not recognised')
+                print(f'LUT {user_settings["dsf_fixed_lut"]} not recognised')
 
-            aot_sel = np.array(float(setu['dsf_fixed_aot']))
+            aot_sel = np.array(float(user_settings['dsf_fixed_aot']))
             aot_sel.shape += (1, 1)  ## make 1,1 dimensions
             aot_sel_lut = luts[aot_lut[0][0]]
             aot_sel_par = None
@@ -515,10 +406,10 @@ def apply_l2r(l1r, gatts, settings=None):
             gk = '' if use_revlut else '_mean'
         ## image derived aot
         else:
-            if setu['dsf_spectrum_option'] not in ['darkest', 'percentile', 'intercept']:
+            if user_settings['dsf_spectrum_option'] not in ['darkest', 'percentile', 'intercept']:
                 print('dsf_spectrum_option {} not configured, falling back to darkest'.format(
-                    setu['dsf_spectrum_option']))
-                setu['dsf_spectrum_option'] = 'darkest'
+                    user_settings['dsf_spectrum_option']))
+                user_settings['dsf_spectrum_option'] = 'darkest'
 
             rhot_aot = None
             ## run through bands to get aot
@@ -527,7 +418,7 @@ def apply_l2r(l1r, gatts, settings=None):
             dsf_rhod = {}
             band_ds = l1r['bands']
             for bi, (b_k, b_v) in enumerate(band_ds.items()):
-                if (b_k in setu['dsf_exclude_bands']):
+                if (b_k in user_settings['dsf_exclude_bands']):
                     continue
                 if ('rhot_ds' not in b_v['att']) or ('tt_gas' not in b_v['att']):
                     continue
@@ -535,13 +426,13 @@ def apply_l2r(l1r, gatts, settings=None):
                     continue
 
                 ## skip band for aot computation
-                if b_v['att']['tt_gas'] < setu['min_tgas_aot']:
+                if b_v['att']['tt_gas'] < user_settings['min_tgas_aot']:
                     continue
 
                 ## skip bands according to configuration
-                if (b_v['att']['wave_nm'] < setu['dsf_wave_range'][0]):
+                if (b_v['att']['wave_nm'] < user_settings['dsf_wave_range'][0]):
                     continue
-                if (b_v['att']['wave_nm'] > setu['dsf_wave_range'][1]):
+                if (b_v['att']['wave_nm'] > user_settings['dsf_wave_range'][1]):
                     continue
 
                 print(b_k, b_v['att']['rhot_ds'])
@@ -552,14 +443,14 @@ def apply_l2r(l1r, gatts, settings=None):
                 mask = valid == False
 
                 ## apply TOA filter
-                if setu['dsf_filter_rhot']:
-                    print(f'Filtered {b_v["att"]["rhot_ds"]} using {setu["dsf_filter_percentile"]}th \
-                     percentile in {setu["dsf_filter_box"][0]}x{setu["dsf_filter_box"][1]} pixel box')
+                if user_settings['dsf_filter_rhot']:
+                    print(f'Filtered {b_v["att"]["rhot_ds"]} using {user_settings["dsf_filter_percentile"]}th \
+                     percentile in {user_settings["dsf_filter_box"][0]}x{user_settings["dsf_filter_box"][1]} pixel box')
 
                     band_data[mask] = np.nanmedian(band_data)  ## fill mask with median
                     # band_data = scipy.ndimage.median_filter(band_data, size=setu['dsf_filter_box'])
-                    band_data = scipy.ndimage.percentile_filter(band_data, setu['dsf_filter_percentile'],
-                                                                size=setu['dsf_filter_box'])
+                    band_data = scipy.ndimage.percentile_filter(band_data, user_settings['dsf_filter_percentile'],
+                                                                size=user_settings['dsf_filter_box'])
                     band_data[mask] = np.nan
                 band_sub = np.where(valid)
                 del valid, mask
@@ -568,14 +459,14 @@ def apply_l2r(l1r, gatts, settings=None):
                 gk = ''
 
                 ## fixed path reflectance
-                if setu['dsf_aot_estimate'] == 'fixed':
+                if user_settings['dsf_aot_estimate'] == 'fixed':
                     band_data_copy = band_data * 1.0
-                    if setu['dsf_spectrum_option'] == 'darkest':
+                    if user_settings['dsf_spectrum_option'] == 'darkest':
                         band_data = np.array((np.nanpercentile(band_data[band_sub], 0)))
-                    if setu['dsf_spectrum_option'] == 'percentile':
-                        band_data = np.array((np.nanpercentile(band_data[band_sub], setu['dsf_percentile'])))
-                    if setu['dsf_spectrum_option'] == 'intercept':
-                        band_data = atmos.shared.intercept(band_data[band_sub], setu['dsf_intercept_pixels'])
+                    if user_settings['dsf_spectrum_option'] == 'percentile':
+                        band_data = np.array((np.nanpercentile(band_data[band_sub], user_settings['dsf_percentile'])))
+                    if user_settings['dsf_spectrum_option'] == 'intercept':
+                        band_data = atmos.shared.intercept(band_data[band_sub], user_settings['dsf_intercept_pixels'])
                     band_data.shape += (1, 1)  ## make 1,1 dimensions
                     gk = '_mean'
                     dark_pixel_location = np.where(band_data_copy <= band_data)
@@ -588,10 +479,10 @@ def apply_l2r(l1r, gatts, settings=None):
                     #    gk='_mean'
                     # else:
                     #    band_data = np.tile(band_data, band_shape)
-                    print(b_k, setu['dsf_spectrum_option'], f'{float(band_data[0, 0]):.3f}')
+                    print(b_k, user_settings['dsf_spectrum_option'], f'{float(band_data[0, 0]):.3f}')
 
                 ## tiled path reflectance
-                elif setu['dsf_aot_estimate'] == 'tiled':
+                elif user_settings['dsf_aot_estimate'] == 'tiled':
                     gk = '_tiled'
 
                     ## tile this band data
@@ -601,16 +492,16 @@ def apply_l2r(l1r, gatts, settings=None):
                         tsub = band_data[subti[0]:subti[1], subtj[0]:subtj[1]]
                         tel = (subtj[1] - subtj[0]) * (subti[1] - subti[0])
                         nsub = len(np.where(np.isfinite(tsub))[0])
-                        if nsub < tel * float(setu['dsf_min_tile_cover']):
+                        if nsub < tel * float(user_settings['dsf_min_tile_cover']):
                             continue
 
                         ## get per tile darkest
-                        if setu['dsf_spectrum_option'] == 'darkest':
+                        if user_settings['dsf_spectrum_option'] == 'darkest':
                             tile_data[ti, tj] = np.array((np.nanpercentile(tsub, 0)))
-                        if setu['dsf_spectrum_option'] == 'percentile':
-                            tile_data[ti, tj] = np.array((np.nanpercentile(tsub, setu['dsf_percentile'])))
-                        if setu['dsf_spectrum_option'] == 'intercept':
-                            tile_data[ti, tj] = atmos.shared.intercept(tsub, int(setu['dsf_intercept_pixels']))
+                        if user_settings['dsf_spectrum_option'] == 'percentile':
+                            tile_data[ti, tj] = np.array((np.nanpercentile(tsub, user_settings['dsf_percentile'])))
+                        if user_settings['dsf_spectrum_option'] == 'intercept':
+                            tile_data[ti, tj] = atmos.shared.intercept(tsub, int(user_settings['dsf_intercept_pixels']))
                         del tsub
 
                     ## fill nan tiles with closest values
@@ -620,28 +511,28 @@ def apply_l2r(l1r, gatts, settings=None):
                     del tile_data, ind
 
                 ## image is segmented based on input vector mask
-                elif setu['dsf_aot_estimate'] == 'segmented':
+                elif user_settings['dsf_aot_estimate'] == 'segmented':
                     gk = '_segmented'
-                    if setu['dsf_spectrum_option'] == 'darkest':
+                    if user_settings['dsf_spectrum_option'] == 'darkest':
                         band_data = np.array(
                             [np.nanpercentile(band_data[segment_data[segment]['sub']], 0)[0] for segment in
                              segment_data])
-                    if setu['dsf_spectrum_option'] == 'percentile':
+                    if user_settings['dsf_spectrum_option'] == 'percentile':
                         band_data = np.array(
-                            [np.nanpercentile(band_data[segment_data[segment]['sub']], setu['dsf_percentile'])[0]
+                            [np.nanpercentile(band_data[segment_data[segment]['sub']], user_settings['dsf_percentile'])[0]
                              for segment in segment_data])
-                    if setu['dsf_spectrum_option'] == 'intercept':
+                    if user_settings['dsf_spectrum_option'] == 'intercept':
                         band_data = np.array([atmos.shared.intercept(band_data[segment_data[segment]['sub']],
-                                                                  setu['dsf_intercept_pixels']) for segment in
+                                                                     user_settings['dsf_intercept_pixels']) for segment in
                                               segment_data])
                     band_data.shape += (1, 1)  ## make 2 dimensions
                     # if verbosity > 2: print(b, setu['dsf_spectrum_option'], ['{:.3f}'.format(float(v)) for v in band_data])
                 ## resolved per pixel dsf
-                elif setu['dsf_aot_estimate'] == 'resolved':
-                    if not setu['resolved_geometry']:
+                elif user_settings['dsf_aot_estimate'] == 'resolved':
+                    if not user_settings['resolved_geometry']:
                         gk = '_mean'
                 else:
-                    print(f'DSF option {setu["dsf_aot_estimate"]} not configured')
+                    print(f'DSF option {user_settings["dsf_aot_estimate"]} not configured')
                     continue
                 del band_sub
 
@@ -651,7 +542,7 @@ def apply_l2r(l1r, gatts, settings=None):
                     band_data[band_sub] /= b_v['att']['tt_gas']
 
                 ## store rhod
-                if setu['dsf_aot_estimate'] in ['fixed', 'tiled', 'segmented']:
+                if user_settings['dsf_aot_estimate'] in ['fixed', 'tiled', 'segmented']:
                     dsf_rhod[b_k] = band_data
 
                 ## use band specific geometry if available
@@ -690,7 +581,7 @@ def apply_l2r(l1r, gatts, settings=None):
                         aot_band[lut_name][aot_band[lut_name] >= revl[lut_name]['maxaot']] = np.nan
 
                         ## replace nans with closest aot
-                        if (setu['dsf_aot_fillnan']):
+                        if (user_settings['dsf_aot_fillnan']):
                             aot_band[lut_name] = atmos.shared.fillnan(aot_band[lut_name])
 
                     ## standard lut interpolates rhot to results for different aot values
@@ -758,12 +649,12 @@ def apply_l2r(l1r, gatts, settings=None):
                                                                     right=right)
 
                     ## mask minimum/maximum tile aots
-                    if setu['dsf_aot_estimate'] == 'tiled':
-                        aot_band[lut_name][aot_band[lut_name] < setu['dsf_min_tile_aot']] = np.nan
-                        aot_band[lut_name][aot_band[lut_name] > setu['dsf_max_tile_aot']] = np.nan
+                    if user_settings['dsf_aot_estimate'] == 'tiled':
+                        aot_band[lut_name][aot_band[lut_name] < user_settings['dsf_min_tile_aot']] = np.nan
+                        aot_band[lut_name][aot_band[lut_name] > user_settings['dsf_max_tile_aot']] = np.nan
 
                     tel = time.time() - t0
-                    print(f'{gatts["sensor"]}/{b_k} {lut_name} took {tel:.3f}s ({"RevLUT" if use_revlut else "StdLUT"})')
+                    print(f'{global_attrs["sensor"]}/{b_k} {lut_name} took {tel:.3f}s ({"RevLUT" if use_revlut else "StdLUT"})')
 
                 ## store current band results
                 aot_dict[b_k] = aot_band
@@ -791,20 +682,20 @@ def apply_l2r(l1r, gatts, settings=None):
                 ay, ax = np.meshgrid(np.arange(tmp.shape[1]), np.arange(tmp.shape[0]))
 
                 ## identify number of bands
-                if setu['dsf_nbands'] < 2:
-                    setu['dsf_nbands'] = 2
-                if setu['dsf_nbands'] > tmp.shape[2]:
-                    setu['dsf_nbands'] = tmp.shape[2]
-                if setu['dsf_nbands_fit'] < 2:
-                    setu['dsf_nbands_fit'] = 2
-                if setu['dsf_nbands_fit'] > tmp.shape[2]:
-                    setu['dsf_nbands_fit'] = tmp.shape[2]
+                if user_settings['dsf_nbands'] < 2:
+                    user_settings['dsf_nbands'] = 2
+                if user_settings['dsf_nbands'] > tmp.shape[2]:
+                    user_settings['dsf_nbands'] = tmp.shape[2]
+                if user_settings['dsf_nbands_fit'] < 2:
+                    user_settings['dsf_nbands_fit'] = 2
+                if user_settings['dsf_nbands_fit'] > tmp.shape[2]:
+                    user_settings['dsf_nbands_fit'] = tmp.shape[2]
 
                 ## get minimum or average aot
-                if setu['dsf_aot_compute'] in ['mean', 'median']:
-                    print(f'Using dsf_aot_compute = {setu["dsf_aot_compute"]}')
+                if user_settings['dsf_aot_compute'] in ['mean', 'median']:
+                    print(f'Using dsf_aot_compute = {user_settings["dsf_aot_compute"]}')
                     ## stack n lowest bands
-                    for ai in range(setu['dsf_nbands']):
+                    for ai in range(user_settings['dsf_nbands']):
                         if ai == 0:
                             # find aot at 1st order
                             tmp_aot = aot_stack[lut_name]['all'][ax, ay, tmp[ax, ay, ai]] * 1.0
@@ -812,43 +703,43 @@ def apply_l2r(l1r, gatts, settings=None):
                             # find aot at 2nd order
                             tmp_aot = np.dstack((tmp_aot, aot_stack[lut_name]['all'][ax, ay, tmp[ax, ay, ai]] * 1.0))
                     ## compute mean over stack
-                    if setu['dsf_aot_compute'] == 'mean':
+                    if user_settings['dsf_aot_compute'] == 'mean':
                         aot_stack[lut_name]['aot'] = np.nanmean(tmp_aot, axis=2)
-                    if setu['dsf_aot_compute'] == 'median':
+                    if user_settings['dsf_aot_compute'] == 'median':
                         aot_stack[lut_name]['aot'] = np.nanmedian(tmp_aot, axis=2)
-                    if setu['dsf_aot_estimate'] == 'fixed':
-                        print(f'Using dsf_aot_compute = {setu["dsf_aot_compute"]} {lut_name} aot = {float(aot_stack[lut_name]["aot"].flatten()):.3f}')
+                    if user_settings['dsf_aot_estimate'] == 'fixed':
+                        print(f'Using dsf_aot_compute = {user_settings["dsf_aot_compute"]} {lut_name} aot = {float(aot_stack[lut_name]["aot"].flatten()):.3f}')
                     tmp_aot = None
                 else:
                     aot_stack[lut_name]['aot'] = aot_stack[lut_name]['all'][ax, ay, tmp[ax, ay, 0]]  # np.nanmin(aot_stack[lut]['all'], axis=2)
 
                 ## if minimum for fixed retrieval is nan, set it to 0.01
-                if setu['dsf_aot_estimate'] == 'fixed':
+                if user_settings['dsf_aot_estimate'] == 'fixed':
                     if np.isnan(aot_stack[lut_name]['aot']):
                         aot_stack[lut_name]['aot'][0][0] = 0.01
                 aot_stack[lut_name]['mask'] = ~np.isfinite(aot_stack[lut_name]['aot'])
 
                 ## apply percentile filter
-                if (setu['dsf_filter_aot']) & (setu['dsf_aot_estimate'] == 'resolved'):
+                if (user_settings['dsf_filter_aot']) & (user_settings['dsf_aot_estimate'] == 'resolved'):
                     aot_stack[lut_name]['aot'] = scipy.ndimage.percentile_filter(aot_stack[lut_name]['aot'],
-                                                                                 setu['dsf_filter_percentile'],
-                                                                                 size=setu['dsf_filter_box'])
+                                                                                 user_settings['dsf_filter_percentile'],
+                                                                                 size=user_settings['dsf_filter_box'])
                 ## apply gaussian kernel smoothing
-                if (setu['dsf_smooth_aot']) & (setu['dsf_aot_estimate'] == 'resolved'):
+                if (user_settings['dsf_smooth_aot']) & (user_settings['dsf_aot_estimate'] == 'resolved'):
                     ## for gaussian smoothing of aot
                     aot_stack[lut_name]['aot'] = scipy.ndimage.gaussian_filter(aot_stack[lut_name]['aot'],
-                                                                          setu['dsf_smooth_box'], order=0,
-                                                                          mode='nearest')
+                                                                               user_settings['dsf_smooth_box'], order=0,
+                                                                               mode='nearest')
 
                 ## mask aot
                 aot_stack[lut_name]['aot'][aot_stack[lut_name]['mask']] = np.nan
 
                 ## store bands for fitting rmsd
-                for bbi in range(setu['dsf_nbands_fit']):
+                for bbi in range(user_settings['dsf_nbands_fit']):
                     aot_stack[lut_name][f'b{bbi + 1}'] = tmp[:, :, bbi].astype(int)  # .astype(float)
                     aot_stack[lut_name][f'b{bbi + 1}'][aot_stack[lut_name]['mask']] = -1
 
-                if setu['dsf_model_selection'] == 'min_dtau':
+                if user_settings['dsf_model_selection'] == 'min_dtau':
                     ## array idices
                     aid = np.indices(aot_stack[lut_name]['all'].shape[0:2])
                     ## abs difference between first and second band tau
@@ -857,20 +748,20 @@ def apply_l2r(l1r, gatts, settings=None):
                 ## remove sorted indices
                 tmp = None
             ## select model based on min rmsd for 2 bands
-            print(f'Choosing best fitting model: {setu["dsf_model_selection"]} ({setu["dsf_nbands"]} bands)')
+            print(f'Choosing best fitting model: {user_settings["dsf_model_selection"]} ({user_settings["dsf_nbands"]} bands)')
 
             ## run through model results, get rhod and rhop for n lowest bands
             for l_i, lut_name in enumerate(luts):
                 ## select model based on minimum rmsd between n best fitting bands
-                if setu['dsf_model_selection'] == 'min_drmsd':
+                if user_settings['dsf_model_selection'] == 'min_drmsd':
 
                     print(f'Computing RMSD for model {lut_name}')
 
                     rhop_f = np.zeros(
-                        (aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], setu['dsf_nbands_fit']),
+                        (aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], user_settings['dsf_nbands_fit']),
                         dtype=np.float32) + np.nan
                     rhod_f = np.zeros(
-                        (aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], setu['dsf_nbands_fit']),
+                        (aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], user_settings['dsf_nbands_fit']),
                         dtype=np.float32) + np.nan
 
                     for bi, b_k in enumerate(aot_bands):
@@ -885,13 +776,13 @@ def apply_l2r(l1r, gatts, settings=None):
                             gk_vza = f'_{band_ds[b_k]["att"]["wave_name"]}' + gk_vza
 
                         ## run through two best fitting bands
-                        fit_bands = [f'b{bbi + 1}' for bbi in range(setu['dsf_nbands_fit'])]
+                        fit_bands = [f'b{bbi + 1}' for bbi in range(user_settings['dsf_nbands_fit'])]
                         for ai, ab in enumerate(fit_bands):
                             aot_sub = np.where(aot_stack[lut_name][ab] == bi)
                             ## get rhod for current band
-                            if (setu['dsf_aot_estimate'] == 'resolved'):
+                            if (user_settings['dsf_aot_estimate'] == 'resolved'):
                                 rhod_f[aot_sub[0], aot_sub[1], ai] = band_ds[b_k]['data'][aot_sub]
-                            elif (setu['dsf_aot_estimate'] == 'segmented'):
+                            elif (user_settings['dsf_aot_estimate'] == 'segmented'):
                                 rhod_f[aot_sub[0], aot_sub[1], ai] = dsf_rhod[b_k][aot_sub].flatten()
                             else:
                                 rhod_f[aot_sub[0], aot_sub[1], ai] = dsf_rhod[b_k][aot_sub] # band_data / gas
@@ -946,7 +837,7 @@ def apply_l2r(l1r, gatts, settings=None):
                                                 res_hyp.flatten(), lutdw[lut_name]['meta']['wave'],
                                                 rsrd['rsr'][b_k]['response'], rsrd['rsr'][b_k]['wave'], axis=0)
                                 else:
-                                    if setu['dsf_aot_estimate'] == 'segmented':
+                                    if user_settings['dsf_aot_estimate'] == 'segmented':
                                         for gki in range(len(aot_sub[0])):
                                             rhop_f[aot_sub[0][gki], aot_sub[1][gki], ai] = lutdw[lut_name]['rgi'][b_k](
                                                 (xi[0][aot_sub[0][gki]], lutdw[lut_name]['ipd'][par],
@@ -960,13 +851,13 @@ def apply_l2r(l1r, gatts, settings=None):
                                              xi[1], xi[2], xi[3], xi[4], aot_stack[lut_name]['aot'][aot_sub]))
                     ## rmsd for current bands
                     cur_sel_par = np.sqrt(np.nanmean(np.square((rhod_f - rhop_f)), axis=2)) # band_data - lut value for aot to trans
-                    if (setu['dsf_aot_estimate'] == 'fixed') :
+                    if (user_settings['dsf_aot_estimate'] == 'fixed') :
                         print( f'Computing RMSD for model {lut_name}: {cur_sel_par[0][0]:.4e}')
 
                 ## end select with min RMSD
 
                 ## select model based on minimum delta tau between two lowest aot bands
-                if setu['dsf_model_selection'] == 'min_dtau':
+                if user_settings['dsf_model_selection'] == 'min_dtau':
                     cur_sel_par = aot_stack[lut_name]['dtau']
                 ## end select with min delta tau
 
@@ -976,7 +867,7 @@ def apply_l2r(l1r, gatts, settings=None):
                     aot_lut[aot_stack[lut_name]['mask']] = -1
                     aot_sel = aot_stack[lut_name]['aot'] * 1.0
                     aot_sel_par = cur_sel_par * 1.0
-                    if setu['dsf_aot_estimate'] == 'fixed':
+                    if user_settings['dsf_aot_estimate'] == 'fixed':
                         aot_sel_lut = '{}'.format(lut_name)
                         aot_sel_bands = [aot_stack[lut_name][f'{bb}'][0][0] for bb in fit_bands]
                 else:
@@ -986,17 +877,17 @@ def apply_l2r(l1r, gatts, settings=None):
                     aot_lut[aot_sub] = l_i
                     aot_sel[aot_sub] = aot_stack[lut_name]['aot'][aot_sub] * 1.0
                     aot_sel_par[aot_sub] = cur_sel_par[aot_sub] * 1.0
-                    if setu['dsf_aot_estimate'] == 'fixed':
+                    if user_settings['dsf_aot_estimate'] == 'fixed':
                         aot_sel_lut = f'{lut_name}'
                         aot_sel_bands = [aot_stack[lut_name][f'{bb}'][0][0] for bb in fit_bands]
 
             rhod_f = None
             rhod_p = None
-        if (setu['dsf_aot_estimate'] == 'fixed') & (aot_sel_par is not None):
+        if (user_settings['dsf_aot_estimate'] == 'fixed') & (aot_sel_par is not None):
             print(f'Selected model {aot_sel_lut}: aot {aot_sel[0][0]:.3f}, RMSD {aot_sel_par[0][0]:.2e}')
 
         ## check variable aot, use most common LUT
-        if (setu['dsf_aot_estimate'] != 'fixed') & (setu['dsf_aot_most_common_model']):
+        if (user_settings['dsf_aot_estimate'] != 'fixed') & (user_settings['dsf_aot_most_common_model']):
             print('Selecting most common model for processing.')
             n_aot = len(np.where(aot_lut != -1)[0]) # 0 = mod_1, 1 = mod2, -1 = null
             n_sel = 0
@@ -1029,17 +920,17 @@ def apply_l2r(l1r, gatts, settings=None):
         exp_mask_diff = 1000
 
         for b_k, b_v in l1r['bands'].items():
-            sd = np.abs(b_v['att']['wave_nm'] - setu['exp_wave1'])
+            sd = np.abs(b_v['att']['wave_nm'] - user_settings['exp_wave1'])
             if (sd < 100) & (sd < exp_b1_diff):
                 exp_b1_diff = sd
                 exp_b1 = b_k
                 short_wv = b_v['att']['wave_nm']
-            sd = np.abs(b_v['att']['wave_nm'] - setu['exp_wave2'])
+            sd = np.abs(b_v['att']['wave_nm'] - user_settings['exp_wave2'])
             if (sd < 100) & (sd < exp_b2_diff):
                 exp_b2_diff = sd
                 exp_b2 = b_k
                 long_wv = b_v['att']['wave_nm']
-            sd = np.abs(b_v['att']['wave_nm'] - setu['l2w_mask_wave'])
+            sd = np.abs(b_v['att']['wave_nm'] - user_settings['l2w_mask_wave'])
             if (sd < 100) & (sd < exp_mask_diff):
                 exp_mask_diff = sd
                 exp_mask = b_k
@@ -1050,7 +941,7 @@ def apply_l2r(l1r, gatts, settings=None):
 
         print(f'Selected bands {exp_b1} and {exp_b2} for EXP processing')
         if (l1r['bands'][exp_b1]['att']['rhot_ds'] not in l1r_datasets) | (l1r['bands'][exp_b2]['att']['rhot_ds'] not in l1r_datasets):
-            print(f'Selected bands are not available in {setu["inputfile"]}')
+            print(f'Selected bands are not available in {user_settings["inputfile"]}')
             if (l1r['bands'][exp_b1]['att']['rhot_ds'] not in l1r_datasets):
                 print(f'EXP B1: {l1r["bands"][exp_b1]["att"]["rhot_ds"]}')
             if (l1r['bands'][exp_b2]['att']['rhot_ds'] not in l1r_datasets):
@@ -1090,14 +981,14 @@ def apply_l2r(l1r, gatts, settings=None):
 
         ## compute mask
         if exp_mask == exp_b1:
-            mask = exp_d1 >= setu['exp_swir_threshold']
+            mask = exp_d1 >= user_settings['exp_swir_threshold']
         elif exp_mask == exp_b2:
-            mask = exp_d2 >= setu['exp_swir_threshold']
+            mask = exp_d2 >= user_settings['exp_swir_threshold']
         else:
             exp_dm = l1r["bands"][exp_mask]["data"] * 1.0
             rorayl_mask = lutdw[exp_lut]['rgi'][exp_mask]((xi[0], lutdw[exp_lut]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
             exp_dm -= rorayl_mask
-            mask = exp_dm >= setu['exp_swir_threshold']
+            mask = exp_dm >= user_settings['exp_swir_threshold']
             exp_dm = None
 
         ## compute aerosol epsilon band ratio
@@ -1106,7 +997,7 @@ def apply_l2r(l1r, gatts, settings=None):
 
         ## red/NIR option
         exp_fixed_epsilon = False
-        if setu['exp_fixed_epsilon']:
+        if user_settings['exp_fixed_epsilon']:
             exp_fixed_epsilon = True
 
         if exp_option == 'red/NIR':
@@ -1121,15 +1012,15 @@ def apply_l2r(l1r, gatts, settings=None):
             tr_b1 = (dtotr_b1 * utotr_b1 * l1r['bands'][exp_b1]['att']['tt_gas'])
             tr_b2 = (dtotr_b2 * utotr_b2 * l1r['bands'][exp_b2]['att']['tt_gas'])
             ## get gamma
-            exp_gamma = tr_b1 / tr_b2 if setu['exp_gamma'] is None else float(setu['exp_gamma'])
+            exp_gamma = tr_b1 / tr_b2 if user_settings['exp_gamma'] is None else float(user_settings['exp_gamma'])
             print(f'Gamma: {exp_gamma:.2f}')
 
             ## get alpha
-            if setu['exp_alpha'] is None:
+            if user_settings['exp_alpha'] is None:
                 ## import simspec
                 simspec = atmos.shared.similarity_read()
                 ## convolute to sensor_o
-                if setu['exp_alpha_weighted']:
+                if user_settings['exp_alpha_weighted']:
                     ssd = atmos.shared.rsr_convolute_dict(simspec['wave'], simspec['ave'], rsrd['rsr'])
                     exp_alpha = ssd[exp_b1] / ssd[exp_b2]
                 ## or use closest bands
@@ -1138,7 +1029,7 @@ def apply_l2r(l1r, gatts, settings=None):
                     ssi1, ssw1 = atmos.shared.closest_idx(simspec['wave'], l1r['bands'][exp_b2]['att']['wave_mu'])
                     exp_alpha = simspec['ave'][ssi0] / simspec['ave'][ssi1]
             else:
-                exp_alpha = float(setu['exp_alpha'])
+                exp_alpha = float(user_settings['exp_alpha'])
             print(f'Alpha: {exp_alpha:.2f}')
 
             ## first estimate of rhow to find clear waters
@@ -1161,14 +1052,14 @@ def apply_l2r(l1r, gatts, settings=None):
             mask2 = None
         elif exp_option == 'SWIR':
             print('Using SWIR EXP')
-            if setu['exp_fixed_aerosol_reflectance']: exp_fixed_epsilon = True
+            if user_settings['exp_fixed_aerosol_reflectance']: exp_fixed_epsilon = True
 
         ## compute fixed epsilon
         if exp_fixed_epsilon:
-            if setu['exp_epsilon'] is not None:
-                epsilon = float(setu['exp_epsilon'])
+            if user_settings['exp_epsilon'] is not None:
+                epsilon = float(user_settings['exp_epsilon'])
             else:
-                epsilon = np.nanpercentile(epsilon, setu['exp_fixed_epsilon_percentile'])
+                epsilon = np.nanpercentile(epsilon, user_settings['exp_fixed_epsilon_percentile'])
 
         ## determination of rhoam in long wavelength
         if exp_option == 'red/NIR':
@@ -1180,60 +1071,60 @@ def apply_l2r(l1r, gatts, settings=None):
         exp_d1, exp_d2 = None, None
 
         ## fixed rhoam?
-        exp_fixed_rhoam = setu['exp_fixed_aerosol_reflectance']
+        exp_fixed_rhoam = user_settings['exp_fixed_aerosol_reflectance']
         if exp_fixed_rhoam:
-            rhoam = np.nanpercentile(rhoam, setu['exp_fixed_aerosol_reflectance_percentile'])
-            print(f'{setu["exp_fixed_aerosol_reflectance_percentile"]:.0f}th percentile rhoam ({long_wv} nm): {rhoam:.5f}')
+            rhoam = np.nanpercentile(rhoam, user_settings['exp_fixed_aerosol_reflectance_percentile'])
+            print(f'{user_settings["exp_fixed_aerosol_reflectance_percentile"]:.0f}th percentile rhoam ({long_wv} nm): {rhoam:.5f}')
 
-        print('EXP band 1', setu['exp_wave1'], exp_b1, l1r['bands'][exp_b1]['att']['rhot_ds'])
-        print('EXP band 2', setu['exp_wave2'], exp_b2, l1r['bands'][exp_b2]['att']['rhot_ds'])
+        print('EXP band 1', user_settings['exp_wave1'], exp_b1, l1r['bands'][exp_b1]['att']['rhot_ds'])
+        print('EXP band 2', user_settings['exp_wave2'], exp_b2, l1r['bands'][exp_b2]['att']['rhot_ds'])
 
         if exp_fixed_epsilon:
             print(f'Epsilon: {epsilon:.2f}')
 
         ## output data
-        if setu['exp_output_intermediate']:
+        if user_settings['exp_output_intermediate']:
             if not exp_fixed_epsilon:
-                gatts['epsilon'] = epsilon
+                global_attrs['epsilon'] = epsilon
             if not exp_fixed_rhoam:
-                gatts['rhoam'] = rhoam
+                global_attrs['rhoam'] = rhoam
     ## end exponential
 
     ## set up interpolator for tiled processing
-    if (ac_opt == 'dsf') & (setu['dsf_aot_estimate'] == 'tiled'):
-        xnew = np.linspace(0, tiles[-1][1], gatts['data_dimensions'][1], dtype=np.float32)
-        ynew = np.linspace(0, tiles[-1][0], gatts['data_dimensions'][0], dtype=np.float32)
+    if (ac_opt == 'dsf') & (user_settings['dsf_aot_estimate'] == 'tiled'):
+        xnew = np.linspace(0, tiles[-1][1], global_attrs['data_dimensions'][1], dtype=np.float32)
+        ynew = np.linspace(0, tiles[-1][0], global_attrs['data_dimensions'][0], dtype=np.float32)
 
     ## store fixed aot in gatts
-    if (ac_opt == 'dsf') & (setu['dsf_aot_estimate'] == 'fixed'):
-        gatts['ac_aot_550'] = aot_sel[0][0]
-        gatts['ac_model'] = luts[aot_lut[0][0]]
+    if (ac_opt == 'dsf') & (user_settings['dsf_aot_estimate'] == 'fixed'):
+        global_attrs['ac_aot_550'] = aot_sel[0][0]
+        global_attrs['ac_model'] = luts[aot_lut[0][0]]
 
-        if setu['dsf_fixed_aot'] is None:
+        if user_settings['dsf_fixed_aot'] is None:
             ## store fitting parameter
-            gatts['ac_fit'] = aot_sel_par[0][0]
+            global_attrs['ac_fit'] = aot_sel_par[0][0]
             ## store bands used for DSF
-            gatts['ac_bands'] = ','.join([str(b) for b in aot_stack[gatts['ac_model']]['band_list']])
-            gatts['ac_nbands_fit'] = setu['dsf_nbands']
+            global_attrs['ac_bands'] = ','.join([str(b) for b in aot_stack[global_attrs['ac_model']]['band_list']])
+            global_attrs['ac_nbands_fit'] = user_settings['dsf_nbands']
             for bbi, bn in enumerate(aot_sel_bands):
-                gatts['ac_band{}_idx'.format(bbi + 1)] = aot_sel_bands[bbi]
-                gatts['ac_band{}'.format(bbi + 1)] = aot_stack[gatts['ac_model']]['band_list'][
+                global_attrs['ac_band{}_idx'.format(bbi + 1)] = aot_sel_bands[bbi]
+                global_attrs['ac_band{}'.format(bbi + 1)] = aot_stack[global_attrs['ac_model']]['band_list'][
                     aot_sel_bands[bbi]]
 
     ## write aot to outputfile
-    if (ac_opt == 'dsf') & (setu['dsf_write_aot_550']):
+    if (ac_opt == 'dsf') & (user_settings['dsf_write_aot_550']):
         ## reformat & save aot
-        if setu['dsf_aot_estimate'] == 'fixed':
-            aot_out = np.repeat(aot_sel, gatts['data_elements']).reshape(gatts['data_dimensions'])
-        elif setu['dsf_aot_estimate'] == 'segmented':
-            aot_out = np.zeros(gatts['data_dimensions']) + np.nan
+        if user_settings['dsf_aot_estimate'] == 'fixed':
+            aot_out = np.repeat(aot_sel, global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
+        elif user_settings['dsf_aot_estimate'] == 'segmented':
+            aot_out = np.zeros(global_attrs['data_dimensions']) + np.nan
             for sidx, segment in enumerate(segment_data):
                 aot_out[segment_data[segment]['sub']] = aot_sel[sidx]
-        elif setu['dsf_aot_estimate'] == 'tiled':
+        elif user_settings['dsf_aot_estimate'] == 'tiled':
             aot_out = atmos.shared.tiles_interp(aot_sel, xnew, ynew, target_mask=None,
-                                             smooth=setu['dsf_tile_smoothing'],
-                                             kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                             method=setu['dsf_tile_interp_method'])
+                                                smooth=user_settings['dsf_tile_smoothing'],
+                                                kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                method=user_settings['dsf_tile_interp_method'])
         else:
             aot_out = aot_sel * 1.0
         ## write aot
@@ -1244,20 +1135,20 @@ def apply_l2r(l1r, gatts, settings=None):
     ttot_all = {}
 
     ## allow use of per pixel geometry for fixed dsf
-    if (per_pixel_geometry) & (setu['dsf_aot_estimate'] == 'fixed') & (setu['resolved_geometry']):
+    if (per_pixel_geometry) & (user_settings['dsf_aot_estimate'] == 'fixed') & (user_settings['resolved_geometry']):
         use_revlut = True
 
     ## for ease of subsetting later, repeat single element datasets to the tile shape
-    if (use_revlut) & (ac_opt == 'dsf') & (setu['dsf_aot_estimate'] != 'tiled'):
+    if (use_revlut) & (ac_opt == 'dsf') & (user_settings['dsf_aot_estimate'] != 'tiled'):
         for ds in geom_ds:
             if len(np.atleast_1d(data_mem[ds])) != 1:
                 continue
 
-            print(f'Reshaping {ds} to {gatts["data_dimensions"][0]}x{gatts["data_dimensions"][1]}')
-            data_mem[ds] = np.repeat(data_mem[ds], gatts['data_elements']).reshape(gatts['data_dimensions'])
+            print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]}')
+            data_mem[ds] = np.repeat(data_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
     ## figure out cirrus bands
-    if setu['cirrus_correction']:
+    if user_settings['cirrus_correction']:
         rho_cirrus = None
 
         ## use mean geometry to compute cirrus band Rayleigh
@@ -1280,9 +1171,9 @@ def apply_l2r(l1r, gatts, settings=None):
                 continue
             if b_v['att']['rhot_ds'] not in l1r_datasets:
                 continue
-            if (b_v['att']['wave_nm'] < setu['cirrus_range'][0]):
+            if (b_v['att']['wave_nm'] < user_settings['cirrus_range'][0]):
                 continue
-            if (b_v['att']['wave_nm'] > setu['cirrus_range'][1]):
+            if (b_v['att']['wave_nm'] > user_settings['cirrus_range'][1]):
                 continue
 
             ## compute Rayleigh reflectance
@@ -1302,7 +1193,7 @@ def apply_l2r(l1r, gatts, settings=None):
             cur_data = None
 
         if rho_cirrus is None:
-            setu['cirrus_correction'] = False
+            user_settings['cirrus_correction'] = False
         else:
             ## compute mean from several bands
             if len(rho_cirrus.shape) == 3:
@@ -1335,15 +1226,15 @@ def apply_l2r(l1r, gatts, settings=None):
 
         ## store rhot in output file
 
-        if b_v['att']['tt_gas'] < setu['min_tgas_rho']:
-            print(f'Band {b_k} at {b_v["att"]["wave_name"]} nm has tgas < min_tgas_rho ({b_v["att"]["tt_gas"]:.2f} < {setu["min_tgas_rho"]:.2f})')
+        if b_v['att']['tt_gas'] < user_settings['min_tgas_rho']:
+            print(f'Band {b_k} at {b_v["att"]["wave_name"]} nm has tgas < min_tgas_rho ({b_v["att"]["tt_gas"]:.2f} < {user_settings["min_tgas_rho"]:.2f})')
             continue
 
         ## apply cirrus correction
-        if setu['cirrus_correction']:
-            g = setu['cirrus_g_vnir'] * 1.0
+        if user_settings['cirrus_correction']:
+            g = user_settings['cirrus_g_vnir'] * 1.0
             if b_v['att']['wave_nm'] > 1000:
-                g = setu['cirrus_g_swir'] * 1.0
+                g = user_settings['cirrus_g_swir'] * 1.0
             cur_data -= (rho_cirrus * g)
 
         t0 = time.time()
@@ -1354,14 +1245,14 @@ def apply_l2r(l1r, gatts, settings=None):
 
         ## dark spectrum fitting
         if (ac_opt == 'dsf'):
-            if setu['slicing']:
+            if user_settings['slicing']:
                 valid_mask = np.isfinite(cur_data)
 
             ## shape of atmospheric datasets
             atm_shape = aot_sel.shape
 
             ## if path reflectance is resolved, but resolved geometry available
-            if (use_revlut) & (setu['dsf_aot_estimate'] == 'fixed'):
+            if (use_revlut) & (user_settings['dsf_aot_estimate'] == 'fixed'):
                 atm_shape = cur_data.shape
                 gk = ''
 
@@ -1377,7 +1268,7 @@ def apply_l2r(l1r, gatts, settings=None):
             astot = np.zeros(atm_shape, dtype=np.float32) + np.nan
             dutott = np.zeros(atm_shape, dtype=np.float32) + np.nan
 
-            if (setu['dsf_residual_glint_correction']) & (setu['dsf_residual_glint_correction_method'] == 'default'):
+            if (user_settings['dsf_residual_glint_correction']) & (user_settings['dsf_residual_glint_correction_method'] == 'default'):
                 ttot_all[b_k] = np.zeros(atm_shape, dtype=np.float32) + np.nan
 
             for li, lut in enumerate(luts):
@@ -1387,7 +1278,7 @@ def apply_l2r(l1r, gatts, settings=None):
                 ai = aot_sel[ls]
 
                 ## resolved geometry with fixed path reflectance
-                if (use_revlut) & (setu['dsf_aot_estimate'] == 'fixed'):
+                if (use_revlut) & (user_settings['dsf_aot_estimate'] == 'fixed'):
                     ls = np.where(cur_data)
 
                 if (use_revlut):
@@ -1441,8 +1332,8 @@ def apply_l2r(l1r, gatts, settings=None):
                                                             rsrd['rsr'][band_num]['response'], rsrd['rsr'][band_num]['wave'], axis=0)
 
                     ## total transmittance
-                    if (setu['dsf_residual_glint_correction']) & (
-                            setu['dsf_residual_glint_correction_method'] == 'default'):
+                    if (user_settings['dsf_residual_glint_correction']) & (
+                            user_settings['dsf_residual_glint_correction_method'] == 'default'):
                         ttot_all[b_k][ls] = atmos.shared.rsr_convolute_nd(hyper_res['ttot'], lutdw[lut]['meta']['wave'],
                                                                      rsrd['rsr'][band_num]['response'], rsrd['rsr'][band_num]['wave'],
                                                                      axis=0)
@@ -1455,35 +1346,35 @@ def apply_l2r(l1r, gatts, settings=None):
                     dutott[ls] = lutdw[lut]['rgi'][band_num]((xi[0], lutdw[lut]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], ai))
 
                     ## total transmittance
-                    if (setu['dsf_residual_glint_correction']) & (setu['dsf_residual_glint_correction_method'] == 'default'):
+                    if (user_settings['dsf_residual_glint_correction']) & (user_settings['dsf_residual_glint_correction_method'] == 'default'):
                         ttot_all[b_k][ls] = lutdw[lut]['rgi'][band_num]((xi[0], lutdw[lut]['ipd']['ttot'], xi[1], xi[2], xi[3], xi[4], ai))
                 del ls, ai, xi
 
             ## interpolate tiled processing to full scene
-            if setu['dsf_aot_estimate'] == 'tiled':
+            if user_settings['dsf_aot_estimate'] == 'tiled':
                 print('Interpolating tiles')
-                romix = atmos.shared.tiles_interp(romix, xnew, ynew, target_mask=(valid_mask if setu['slicing'] else None), \
-                                               target_mask_full=True, smooth=setu['dsf_tile_smoothing'],
-                                               kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                               method=setu['dsf_tile_interp_method'])
-                astot = atmos.shared.tiles_interp(astot, xnew, ynew, target_mask=(valid_mask if setu['slicing'] else None), \
-                                               target_mask_full=True, smooth=setu['dsf_tile_smoothing'],
-                                               kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                               method=setu['dsf_tile_interp_method'])
+                romix = atmos.shared.tiles_interp(romix, xnew, ynew, target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                  target_mask_full=True, smooth=user_settings['dsf_tile_smoothing'],
+                                                  kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                  method=user_settings['dsf_tile_interp_method'])
+                astot = atmos.shared.tiles_interp(astot, xnew, ynew, target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                  target_mask_full=True, smooth=user_settings['dsf_tile_smoothing'],
+                                                  kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                  method=user_settings['dsf_tile_interp_method'])
                 dutott = atmos.shared.tiles_interp(dutott, xnew, ynew,
-                                                target_mask=(valid_mask if setu['slicing'] else None), \
-                                                target_mask_full=True, smooth=setu['dsf_tile_smoothing'],
-                                                kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                                method=setu['dsf_tile_interp_method'])
+                                                   target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                   target_mask_full=True, smooth=user_settings['dsf_tile_smoothing'],
+                                                   kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                   method=user_settings['dsf_tile_interp_method'])
 
             ## create full scene parameters for segmented processing
-            if setu['dsf_aot_estimate'] == 'segmented':
+            if user_settings['dsf_aot_estimate'] == 'segmented':
                 romix_ = romix * 1.0
                 astot_ = astot * 1.0
                 dutott_ = dutott * 1.0
-                romix = np.zeros(gatts['data_dimensions']) + np.nan
-                astot = np.zeros(gatts['data_dimensions']) + np.nan
-                dutott = np.zeros(gatts['data_dimensions']) + np.nan
+                romix = np.zeros(global_attrs['data_dimensions']) + np.nan
+                astot = np.zeros(global_attrs['data_dimensions']) + np.nan
+                dutott = np.zeros(global_attrs['data_dimensions']) + np.nan
 
                 for sidx, segment in enumerate(segment_data):
                     romix[segment_data[segment]['sub']] = romix_[sidx]
@@ -1492,7 +1383,7 @@ def apply_l2r(l1r, gatts, settings=None):
                 del romix_, astot_, dutott_
 
             ## write ac parameters
-            if setu['dsf_write_tiled_parameters']:
+            if user_settings['dsf_write_tiled_parameters']:
                 if len(np.atleast_1d(romix) > 1):
                     if romix.shape == cur_data.shape:
                         l2r['inputs'][f'romix_{b_v["att"]["wave_name"]}'] = romix
@@ -1537,7 +1428,7 @@ def apply_l2r(l1r, gatts, settings=None):
         ## end exponential
 
         ## write rhorc
-        if (setu['output_rhorc']):
+        if (user_settings['output_rhorc']):
             ## read TOA
             cur_rhorc, cur_att = b_v['data'].copy(), b_v['att'].copy()
 
@@ -1564,32 +1455,32 @@ def apply_l2r(l1r, gatts, settings=None):
                 del xi
 
             ## create full scene parameters for segmented processing
-            if setu['dsf_aot_estimate'] == 'segmented':
+            if user_settings['dsf_aot_estimate'] == 'segmented':
                 rorayl_ = rorayl_cur * 1.0
                 dutotr_ = dutotr_cur * 1.0
-                rorayl_cur = np.zeros(gatts['data_dimensions']) + np.nan
-                dutotr_cur = np.zeros(gatts['data_dimensions']) + np.nan
+                rorayl_cur = np.zeros(global_attrs['data_dimensions']) + np.nan
+                dutotr_cur = np.zeros(global_attrs['data_dimensions']) + np.nan
                 for sidx, segment in enumerate(segment_data):
                     rorayl_cur[segment_data[segment]['sub']] = rorayl_[sidx]
                     dutotr_cur[segment_data[segment]['sub']] = dutotr_[sidx]
                 del rorayl_, dutotr_
 
             ## create full scene parameters for tiled processing
-            if (setu['dsf_aot_estimate'] == 'tiled') & (use_revlut):
+            if (user_settings['dsf_aot_estimate'] == 'tiled') & (use_revlut):
                 print('Interpolating tiles for rhorc')
                 rorayl_cur = atmos.shared.tiles_interp(rorayl_cur, xnew, ynew,
-                                                    target_mask=(valid_mask if setu['slicing'] else None), \
-                                                    target_mask_full=True, smooth=setu['dsf_tile_smoothing'],
-                                                    kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                                    method=setu['dsf_tile_interp_method'])
+                                                       target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                       target_mask_full=True, smooth=user_settings['dsf_tile_smoothing'],
+                                                       kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                       method=user_settings['dsf_tile_interp_method'])
                 dutotr_cur = atmos.shared.tiles_interp(dutotr_cur, xnew, ynew,
-                                                    target_mask=(valid_mask if setu['slicing'] else None), \
-                                                    target_mask_full=True, smooth=setu['dsf_tile_smoothing'],
-                                                    kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                                    method=setu['dsf_tile_interp_method'])
+                                                       target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                       target_mask_full=True, smooth=user_settings['dsf_tile_smoothing'],
+                                                       kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                       method=user_settings['dsf_tile_interp_method'])
 
             ## write ac parameters
-            if setu['dsf_write_tiled_parameters']:
+            if user_settings['dsf_write_tiled_parameters']:
                 if len(np.atleast_1d(rorayl_cur) > 1):
                     if rorayl_cur.shape == cur_data.shape:
                         d_k = f'rorayl_{b_v["att"]["wave_name"]}'
@@ -1616,7 +1507,7 @@ def apply_l2r(l1r, gatts, settings=None):
 
             del cur_rhorc, rorayl_cur, dutotr_cur
 
-        if ac_opt == 'dsf' and setu['slicing']:
+        if ac_opt == 'dsf' and user_settings['slicing']:
             del valid_mask
 
         ## write rhos
@@ -1625,10 +1516,10 @@ def apply_l2r(l1r, gatts, settings=None):
         l2r_datasets.append(rhos_name)
 
         del cur_data
-        print(f'{gatts["sensor"]}/{b_k} took {(time.time() - t0):.1f}s ({"RevLUT" if use_revlut else "StdLUT"})')
+        print(f'{global_attrs["sensor"]}/{b_k} took {(time.time() - t0):.1f}s ({"RevLUT" if use_revlut else "StdLUT"})')
 
     ## glint correction
-    if (ac_opt == 'dsf') & (setu['dsf_residual_glint_correction']) & ( setu['dsf_residual_glint_correction_method'] == 'default'):
+    if (ac_opt == 'dsf') & (user_settings['dsf_residual_glint_correction']) & (user_settings['dsf_residual_glint_correction_method'] == 'default'):
         ## find bands for glint correction
         gc_swir1, gc_swir2 = None, None
         gc_swir1_b, gc_swir2_b = None, None
@@ -1653,15 +1544,15 @@ def apply_l2r(l1r, gatts, settings=None):
                     swir2d = sd
                     gc_swir2_b = b_k
             ## mask band
-            sd = np.abs(b_v['att']['wave_nm'] - setu['glint_mask_rhos_wave'])
+            sd = np.abs(b_v['att']['wave_nm'] - user_settings['glint_mask_rhos_wave'])
             if sd < 100:
                 if sd < maskd:
                     gc_mask = b_v['att']['rhos_ds']
                     maskd = sd
                     gc_mask_b = b_k
             ## user band
-            if setu['glint_force_band'] is not None:
-                sd = np.abs(b_v['att']['wave_nm'] - setu['glint_force_band'])
+            if user_settings['glint_force_band'] is not None:
+                sd = np.abs(b_v['att']['wave_nm'] - user_settings['glint_force_band'])
                 if sd < 100:
                     if sd < userd:
                         gc_user = b_v['att']['rhos_ds']
@@ -1719,7 +1610,7 @@ def apply_l2r(l1r, gatts, settings=None):
             if gc_mask_data is None:  ## reference rhos dataset can be missing for night time images (tgas computation goes negative)
                 print('No glint mask could be determined.')
             else:
-                sub_gc = np.where(np.isfinite(gc_mask_data) & (gc_mask_data <= setu['glint_mask_rhos_threshold']))
+                sub_gc = np.where(np.isfinite(gc_mask_data) & (gc_mask_data <= user_settings['glint_mask_rhos_threshold']))
                 del gc_mask_data
 
                 ## get reference bands transmittance
@@ -1731,21 +1622,21 @@ def apply_l2r(l1r, gatts, settings=None):
                         continue
 
                     ## two way direct transmittance
-                    if setu['dsf_aot_estimate'] == 'tiled':
-                        if setu['slicing']:
+                    if user_settings['dsf_aot_estimate'] == 'tiled':
+                        if user_settings['slicing']:
                             ## load rhos dataset
                             cur_data = l2r['bands'][b_k]['data'].copy()
                             valid_mask = np.isfinite(cur_data)
                             del cur_data
                         ttot_all_b = atmos.shared.tiles_interp(ttot_all[b_k], xnew, ynew,
-                                                            target_mask=(valid_mask if setu['slicing'] else None), \
-                                                            target_mask_full=True,
-                                                            smooth=setu['dsf_tile_smoothing'],
-                                                            kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                                            method=setu['dsf_tile_interp_method'])
-                    elif setu['dsf_aot_estimate'] == 'segmented':
+                                                               target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                               target_mask_full=True,
+                                                               smooth=user_settings['dsf_tile_smoothing'],
+                                                               kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                               method=user_settings['dsf_tile_interp_method'])
+                    elif user_settings['dsf_aot_estimate'] == 'segmented':
                         ttot_all_ = ttot_all[b] * 1.0
-                        ttot_all_b = np.zeros(gatts['data_dimensions']) + np.nan
+                        ttot_all_b = np.zeros(global_attrs['data_dimensions']) + np.nan
                         for sidx, segment in enumerate(segment_data):
                             ttot_all_b[segment_data[segment]['sub']] = ttot_all_[sidx]
                         del ttot_all_
@@ -1781,24 +1672,24 @@ def apply_l2r(l1r, gatts, settings=None):
                     cur_data = l2r['bands'][b_k]['data'].copy()
 
                     ## two way direct transmittance
-                    if setu['dsf_aot_estimate'] == 'tiled':
-                        if setu['slicing']:
+                    if user_settings['dsf_aot_estimate'] == 'tiled':
+                        if user_settings['slicing']:
                             valid_mask = np.isfinite(cur_data)
                         ttot_all_b = atmos.shared.tiles_interp(ttot_all[b_k], xnew, ynew,
-                                                            target_mask=(valid_mask if setu['slicing'] else None), \
-                                                            target_mask_full=True,
-                                                            smooth=setu['dsf_tile_smoothing'],
-                                                            kern_size=setu['dsf_tile_smoothing_kernel_size'],
-                                                            method=setu['dsf_tile_interp_method'])
-                    elif setu['dsf_aot_estimate'] == 'segmented':
+                                                               target_mask=(valid_mask if user_settings['slicing'] else None), \
+                                                               target_mask_full=True,
+                                                               smooth=user_settings['dsf_tile_smoothing'],
+                                                               kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
+                                                               method=user_settings['dsf_tile_interp_method'])
+                    elif user_settings['dsf_aot_estimate'] == 'segmented':
                         ttot_all_ = ttot_all[b_k] * 1.0
-                        ttot_all_b = np.zeros(gatts['data_dimensions']) + np.nan
+                        ttot_all_b = np.zeros(global_attrs['data_dimensions']) + np.nan
                         for sidx, segment in enumerate(segment_data):
                             ttot_all_b[segment_data[segment]['sub']] = ttot_all_[sidx]
                         del ttot_all_
                     else:
                         ttot_all_b = ttot_all[b_k] * 1.0
-                    if setu['dsf_write_tiled_parameters']:
+                    if user_settings['dsf_write_tiled_parameters']:
                         if len(np.atleast_1d(ttot_all_b) > 1):
                             ttot_key = f'ttot_{b_v["att"]["wave_name"]}'
                             if ttot_all_b.shape == muv.shape:
@@ -1855,8 +1746,8 @@ def apply_l2r(l1r, gatts, settings=None):
                             ## set negatives to 0
                             rhog_ref[rhog_ref < 0] = 0
                         ## write reference glint
-                        if setu['glint_write_rhog_ref']:
-                            tmp = np.zeros(gatts['data_dimensions'], dtype=np.float32) + np.nan
+                        if user_settings['glint_write_rhog_ref']:
+                            tmp = np.zeros(global_attrs['data_dimensions'], dtype=np.float32) + np.nan
                             tmp[sub_gc] = rhog_ref
                             l2r['rhog_ref'] = tmp
                     ## end select glint correction band
@@ -1879,8 +1770,8 @@ def apply_l2r(l1r, gatts, settings=None):
                     del cur_data
 
                     ## write band glint
-                    if setu['glint_write_rhog_all']:
-                        tmp = np.zeros(gatts['data_dimensions'], dtype=np.float32) + np.nan
+                    if user_settings['glint_write_rhog_all']:
+                        tmp = np.zeros(global_attrs['data_dimensions'], dtype=np.float32) + np.nan
                         tmp[sub_gc] = cur_rhog
                         l2r[f'rhog_{b_v["att"]["wave_name"]}'] = {}
                         l2r[f'rhog_{b_v["att"]["wave_name"]}']['data'] = tmp
@@ -1893,33 +1784,33 @@ def apply_l2r(l1r, gatts, settings=None):
                 else:
                     del T_SWIR1, T_SWIR2, use_swir1
             del Rf_sen, omega, muv, mus
-        if (setu['dsf_aot_estimate'] == 'tiled') & (setu['slicing']):
+        if (user_settings['dsf_aot_estimate'] == 'tiled') & (user_settings['slicing']):
             del valid_mask
     ## end glint correction
 
     ## alternative glint correction
-    if (ac_opt == 'dsf') & (setu['dsf_residual_glint_correction']) & (setu['dsf_aot_estimate'] in ['fixed', 'segmented']) & \
-            (setu['dsf_residual_glint_correction_method'] == 'alternative'):
+    if (ac_opt == 'dsf') & (user_settings['dsf_residual_glint_correction']) & (user_settings['dsf_aot_estimate'] in ['fixed', 'segmented']) & \
+            (user_settings['dsf_residual_glint_correction_method'] == 'alternative'):
 
         ## reference aot and wind speed
-        if setu['dsf_aot_estimate'] == 'fixed':
-            gc_aot = max(0.1, gatts['ac_aot_550'])
+        if user_settings['dsf_aot_estimate'] == 'fixed':
+            gc_aot = max(0.1, global_attrs['ac_aot_550'])
             gc_wind = 20
-            gc_lut = gatts['ac_model']
+            gc_lut = global_attrs['ac_model']
 
-            raa = gatts['raa']
-            sza = gatts['sza']
-            vza = gatts['vza']
+            raa = global_attrs['raa']
+            sza = global_attrs['sza']
+            vza = global_attrs['vza']
 
             ## get surface reflectance for fixed geometry
             if len(np.atleast_1d(raa)) == 1:
                 if hyper:
-                    surf = lutdw[gc_lut]['rgi']((gatts['pressure'], lutdw[gc_lut]['ipd']['rsky_s'], lutdw[gc_lut]['meta']['wave'], raa, vza, sza, gc_wind, gc_aot))
+                    surf = lutdw[gc_lut]['rgi']((global_attrs['pressure'], lutdw[gc_lut]['ipd']['rsky_s'], lutdw[gc_lut]['meta']['wave'], raa, vza, sza, gc_wind, gc_aot))
                     surf_res = atmos.shared.rsr_convolute_dict(lutdw[gc_lut]['meta']['wave'], surf, rsrd['rsr'])
                 else:
-                    surf_res = {b: lutdw[gc_lut]['rgi'][b]((gatts['pressure'], lutdw[gc_lut]['ipd']['rsky_s'], raa, vza, sza, gc_wind, gc_aot)) for b in lutdw[gc_lut]['rgi']}
+                    surf_res = {b: lutdw[gc_lut]['rgi'][b]((global_attrs['pressure'], lutdw[gc_lut]['ipd']['rsky_s'], raa, vza, sza, gc_wind, gc_aot)) for b in lutdw[gc_lut]['rgi']}
 
-        if setu['dsf_aot_estimate'] == 'segmented':
+        if user_settings['dsf_aot_estimate'] == 'segmented':
             for sidx, segment in enumerate(segment_data):
                 gc_aot = max(0.1, aot_sel[sidx])
                 gc_wind = 20
@@ -1948,15 +1839,15 @@ def apply_l2r(l1r, gatts, settings=None):
             rhos_ds = b_v['att']['rhos_ds']
             if rhos_ds not in l2r_datasets:
                 continue
-            if (b_v['att']['wavelength'] < setu['dsf_residual_glint_wave_range'][0]) | \
-                    (b_v['att']['wavelength'] > setu['dsf_residual_glint_wave_range'][1]):
+            if (b_v['att']['wavelength'] < user_settings['dsf_residual_glint_wave_range'][0]) | \
+                    (b_v['att']['wavelength'] > user_settings['dsf_residual_glint_wave_range'][1]):
                 continue
 
             print(f'Reading reference for glint correction from band {b_k} ({b_v["att"]["wave_name"]} nm)')
 
-            if setu['dsf_aot_estimate'] == 'fixed':
+            if user_settings['dsf_aot_estimate'] == 'fixed':
                 gc_sur_cur = surf_res[band_num]
-            if setu['dsf_aot_estimate'] == 'segmented':
+            if user_settings['dsf_aot_estimate'] == 'segmented':
                 gc_sur_cur = l2r['bands'][b_k] * np.nan
                 for segment in segment_data:
                     gc_sur_cur[segment_data[segment]['sub']] = surf_res[segment][band_num]
@@ -1969,7 +1860,7 @@ def apply_l2r(l1r, gatts, settings=None):
                 gc_sur = np.dstack((gc_sur, gc_sur_cur))
 
         if gc_ref is None:
-            print(f'No bands found between {setu["dsf_residual_glint_wave_range"][0]} and {setu["dsf_residual_glint_wave_range"][1]} nm for glint correction')
+            print(f'No bands found between {user_settings["dsf_residual_glint_wave_range"][0]} and {user_settings["dsf_residual_glint_wave_range"][1]} nm for glint correction')
         else:
             ## compute average reference glint
             if len(gc_ref.shape) == 3:
@@ -1986,13 +1877,13 @@ def apply_l2r(l1r, gatts, settings=None):
 
             ## compute average modeled surface glint
             axis = None
-            if setu['dsf_aot_estimate'] == 'segmented':
+            if user_settings['dsf_aot_estimate'] == 'segmented':
                 axis = 2
             gc_sur_mean = np.nanmean(gc_sur, axis=axis)
             gc_sur_std = np.nanstd(gc_sur, axis=axis)
 
             ## get subset where to apply glint correction
-            gc_sub = np.where(gc_ref_mean < setu['glint_mask_rhos_threshold'])
+            gc_sub = np.where(gc_ref_mean < user_settings['glint_mask_rhos_threshold'])
 
             ## glint correction per band
             for ib, (b_k, b_v) in enumerate(l2r['bands'].items()):
@@ -2003,10 +1894,10 @@ def apply_l2r(l1r, gatts, settings=None):
                 print(f'Performing glint correction for band {b_k} ({b_v["att"]["wave_name"]} nm)')
 
                 ## estimate current band glint from reference glint image and ratio of interface reflectance
-                if setu['dsf_aot_estimate'] == 'fixed':
+                if user_settings['dsf_aot_estimate'] == 'fixed':
                     sur = surf_res[band_name] * 1.0
 
-                if setu['dsf_aot_estimate'] == 'segmented':
+                if user_settings['dsf_aot_estimate'] == 'segmented':
                     sur = gc_ref_mean * np.nan
                     for segment in segment_data:
                         sur[segment_data[segment]['sub']] = surf_res[segment][band_name]
@@ -2023,8 +1914,8 @@ def apply_l2r(l1r, gatts, settings=None):
                 b_v['data'] = cur_data
 
                 ## write band glint
-                if setu['glint_write_rhog_all']:
-                    tmp = np.zeros(gatts['data_dimensions'], dtype=np.float32) + np.nan
+                if user_settings['glint_write_rhog_all']:
+                    tmp = np.zeros(global_attrs['data_dimensions'], dtype=np.float32) + np.nan
                     tmp[gc_sub] = cur_rhog
                     rhog_key = f'rhog_{b_v["att"]["wave_name"]}'
                     l2r[rhog_key] = {}
