@@ -8,7 +8,7 @@ def select_lut_type(global_attrs:dict, user_settings:dict):
             par = 'romix+rsky_t'
         elif (user_settings['dsf_interface_option'] == '6sv'):
             par = 'romix+rsurf'
-            print(par)
+            # print(par)
     else:
         par = 'romix'
 
