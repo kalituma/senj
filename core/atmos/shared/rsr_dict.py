@@ -21,8 +21,9 @@ def rsr_dict(sensor = None, rsrd = None, wave_range = [0.25,2.55], wave_step = 0
         if sensor is None:
             sens = glob.glob(atmos.config['data_dir'] + '/RSR/*.txt')
         else:
-            sens = glob.glob(atmos.config['data_dir'] + '/RSR/{}.txt'.format(sensor))
-            if len(sens) == 0: print('Could not find {} RSR file at {}'.format(sensor, atmos.config['data_dir'] + '/RSR/'))
+            sens = glob.glob(atmos.config['data_dir'] + f'/RSR/{sensor}.txt')
+            if len(sens) == 0:
+                print(f'Could not find {sensor} RSR file at {atmos.config["data_dir"] + "/RSR/"}')
 
         rsrd = {}
         for rsrf in sens:
@@ -38,4 +39,4 @@ def rsr_dict(sensor = None, rsrd = None, wave_range = [0.25,2.55], wave_step = 0
         rsrd[fsensor]['wave_name'] = {b:'{:.0f}'.format(rsrd[fsensor]['wave_nm'][b]) for b in rsrd[fsensor]['wave_nm']}
         if 'rsr_bands' not in rsrd[fsensor]:
             rsrd[fsensor]['rsr_bands'] = [b for b in rsrd[fsensor]['rsr']]
-    return(rsrd)
+    return rsrd

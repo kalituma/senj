@@ -1,13 +1,17 @@
+from functools import partial
 import os, time, datetime
 import numpy as np
 import scipy.ndimage, scipy.interpolate
 import skimage.measure
 
 from core import atmos
+from core.util import tiles_interp
 from core.atmos.setting import parse
+
 from core.atmos.run.l2r import check_blackfill_skip, load_rsrd, load_ancillary_data, \
     get_dem_pressure, select_lut_type, clip_angles, prepare_attr_band_ds, build_l1r_mem
-from core.atmos.run.l2r.ac import apply_dsf, apply_ac_exp, correct_cirrus, calc_surface_reflectance
+from core.atmos.run.l2r.ac import apply_dsf, apply_ac_exp, correct_cirrus, calc_surface_reflectance, dsf_correction, exp_correction
+
 
 
 def apply_l2r(l1r:dict, global_attrs:dict):
@@ -15,7 +19,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     data_mem = {}
     l2r = {}
     l2r_band_list = []
-    # rhos_to_band_name = {}
+    rhos_to_band_name = {}
     # l2r['bands'] = {}
     # l2r['inputs'] = {}
     #
@@ -120,10 +124,8 @@ def apply_l2r(l1r:dict, global_attrs:dict):
         # print('Resolved geometry for hyperspectral sensors currently not supported')
         user_settings['resolved_geometry'] = False
 
-    data_mem, tiles, segment_data, use_revlut, per_pixel_geometry = \
-        build_l1r_mem(l1r, geom_mean, mean_ds=mean_ds, l1r_ds=l1r_band_list,
-                      rhot_bands=rhot_bands, user_settings=user_settings,
-                      global_attrs=global_attrs, is_hyper=is_hyper)
+    data_mem, tiles, segment_data, use_revlut, per_pixel_geometry = build_l1r_mem(l1r, geom_mean, mean_ds=mean_ds, l1r_ds=l1r_band_list, rhot_bands=rhot_bands, user_settings=user_settings,
+                                                                                  global_attrs=global_attrs, is_hyper=is_hyper)
 
     ## do not allow LUT boundaries ()
     left, right = np.nan, np.nan
@@ -149,15 +151,23 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     luts = list(lutdw.keys())
     # print(f'Loading LUTs took {(time.time() - t0):.1f} s')
 
+    gk = ''
     if ac_opt == 'dsf':
-        aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands = \
-            apply_dsf(band_ds=band_ds, data_mem=data_mem, lutdw=lutdw, rsrd=rsrd, luts=luts,
-                      l1r_ds=l1r_band_list, par=par, user_settings=user_settings, use_revlut=use_revlut,
-                      revl=revl, tiles=tiles, segment_data=segment_data, is_hyper=is_hyper)
+        aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands, gk = apply_dsf(band_ds=band_ds, data_mem=data_mem, lutdw=lutdw, rsrd=rsrd, luts=luts, l1r_ds=l1r_band_list,
+                                                                                par=par, user_settings=user_settings, use_revlut=use_revlut,
+                                                                                revl=revl, tiles=tiles, segment_data=segment_data, is_hyper=is_hyper)
+
+        corr_func = partial(dsf_correction, gk=gk, aot_sel=aot_sel, aot_lut=aot_lut, rsrd=rsrd, luts=luts, lutdw=lutdw, data_mem=data_mem,
+                            segment_data=segment_data, use_revlut=use_revlut, par=par, is_hyper=is_hyper)
     ## exponential
     elif ac_opt == 'exp':
-        rham, global_attrs = apply_ac_exp(band_ds=band_ds, l1r_band_list=l1r_band_list, data_mem=data_mem, rsrd=rsrd,
-                                          luts=luts, lutdw=lutdw, par=par, user_settings=user_settings, global_attrs=global_attrs)
+        rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam, global_attrs = \
+            apply_ac_exp(band_ds=band_ds, l1r_band_list=l1r_band_list, data_mem=data_mem, rsrd=rsrd, luts=luts, lutdw=lutdw, par=par, user_settings=user_settings, global_attrs=global_attrs)
+
+        corr_func = partial(exp_correction, lutdw=lutdw, par=par, rhoam=rhoam, xi=xi, exp_lut=exp_lut, short_wv=short_wv, long_wv=long_wv, epsilon=epsilon, mask=mask,
+                            fixed_epsilon=fixed_epsilon, fixed_rhoam=fixed_rhoam)
+    else:
+        raise ValueError(f'Unknown atmospheric correction method {ac_opt}')
 
     ## set up interpolator for tiled processing
     if ac_opt == 'dsf':
@@ -178,8 +188,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
             global_attrs['ac_nbands_fit'] = user_settings['dsf_nbands']
             for bbi, bn in enumerate(aot_sel_bands):
                 global_attrs['ac_band{}_idx'.format(bbi + 1)] = aot_sel_bands[bbi]
-                global_attrs['ac_band{}'.format(bbi + 1)] = aot_stack[global_attrs['ac_model']]['band_list'][
-                    aot_sel_bands[bbi]]
+                global_attrs['ac_band{}'.format(bbi + 1)] = aot_stack[global_attrs['ac_model']]['band_list'][ aot_sel_bands[bbi]]
 
         ## write aot to outputfile
         if user_settings['dsf_write_aot_550']:
@@ -191,7 +200,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
                 for sidx, segment in enumerate(segment_data):
                     aot_out[segment_data[segment]['sub']] = aot_sel[sidx]
             elif user_settings['dsf_aot_estimate'] == 'tiled':
-                aot_out = atmos.shared.tiles_interp(aot_sel, xnew, ynew, target_mask=None,
+                aot_out = tiles_interp(aot_sel, xnew, ynew, target_mask=None,
                                                     smooth=user_settings['dsf_tile_smoothing'],
                                                     kern_size=user_settings['dsf_tile_smoothing_kernel_size'],
                                                     method=user_settings['dsf_tile_interp_method'])
@@ -202,7 +211,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
             l2r_band_list.append('aot_550')
 
     ## store ttot for glint correction
-    ttot_all = {}
+    # ttot_all = {}
 
     ## allow use of per pixel geometry for fixed dsf
     if per_pixel_geometry and (user_settings['dsf_aot_estimate'] == 'fixed') and (user_settings['resolved_geometry']):
@@ -217,14 +226,17 @@ def apply_l2r(l1r:dict, global_attrs:dict):
             # print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]}')
             data_mem[ds] = np.repeat(data_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
+    rho_cirrus = None
     ## figure out cirrus bands
     if user_settings['cirrus_correction']:
-        l2r, l2r_band_list, user_settings = correct_cirrus(band_ds=band_ds, l1r_band_list=l1r_band_list, data_mem=data_mem,
-                                                           luts=luts, lutdw=lutdw, par=par, is_hyper=is_hyper,
+        rho_cirrus, l2r, l2r_band_list, user_settings = correct_cirrus(band_ds=band_ds, l1r_band_list=l1r_band_list, data_mem=data_mem,
+                                                           luts=luts, lutdw=lutdw, par=par, is_hyper=is_hyper, rsrd=rsrd,
                                                            l2r=l2r, l2r_band_list=l2r_band_list, user_settings=user_settings)
 
     # print('use_revlut', use_revlut)
-    calc_surface_reflectance()
+    calc_surface_reflectance(xnew=xnew, ynew=ynew, band_ds=band_ds, data_mem=data_mem, l1r_band_list=l1r_band_list,
+                             gk=gk, lutdw=lutdw, rho_cirrus=rho_cirrus, par=par, use_revlut=use_revlut, segment_data=segment_data, is_hyper=is_hyper, ac_opt=ac_opt, luts=luts, rsrd=rsrd,
+                             global_attrs=global_attrs, user_settings=user_settings, l2r=l2r, l2r_band_list=l2r_band_list, rhos_to_band_name=rhos_to_band_name, corr_func=corr_func)
 
     ## glint correction
     if (ac_opt == 'dsf') & (user_settings['dsf_residual_glint_correction']) & (user_settings['dsf_residual_glint_correction_method'] == 'default'):

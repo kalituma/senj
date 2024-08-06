@@ -12,7 +12,7 @@ from core.atmos.run.l1r import meta_dict_to_l1r_meta
 if TYPE_CHECKING:
     from core.raster import Raster
 
-def apply_atmos(target_raster: "Raster", target_band_names:list[str], target_det_name:str, target_band_slot:list[str], atmos_conf_path:str):
+def apply_atmos(target_raster: "Raster", target_band_names:list[str], target_band_slot:list[str], atmos_conf_path:str):
 
     assert len(target_band_names) == len(target_band_slot), 'Band names and slots should have the same length.'
 

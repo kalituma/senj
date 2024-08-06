@@ -37,6 +37,7 @@ def apply_dsf(band_ds, data_mem, lutdw, rsrd, luts, l1r_ds, par, user_settings:d
     aot_stack = None
     aot_sel_bands = None
 
+
     left, right = np.nan, np.nan
     if allow_lut_boundaries:
         left, right = None, None
@@ -65,7 +66,7 @@ def apply_dsf(band_ds, data_mem, lutdw, rsrd, luts, l1r_ds, par, user_settings:d
     else:
         if spectrum_option not in ['darkest', 'percentile', 'intercept']:
             # print('dsf_spectrum_option {} not configured, falling back to darkest'.format(spectrum_option))
-            spectrum_option = 'darkest'
+            user_settings['dsf_spectrum_option'] = 'darkest'
 
         ## run through bands to get aot
         aot_bands, aot_dict, dsf_rhod, gk = calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem,
@@ -169,16 +170,8 @@ def apply_dsf(band_ds, data_mem, lutdw, rsrd, luts, l1r_ds, par, user_settings:d
             if model_selection_method == 'min_drmsd':
 
                 # print(f'Computing RMSD for model {lut_name}')
-
-                rhop_f = np.zeros(
-                    (aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit),
-                    dtype=np.float32
-                ) + np.nan
-
-                rhod_f = np.zeros(
-                    (aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit),
-                    dtype=np.float32
-                ) + np.nan
+                rhop_f = np.zeros((aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit), dtype=np.float32) + np.nan
+                rhod_f = np.zeros((aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit),dtype=np.float32) + np.nan
 
                 for bi, band_slot in enumerate(aot_bands):
                     band_num = band_slot[1:]
@@ -204,67 +197,46 @@ def apply_dsf(band_ds, data_mem, lutdw, rsrd, luts, l1r_ds, par, user_settings:d
                             rhod_f[aot_sub[0], aot_sub[1], ai] = dsf_rhod[band_slot][aot_sub]  # band_data / gas
                         ## get rho path for current band
                         if len(aot_sub[0]) > 0:
-                            if (use_revlut):
-                                xi = [data_mem['pressure' + gk][aot_sub], data_mem['raa' + gk_raa][aot_sub],
-                                      data_mem['vza' + gk_vza][aot_sub], data_mem['sza' + gk][aot_sub],
-                                      data_mem['wind' + gk][aot_sub]]
+                            if use_revlut:
+                                xi = [data_mem['pressure' + gk][aot_sub], data_mem['raa' + gk_raa][aot_sub], data_mem['vza' + gk_vza][aot_sub], data_mem['sza' + gk][aot_sub], data_mem['wind' + gk][aot_sub]]
                             else:
-                                xi = [data_mem['pressure' + gk], data_mem['raa' + gk_raa],
-                                      data_mem['vza' + gk_vza], data_mem['sza' + gk],
-                                      data_mem['wind' + gk]]
+                                xi = [data_mem['pressure' + gk], data_mem['raa' + gk_raa], data_mem['vza' + gk_vza], data_mem['sza' + gk], data_mem['wind' + gk]]
+
                             if is_hyper:
                                 ## get hyperspectral results and resample to band
                                 if len(aot_stack[lut_name]['aot'][aot_sub]) == 1:
                                     if len(xi[0]) == 0:
-                                        res_hyp = lutdw[lut_name]['rgi'](
-                                            (xi[0], lutdw[lut_name]['ipd'][par], lutdw[lut_name]['meta']['wave'],
-                                             xi[1], xi[2], xi[3], xi[4], aot_stack[lut_name]['aot'][aot_sub]))
+                                        res_hyp = lutdw[lut_name]['rgi']((xi[0], lutdw[lut_name]['ipd'][par], lutdw[lut_name]['meta']['wave'], xi[1], xi[2], xi[3], xi[4], aot_stack[lut_name]['aot'][aot_sub]))
                                     else:  ## if more resolved geometry
-                                        res_hyp = lutdw[lut_name]['rgi'](
-                                            (xi[0][aot_sub], lutdw[lut_name]['ipd'][par],
-                                             lutdw[lut_name]['meta']['wave'],
-                                             xi[1][aot_sub], xi[2][aot_sub], xi[3][aot_sub], xi[4][aot_sub],
-                                             aot_stack[lut_name]['aot'][aot_sub]))
-
-                                    rhop_f[aot_sub[0], aot_sub[1], ai] = rsr_convolute_nd(
-                                        res_hyp.flatten(), lutdw[lut_name]['meta']['wave'],
-                                        rsrd['rsr'][band_slot]['response'], rsrd['rsr'][band_slot]['wave'], axis=0)
+                                        res_hyp = lutdw[lut_name]['rgi']((xi[0][aot_sub], lutdw[lut_name]['ipd'][par], lutdw[lut_name]['meta']['wave'],xi[1][aot_sub], xi[2][aot_sub], xi[3][aot_sub], xi[4][aot_sub], aot_stack[lut_name]['aot'][aot_sub]))
+                                    rhop_f[aot_sub[0], aot_sub[1], ai] = rsr_convolute_nd( res_hyp.flatten(), lutdw[lut_name]['meta']['wave'], rsrd['rsr'][band_slot]['response'], rsrd['rsr'][band_slot]['wave'], axis=0)
                                 else:
                                     for iii in range(len(aot_stack[lut_name]['aot'][aot_sub])):
                                         if len(xi[0]) == 0:
-                                            res_hyp = lutdw[lut_name]['rgi'](
-                                                (xi[0], lutdw[lut_name]['ipd'][par], lutdw[lut_name]['meta']['wave'],
-                                                 xi[1], xi[2], xi[3], xi[4],
-                                                 aot_stack[lut_name]['aot'][aot_sub][iii]))
+                                            res_hyp = lutdw[lut_name]['rgi']((xi[0], lutdw[lut_name]['ipd'][par], lutdw[lut_name]['meta']['wave'], xi[1], xi[2], xi[3], xi[4], aot_stack[lut_name]['aot'][aot_sub][iii]))
 
                                         else:  ## if more resolved geometry
-                                            res_hyp = lutdw[lut_name]['rgi']((xi[0].flatten()[iii],
-                                                                              lutdw[lut_name]['ipd'][par],
-                                                                              lutdw[lut_name]['meta']['wave'],
-                                                                              xi[1].flatten()[iii],
-                                                                              xi[2].flatten()[iii],
-                                                                              xi[3].flatten()[iii],
-                                                                              xi[4].flatten()[iii],
-                                                                              aot_stack[lut_name]['aot'][aot_sub][iii]))
-                                        rhop_f[aot_sub[0][iii], aot_sub[1][iii], ai] = \
-                                            rsr_convolute_nd(res_hyp.flatten(), lutdw[lut_name]['meta']['wave'], rsrd['rsr'][band_slot]['response'], rsrd['rsr'][band_slot]['wave'], axis=0)
+                                            res_hyp = lutdw[lut_name]['rgi']((xi[0].flatten()[iii], lutdw[lut_name]['ipd'][par], lutdw[lut_name]['meta']['wave'],
+                                                                              xi[1].flatten()[iii], xi[2].flatten()[iii], xi[3].flatten()[iii], xi[4].flatten()[iii], aot_stack[lut_name]['aot'][aot_sub][iii]))
+                                        rhop_f[aot_sub[0][iii], aot_sub[1][iii], ai] = rsr_convolute_nd(res_hyp.flatten(),
+                                                                                                        lutdw[lut_name]['meta']['wave'],
+                                                                                                        rsrd['rsr'][band_slot]['response'],
+                                                                                                        rsrd['rsr'][band_slot]['wave'],
+                                                                                                        axis=0)
                             else:
                                 if aot_estimate_method == 'segmented':
                                     for gki in range(len(aot_sub[0])):
-                                        rhop_f[aot_sub[0][gki], aot_sub[1][gki], ai] = lutdw[lut_name]['rgi'][
-                                            band_slot](
-                                            (xi[0][aot_sub[0][gki]], lutdw[lut_name]['ipd'][par],
-                                             xi[1][aot_sub[0][gki]], xi[2][aot_sub[0][gki]],
-                                             xi[3][aot_sub[0][gki]], xi[4][aot_sub[0][gki]],
-                                             aot_stack[lut_name]['aot'][aot_sub][gki]))
+                                        rhop_f[aot_sub[0][gki], aot_sub[1][gki], ai] = lutdw[lut_name]['rgi'][band_slot]((xi[0][aot_sub[0][gki]], lutdw[lut_name]['ipd'][par],
+                                                                                                                           xi[1][aot_sub[0][gki]], xi[2][aot_sub[0][gki]],
+                                                                                                                           xi[3][aot_sub[0][gki]], xi[4][aot_sub[0][gki]],
+                                                                                                                           aot_stack[lut_name]['aot'][aot_sub][gki]))
 
                                 else:
-                                    rhop_f[aot_sub[0], aot_sub[1], ai] = lutdw[lut_name]['rgi'][band_num](
-                                        (xi[0], lutdw[lut_name]['ipd'][par],
-                                         xi[1], xi[2], xi[3], xi[4], aot_stack[lut_name]['aot'][aot_sub]))
+                                    rhop_f[aot_sub[0], aot_sub[1], ai] = lutdw[lut_name]['rgi'][band_num]((xi[0], lutdw[lut_name]['ipd'][par],
+                                                                                                           xi[1], xi[2], xi[3], xi[4], aot_stack[lut_name]['aot'][aot_sub]))
+
                 ## rmsd for current bands
-                cur_sel_par = np.sqrt(
-                    np.nanmean(np.square((rhod_f - rhop_f)), axis=2))  # band_data - lut value for aot to trans
+                cur_sel_par = np.sqrt(np.nanmean(np.square((rhod_f - rhop_f)), axis=2))  # band_data - lut value for aot to trans
                 # if (aot_estimate_method == 'fixed'):
                 #     print(f'Computing RMSD for model {lut_name}: {cur_sel_par[0][0]:.4e}')
 
@@ -324,4 +296,4 @@ def apply_dsf(band_ds, data_mem, lutdw, rsrd, luts, l1r_ds, par, user_settings:d
         # print(f'Selected {aot_sel_lut}, mean aot = {np.nanmean(aot_sel):.2f}')
     ### end dark_spectrum_fitting
 
-    return aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands
+    return aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands, gk

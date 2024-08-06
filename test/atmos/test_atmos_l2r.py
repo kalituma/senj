@@ -15,8 +15,8 @@ class TestAtmosL2R(unittest.TestCase):
         self.project_path = expand_var('$PROJECT_PATH')
         self.target_path = os.path.join(self.project_path, 'data', 'test', 'target')
         self.l1r_dir = os.path.join(self.target_path, 's2', 'l1r_out')
-
         self.atmos_user_conf = os.path.join(self.project_path, 'test', 'resources', 'config', 'atmos', 'S2A_MSI.txt')
+        self.s2_dim_path = os.path.join(self.project_path, 'data', 'test', 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
         # input_dir = os.path.join(self.project_path, 'data', 'test', 'target', 's2', 'split_safe')
 
         # self.res_60_path = os.path.join(input_dir, 'split_safe_0_B1_B_detector_footprint_B1.tif')

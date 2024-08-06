@@ -2,7 +2,7 @@ import numpy as np
 
 from core.util import rsr_convolute_nd
 
-def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper,
+def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper, rsrd,
                    l2r, l2r_band_list, user_settings:dict):
 
     def _load_params():
@@ -40,12 +40,9 @@ def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper,
 
         ## compute Rayleigh reflectance
         if is_hyper:
-            rorayl_cur = rsr_convolute_nd(rorayl_hyp, lutdw[luts[0]]['meta']['wave'],
-                                                       rsrd['rsr'][band_num]['response'], rsrd['rsr'][band_num]['wave'],
-                                                       axis=0)
+            rorayl_cur = rsr_convolute_nd(rorayl_hyp, lutdw[luts[0]]['meta']['wave'], rsrd['rsr'][band_num]['response'], rsrd['rsr'][band_num]['wave'], axis=0)
         else:
-            rorayl_cur = lutdw[luts[0]]['rgi'][band_slot](
-                (xi[0], lutdw[luts[0]]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
+            rorayl_cur = lutdw[luts[0]]['rgi'][band_slot]((xi[0], lutdw[luts[0]]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
 
         ## cirrus reflectance = rho_t - rho_Rayleigh
         cur_data = band_ds[band_slot]['data'] - rorayl_cur
@@ -66,4 +63,4 @@ def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper,
         l2r['rho_cirrus'] = rho_cirrus
         l2r_band_list.append('rho_cirrus')
 
-    return l2r, l2r_band_list, user_settings
+    return rho_cirrus, l2r, l2r_band_list, user_settings

@@ -29,6 +29,9 @@ class TestAtmosSubFuncs(unittest.TestCase):
         self.target_path = os.path.join(self.project_path, 'data', 'test', 'target')
         input_dir = os.path.join(self.project_path, 'data', 'test', 'target', 's2', 'split_safe')
 
+        self.s2_dim_path = os.path.join(self.project_path, 'data', 'test', 'dim', 's2', 'snap',
+                                        'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
+
         self.res_60_path = os.path.join(input_dir, 'split_safe_0_B1_B_detector_footprint_B1.tif')
         self.res_10_path = os.path.join(input_dir, 'split_safe_1_B2_B_detector_footprint_B2.tif')
         self.res_20_path = os.path.join(input_dir, 'split_safe_2_B6_B_detector_footprint_B6.tif')
@@ -211,3 +214,17 @@ class TestAtmosSubFuncs(unittest.TestCase):
             write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.pkl'))
             write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.pkl'))
             # self.assertEqual(l1r['output'], 'L1R')
+
+    def test_atmos_dim(self):
+        dim_raster = Read(module='snap')(self.s2_dim_path, Context())
+
+        with self.subTest(msg='test L1R'):
+            target_bands = ['B1','B2','B3','B4','B5','B6','B7','B8','B8A']
+            target_slots = target_bands
+            l1r, global_attrs = apply_atmos(dim_raster,
+                                            target_band_names=target_bands,
+                                            target_band_slot=target_slots,
+                                            atmos_conf_path=self.atmos_user_conf)
+
+            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.pkl'))
+            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.pkl'))
