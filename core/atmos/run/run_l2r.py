@@ -9,10 +9,8 @@ from core.util import tiles_interp
 from core.atmos.setting import parse
 
 from core.atmos.run.l2r import check_blackfill_skip, load_rsrd, load_ancillary_data, \
-    get_dem_pressure, select_lut_type, clip_angles, prepare_attr_band_ds, build_l1r_mem
+    get_dem_pressure, select_lut_type, clip_angles, clip_angles_mean, prepare_attr_band_ds, build_l1r_mem
 from core.atmos.run.l2r.ac import apply_dsf, apply_ac_exp, correct_cirrus, calc_surface_reflectance, dsf_correction, exp_correction
-
-
 
 def apply_l2r(l1r:dict, global_attrs:dict):
 
@@ -23,7 +21,6 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     # l2r['bands'] = {}
     # l2r['inputs'] = {}
     #
-
 
     user_settings = parse(global_attrs['sensor'], settings=atmos.settings['user'])
 
@@ -50,8 +47,8 @@ def apply_l2r(l1r:dict, global_attrs:dict):
 
     # print(f'Running acolite for {setu["inputfile"]}')
 
-    first_band_key = list(band_ds.keys())[-1]
-    global_attrs['data_dimensions'] = band_ds[first_band_key]['data'].shape
+    last_band_key = list(band_ds.keys())[-1]
+    global_attrs['data_dimensions'] = band_ds[last_band_key]['data'].shape
     global_attrs['data_elements'] = global_attrs['data_dimensions'][0] * global_attrs['data_dimensions'][1]
 
     rsrd, is_hyper = load_rsrd(global_attrs)
@@ -61,11 +58,6 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     else:
         print(f'Could not find {global_attrs["sensor"]} RSR')
         return()
-
-    # gatts['uoz'] = setu['uoz_default']
-    # gatts['uwv'] = setu['uwv_default']
-    # gatts['wind'] = setu['wind']
-    # gatts['pressure'] = setu['pressure']
 
     uoz = user_settings['uoz_default']
     uwv = user_settings['uwv_default']
@@ -84,7 +76,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     ## dem pressure
     if user_settings['dem_pressure']:
         # print(f'Extracting {user_settings["dem_source"]} DEM data')
-        l1r, l1r_band_list, global_attrs = get_dem_pressure(l1r, l1r_band_list, global_attrs, user_settings)
+        data_mem, l1r_band_list, global_attrs = get_dem_pressure(l1r, l1r_band_list, global_attrs, user_settings, data_mem)
 
     # print(f'default uoz: {user_settings["uoz_default"]:.2f} uwv: {user_settings["uwv_default"]:.2f} pressure: {user_settings["pressure_default"]:.2f}')
     # print(f'current uoz: {global_attrs["uoz"]:.2f} uwv: {global_attrs["uwv"]:.2f} pressure: {global_attrs["pressure"]:.2f}')
@@ -95,17 +87,15 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     ## get mean average geometry
     mean_ds = ['sza', 'vza', 'raa', 'pressure', 'wind']
     for l1r_band_str in l1r_band_list:
-        if ('raa_' in l1r_band_list) or ('vza_' in l1r_band_str):
+        if 'raa_' in l1r_band_list or 'vza_' in l1r_band_str:
             mean_ds.append(l1r_band_str)
 
+    l1r = clip_angles(l1r, l1r_band_list, user_settings)
     geom_mean = {k: np.nanmean(l1r[k]) if k in l1r_band_list else global_attrs[k] for k in mean_ds}
-
-    l1r, geom_mean = clip_angles(l1r_band_list, l1r, geom_mean, user_settings)
+    geom_mean = clip_angles_mean(geom_mean, user_settings)
 
     ## get gas transmittance
-    tg_dict = atmos.ac.gas_transmittance(geom_mean['sza'], geom_mean['vza'],
-                                         uoz=global_attrs['uoz'], uwv=global_attrs['uwv'],
-                                         rsr=rsrd['rsr'])
+    tg_dict = atmos.ac.gas_transmittance(geom_mean['sza'], geom_mean['vza'], uoz=global_attrs['uoz'], uwv=global_attrs['uwv'], rsr=rsrd['rsr'])
 
     ## make bands dataset
     band_ds = prepare_attr_band_ds(band_ds, rsrd, user_settings, rhot_names, transmit_gas=tg_dict)

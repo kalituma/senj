@@ -21,6 +21,7 @@ RESAMPLING_METHODS = {
     'lanczos': gdal.GRA_Lanczos,
 }
 
+from .gdal_meta_from_raw import *
 from .warp_to import *
 
 from .op_funcs import *

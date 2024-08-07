@@ -66,6 +66,7 @@ class ORBIT_TYPE(Enum):
                 return orbit_type
         return None
 
+from .gpf_meta_from_raw import *
 from .gpf_const import *
 from .gpf_op_params import *
 from .check_size import *

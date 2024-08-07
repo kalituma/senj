@@ -42,8 +42,8 @@ def projection_from_granule_meta(granule_meta:dict, s2_target_res:int=10, return
 
 def _build_grid(meta, grid_key):
     grids = {}
-    for i in meta[grid_key].keys():
-        grid = meta[grid_key][i]
+    for res in meta[grid_key].keys():
+        grid = meta[grid_key][res]
         x0 = float(grid['ULX'])
         y0 = float(grid['ULY'])
         xs = float(grid['XDIM'])
@@ -55,13 +55,13 @@ def _build_grid(meta, grid_key):
         y1 = y0 + (ys * ny)
         xrange = (x0, x1)
         yrange = (y0, y1)
-        grids[int(i)] = {'xrange': xrange, 'yrange': yrange, 'nx': nx, 'ny': ny,
+        grids[res] = {'xrange': xrange, 'yrange': yrange, 'nx': nx, 'ny': ny,
                          'x0': x0, 'xs': xs, 'x1': x1, 'y0': y0, 'ys': ys, 'y1': y1}
-        return grids
+    return grids
 
-def _make_proj_dct(grids, s2_target_res, p, proj4_string, is_utm, is_ps, zone_name):
+def _make_proj_dct(grids, s2_target_res:int, p, proj4_string, is_utm, is_ps, zone_name):
 
-    sel_or_grid = grids[int(s2_target_res)]
+    sel_or_grid = grids[f'{s2_target_res}']
 
     dimensions = sel_or_grid['nx'], sel_or_grid['ny']
     pixel_size = sel_or_grid['xs'], sel_or_grid['ys']

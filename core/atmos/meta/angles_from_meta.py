@@ -5,14 +5,15 @@ import numpy as np
 def get_grid_width_height(grid_dict:dict, selected_resolution:str) -> tuple[int, int]:
     return grid_dict['GRIDS'][f'{selected_resolution}']['NCOLS'], grid_dict['GRIDS'][f'{selected_resolution}']['NROWS']
 
-def build_angles(selected_res:int, det_band:np.ndarray, granule_meta:dict, geometry_type:str, warp_option:tuple, index_to_band:list, proj_dict:dict) -> dict:
+def build_angles(det_res:int, det_band:np.ndarray, granule_meta:dict, geometry_type:str, warp_option:tuple, index_to_band:list, proj_dict:dict) -> dict:
 
     out = {}
 
-    width, height = get_grid_width_height(granule_meta, str(selected_res))
+    width, height = get_grid_width_height(granule_meta, str(det_res))
 
     xnew = np.linspace(0, granule_meta['VIEW']['Average_View_Zenith'].shape[1] - 1, int(width))
     ynew = np.linspace(0, granule_meta['VIEW']['Average_View_Zenith'].shape[0] - 1, int(height))
+
     sza = tiles_interp(granule_meta['SUN']['Zenith'], xnew, ynew, smooth=False, method='linear')
     saa = tiles_interp(granule_meta['SUN']['Azimuth'], xnew, ynew, smooth=False, method='linear')
 
@@ -29,8 +30,8 @@ def build_angles(selected_res:int, det_band:np.ndarray, granule_meta:dict, geome
 
         bands = [str(bi) for bi, b in enumerate(index_to_band)]
 
-        vza = np.zeros((int(width), int(height))) + np.nan
-        vaa = np.zeros((int(width), int(height))) + np.nan
+        vza = np.zeros((int(height), int(width))) + np.nan
+        vaa = np.zeros((int(height), int(width))) + np.nan
 
         for det_id, dev_value in enumerate(det_val):
             if dev_value == 0:
@@ -71,7 +72,7 @@ def build_angles(selected_res:int, det_band:np.ndarray, granule_meta:dict, geome
                 vaa[det_mask] = tiles_interp(ave_vaa, xnew + 1, ynew + 1, smooth=False, fill_nan=True,
                                              target_mask=det_mask, target_mask_full=False, method='linear')
 
-    src_params = get_src_param(granule_meta, selected_res)
+    src_params = get_src_param(granule_meta, det_res)
 
     # resample to new geometry
     sza = warp_to(src_params, sza, warp_to=warp_option)

@@ -5,8 +5,18 @@ from core.atmos.ac.ancillary import get
 
 def load_ancillary_data(l1r:dict, l1r_band_list:list, global_attrs:dict, user_settings:dict) -> dict:
 
-    if user_settings['ancillary_data'] and \
-            ('lat' in l1r and 'lon' in l1r) or ('lat' in global_attrs and 'lon' in global_attrs):
+    def _load_params():
+        ancillary_data = user_settings['ancillary_data']
+        pressure = user_settings['pressure']
+        wind = user_settings['wind']
+        pressure_default = user_settings['pressure_default']
+        auxiliary_default = user_settings['s2_auxiliary_default']
+        auxiliary_interpolate = user_settings['s2_auxiliary_interpolate']
+        return ancillary_data, pressure, pressure_default, wind, auxiliary_default, auxiliary_interpolate
+
+    ancillary_data, pressure, pressure_default, wind, auxiliary_default, auxiliary_interpolate = _load_params()
+
+    if ancillary_data and ('lat' in l1r and 'lon' in l1r) or ('lat' in global_attrs and 'lon' in global_attrs):
 
         if 'lat' in l1r and 'lon' in l1r:
             clon = np.nanmedian(l1r['lon'])
@@ -15,15 +25,15 @@ def load_ancillary_data(l1r:dict, l1r_band_list:list, global_attrs:dict, user_se
             clon = global_attrs['lon']
             clat = global_attrs['lat']
 
-        print(f'Getting ancillary data for {global_attrs["isodate"]} {clon:.3f}E {clat:.3f}N')
+        # print(f'Getting ancillary data for {global_attrs["isodate"]} {clon:.3f}E {clat:.3f}N')
         # load ancillary data at center location : ['uoz', 'uwv', 'z_wind', 'm_wind', 'pressure']
         anc = get(global_attrs['isodate'], clon, clat, verbosity=1)
 
         for k in ['uoz', 'uwv', 'wind', 'pressure']:
             if k == 'pressure':
-                if user_settings['pressure'] != user_settings['pressure_default']:
+                if pressure != pressure_default:
                     continue
-            if k == 'wind' and user_settings['wind'] is not None:
+            if k == 'wind' and wind is not None:
                 continue
 
             if k in anc:
@@ -31,7 +41,7 @@ def load_ancillary_data(l1r:dict, l1r_band_list:list, global_attrs:dict, user_se
 
         del clon, clat, anc
     else:
-        if user_settings['s2_auxiliary_default'] and global_attrs['sensor'][0:2] == 'S2' and global_attrs['sensor'][4:] == 'MSI':
+        if auxiliary_default and global_attrs['sensor'][0:2] == 'S2' and global_attrs['sensor'][4:] == 'MSI':
             ## get mid point values from AUX ECMWFT
             if 'AUX_ECMWFT_msl_values' in global_attrs:
                 global_attrs['pressure'] = global_attrs['AUX_ECMWFT_msl_values'][int(len(global_attrs['AUX_ECMWFT_msl_values'])/2)]/100 # convert from Pa to hPa
@@ -45,7 +55,7 @@ def load_ancillary_data(l1r:dict, l1r_band_list:list, global_attrs:dict, user_se
                 global_attrs['wind'] = np.sqrt(u_wind * u_wind + v_wind * v_wind)
 
             ## interpolate to scene centre
-            if user_settings['s2_auxiliary_interpolate']:
+            if auxiliary_interpolate:
                 if 'lat' in l1r_band_list and 'lon' in l1r_band_list:
                     clon = np.nanmedian(l1r['lon'])
                     clat = np.nanmedian(l1r['lon'])

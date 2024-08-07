@@ -51,8 +51,8 @@ def warp_to(source, data, warp_to, rpc_dem=None, type='float'):
         else:
             outputBounds = warp_to_region[1]
             outputBoundsSRS = dstSRS
-        #targetAlignedPixels = True
-        targetAlignedPixels = False
+        targetAlignedPixels = True
+        # targetAlignedPixels = False
 
         target_res = None
         ## if we don't know target resolution, figure out from the outputBounds

@@ -2,9 +2,10 @@ import numpy as np
 import os
 import unittest
 from datetime import datetime
+from jsonpath_ng.ext import parse as parse_ng
 
-from core.config import expand_var
 import core.atmos as atmos
+from core.config import expand_var
 
 from core.atmos.run import l1r_meta_to_global_attrs, meta_dict_to_l1r_meta, apply_atmos
 from core.atmos.run.l1r import preprocess_l1r_band
@@ -18,7 +19,10 @@ from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickl
 from core.raster.funcs import read_band_from_raw, get_band_grid_size
 
 from core.raster.gpf_module import find_grids_and_angle_meta, read_grid_angle_meta_from_product, \
-    get_product_info_meta, get_reflectance_meta_from_product, get_band_info_meta, get_band_info_meta_from_product
+    get_product_info_meta, get_reflectance_meta_from_product, get_band_info_meta, get_band_info_meta_from_product, build_grid_meta, \
+    build_grid_meta_from_gpf
+
+from core.raster.gdal_module import build_grid_meta_from_gdal
 
 from core.logic.context import Context
 from core.operations import Read
@@ -26,11 +30,16 @@ from core.operations import Read
 class TestAtmosSubFuncs(unittest.TestCase):
     def setUp(self) -> None:
         self.project_path = expand_var('$PROJECT_PATH')
+        self.test_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
         self.target_path = os.path.join(self.project_path, 'data', 'test', 'target')
+
+
         input_dir = os.path.join(self.project_path, 'data', 'test', 'target', 's2', 'split_safe')
 
         self.s2_dim_path = os.path.join(self.project_path, 'data', 'test', 'dim', 's2', 'snap',
                                         'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
+        self.s2_safe_path = os.path.join(self.test_root, 'safe', 's2',
+                                         'S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE')
 
         self.res_60_path = os.path.join(input_dir, 'split_safe_0_B1_B_detector_footprint_B1.tif')
         self.res_10_path = os.path.join(input_dir, 'split_safe_1_B2_B_detector_footprint_B2.tif')
@@ -139,7 +148,7 @@ class TestAtmosSubFuncs(unittest.TestCase):
 
         geometry_type = user_settings['geometry_type']
 
-        out_angle = build_angles(selected_res=det_res, det_band=det_dict['B_detector_footprint_B1']['value'], granule_meta=l1r_meta['granule_meta'],
+        out_angle = build_angles(det_res=det_res, det_band=det_dict['B_detector_footprint_B1']['value'], granule_meta=l1r_meta['granule_meta'],
                                  geometry_type=geometry_type, warp_option=warp_option_for_angle,
                                  index_to_band=global_attrs['index_to_band'], proj_dict=global_attrs['proj_dict'])
 
@@ -209,22 +218,43 @@ class TestAtmosSubFuncs(unittest.TestCase):
 
         with self.subTest(msg='test L1R'):
             l1r, global_attrs = apply_atmos(b1_60, target_band_names=['B1'], target_det_name='B_detector_footprint_B1',
-                        target_band_slot=['B1'], atmos_conf_path=self.atmos_user_conf)
+                                            target_band_slot=['B1'], atmos_conf_path=self.atmos_user_conf)
 
             write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.pkl'))
             write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.pkl'))
             # self.assertEqual(l1r['output'], 'L1R')
 
-    def test_atmos_dim(self):
+    def test_grid_dim_and_safe(self):
+        safe_raster = Read(module='snap')(self.s2_safe_path, Context())
+        dim_raster = Read(module='snap')(self.s2_dim_path, Context())
+        tif_raster = Read(module='gdal')(self.res_60_path, Context())
+
+        find_meta_dict = lambda x: [field.value for field in parse_ng(x).find(safe_raster.meta_dict)]
+        find_meta_dict_dim = lambda x: [field.value for field in parse_ng(x).find(dim_raster.meta_dict)]
+
+        grid_from_meta = build_grid_meta(find_meta_dict)
+        grid_from_raw = build_grid_meta_from_gpf(safe_raster.raw, 'B_detector_footprint_B1')
+        grid_from_gdal = build_grid_meta_from_gdal(tif_raster.raw)
+        self.assertEqual(grid_from_meta['60'], grid_from_raw)
+        self.assertEqual(grid_from_meta['60'], grid_from_gdal)
+
+        grid_from_meta = build_grid_meta(find_meta_dict_dim)
+        grid_from_raw = build_grid_meta_from_gpf(dim_raster.raw, 'B_detector_footprint_B1')
+        self.assertNotEquals(grid_from_meta['60'], grid_from_raw)
+
+
+    def test_save_dim_l1r(self):
         dim_raster = Read(module='snap')(self.s2_dim_path, Context())
 
         with self.subTest(msg='test L1R'):
             target_bands = ['B1','B2','B3','B4','B5','B6','B7','B8','B8A']
+            det_bands = 'B_detector_*'
             target_slots = target_bands
             l1r, global_attrs = apply_atmos(dim_raster,
                                             target_band_names=target_bands,
                                             target_band_slot=target_slots,
+                                            det_bands=det_bands,
                                             atmos_conf_path=self.atmos_user_conf)
 
-            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.pkl'))
-            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.pkl'))
+            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.dim.pkl'))
+            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.dim.pkl'))

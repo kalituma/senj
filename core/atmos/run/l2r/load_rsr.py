@@ -1,16 +1,16 @@
 import core.atmos as atmos
 from atmos.shared import rsr_dict, rsr_hyper
 
-def load_rsrd(gloabl_settings:dict) -> tuple:
+def load_rsrd(global_attrs:dict) -> tuple:
 
     is_hyper = False
     ## hyperspectral
-    if gloabl_settings['sensor'] in atmos.config['hyper_sensors']:
+    if global_attrs['sensor'] in atmos.config['hyper_sensors']:
         is_hyper = True
-        rsr = rsr_hyper(gloabl_settings['band_waves'], gloabl_settings['band_widths'], step=0.1)
-        rsrd = rsr_dict(rsrd={gloabl_settings['sensor']: {'rsr': rsr}})
+        rsr = rsr_hyper(global_attrs['band_waves'], global_attrs['band_widths'], step=0.1)
+        rsrd = rsr_dict(rsrd={global_attrs['sensor']: {'rsr': rsr}})
         del rsr
     else:
-        rsrd = rsr_dict(gloabl_settings['sensor'])
+        rsrd = rsr_dict(global_attrs['sensor'])
 
     return rsrd, is_hyper

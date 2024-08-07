@@ -9,7 +9,7 @@ from core.atmos.meta import get_angles_from_meta, get_sensor_type, projection_fr
 def l1r_meta_to_global_attrs(l1r_meta:dict) -> tuple[dict, dict]:
 
     assert l1r_meta['product_info']['PROCESSING_LEVEL'] == 'Level-1C', 'Input data is not Level-1C.'
-    setu = {k: atmos.settings['run'][k] for k in atmos.settings['run']}
+    user_settings = {k: atmos.settings['run'][k] for k in atmos.settings['run']}
 
     sensor = get_sensor_type(l1r_meta['product_info'])
 
@@ -18,19 +18,19 @@ def l1r_meta_to_global_attrs(l1r_meta:dict) -> tuple[dict, dict]:
     se_distance = distance_se(doy)
     isodate = dtime.isoformat()
 
-    setu = atmos.setting.parse(sensor, settings=setu)
+    user_settings = atmos.setting.parse(sensor, settings=user_settings)
 
-    proj_dict = projection_from_granule_meta(l1r_meta['granule_meta'], s2_target_res=int(setu['s2_target_res']))
+    proj_dict = projection_from_granule_meta(l1r_meta['granule_meta'], s2_target_res=user_settings['s2_target_res'])
 
     sza, saa, vza, vaa, raa = get_angles_from_meta(l1r_meta['granule_meta'])
 
     rsr, rsr_bands, gains_dict, offsets_dict = get_gains_offsets_with_rsr(
-        sensor=sensor, gains=setu['gains'], gains_toa=setu['gains_toa'],
-        offsets=setu['offsets'], offsets_toa=setu['offsets_toa'])
+        sensor=sensor, gains=user_settings['gains'], gains_toa=user_settings['gains_toa'],
+        offsets=user_settings['offsets'], offsets_toa=user_settings['offsets_toa'])
 
     waves, w_mu, w_names = get_waves_mu(rsr)
 
-    f0 = f0_get(f0_dataset=setu['solar_irradiance_reference'])
+    f0 = f0_get(f0_dataset=user_settings['solar_irradiance_reference'])
     f0_b = rsr_convolute_dict(wave_data=np.asarray(f0['wave']) / 1000, data=np.asarray(f0['data']) * 10, rsr=rsr)
 
     global_attrs = {
@@ -62,4 +62,4 @@ def l1r_meta_to_global_attrs(l1r_meta:dict) -> tuple[dict, dict]:
     global_attrs['gains_dict'] = gains_dict
     global_attrs['offsets_dict'] = offsets_dict
 
-    return global_attrs, setu
+    return global_attrs, user_settings

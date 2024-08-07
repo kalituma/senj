@@ -65,7 +65,7 @@ s2_dilate_blackfill_iterations=2
 
 ## Sentinel-2 per pixel geometry
 geometry_type=grids_footprint
-geometry_res=60
+geometry_res=10
 geometry_per_band=False
 geometry_fixed_footprint=False
 geometry_override=False

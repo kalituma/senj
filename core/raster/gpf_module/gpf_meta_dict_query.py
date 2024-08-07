@@ -105,7 +105,6 @@ def find_grids_and_angle_meta(meta_dict:dict) -> dict:
     granule_meta['HORIZONTAL_CS_NAME'] = find_meta_dict('$.Granules..HORIZONTAL_CS_NAME')[0]
     granule_meta['HORIZONTAL_CS_CODE'] = find_meta_dict('$.Granules..HORIZONTAL_CS_CODE')[0]
 
-    granule_meta['GRIDS'] = build_grid_meta(find_meta_dict)
     granule_meta['SUN'] = build_sun_angles_meta(find_meta_dict)
     granule_meta['VIEW'], granule_meta['VIEW_DET'] = build_view_angles_meta(find_meta_dict)
 

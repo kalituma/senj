@@ -11,7 +11,6 @@ def gas_transmittance(sza, vza, pressure = 1013, waves = None, uoz = 0.3, uwv = 
                       gases = ['h2o', 'o3', 'o2', 'co2', 'n2o', 'ch4'], lutconfig = '202106F',
                       rsr = None, sensor = None):
 
-
     ## hyperspectral
     if sensor is None:
         ## compute ozone transmittance

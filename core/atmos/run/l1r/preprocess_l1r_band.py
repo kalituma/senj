@@ -10,17 +10,16 @@ def preprocess_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_at
     quant = float(l1r_meta['product_info']['QUANTIFICATION_VALUE'])
 
     granule_meta = l1r_meta['granule_meta']
+    band_info = l1r_meta['sensor_response']
 
     dilate = user_settings['s2_dilate_blackfill']
     dilate_iterations = user_settings['s2_dilate_blackfill_iterations']
 
-    band_info = l1r_meta['sensor_response']
-    wave_names = global_attrs['wave_names']
-    wave_mu = global_attrs['wave_mu']
-
     gains = user_settings['gains']
     offsets = user_settings['offsets']
 
+    wave_names = global_attrs['wave_names']
+    wave_mu = global_attrs['wave_mu']
     gains_dict = global_attrs['gains_dict']
     offsets_dict = global_attrs['offsets_dict']
 

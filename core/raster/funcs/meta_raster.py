@@ -3,8 +3,8 @@ from warnings import warn
 from core.util import assert_bnames
 from core.raster import Raster, RasterType
 from core.raster.funcs import check_product_type, get_band_name_and_index
-from core.raster.gpf_module import get_band_grid_size_gpf
-from core.raster.gdal_module import get_band_grid_size_gdal
+from core.raster.gpf_module import get_band_grid_size_gpf, build_grid_meta_from_gpf
+from core.raster.gdal_module import get_band_grid_size_gdal, build_grid_meta_from_gdal
 
 def set_raw_metadict(raster:Raster, raw, meta_dict:dict, selected_bands:list[Union[str, int]]=None):
     raster.raw = raw
@@ -50,3 +50,15 @@ def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
         return get_band_grid_size_gdal(raster.raw, band_name=all_band_name, selected_index=index)
     else:
         raise NotImplementedError(f'{raster.module_type} is not implemented.')
+
+def build_det_grid(raster:Raster, det_names):
+    grids = {}
+    for det_name in det_names:
+        if raster.module_type == RasterType.SNAP:
+            grid_dict = build_grid_meta_from_gpf(raster.raw, det_name)
+        elif raster.module_type == RasterType.GDAL:
+            grid_dict = build_grid_meta_from_gdal(raster.raw)
+        else:
+            raise NotImplementedError(f'{raster.module_type} is not implemented')
+        grids[f'{int(grid_dict["RESOLUTION"])}'] = grid_dict
+    return grids
