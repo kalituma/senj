@@ -1,44 +1,50 @@
 import numpy as np
 import skimage.measure
 
-def _calcuate_mean(data_mem, use_revlut:bool, per_pixel_geometry:bool,
-                   l1r:dict, geom_mean:dict, mean_ds:list, l1r_ds:list):
-
+def _calcuate_var_means(var_mem, use_revlut:bool, per_pixel_geometry:bool,
+                        var_mean:dict, l1r:dict, var_list:list, l1r_band_list:list):
 
     ## if path reflectance is tiled or resolved, use reverse lut
     ## no need to use reverse lut if fixed geometry is used
     ## we want to use the reverse lut to derive aot if the geometry data is resolved
-    for ds in mean_ds:
-        if ds not in l1r_ds:
-            data_mem[ds] = geom_mean[ds]
+    for var_name in var_list:
+        if var_name not in l1r_band_list:
+            var_mem[var_name] = var_mean[var_name]
         else:
-            data_mem[ds] = l1r[ds]
+            var_mem[var_name] = l1r[var_name]
 
-        if len(np.atleast_1d(data_mem[ds])) > 1:
+        if len(np.atleast_1d(var_mem[var_name])) > 1:
             use_revlut = True  ## if any dataset more than 1 dimension use revlut
             per_pixel_geometry = True
         else:  ## convert floats into arrays
-            data_mem[ds] = np.asarray(data_mem[ds])
-            data_mem[ds].shape += (1, 1)
+            var_mem[var_name] = np.asarray(var_mem[var_name])
+            var_mem[var_name].shape += (1, 1)
 
-        data_mem[f'{ds}_mean'] = np.asarray(np.nanmean(data_mem[ds]))  ## also store tile mean
-        data_mem[f'{ds}_mean'].shape += (1, 1)  ## make 1,1 dimensions
+        var_mem[f'{var_name}_mean'] = np.asarray(np.nanmean(var_mem[var_name]))  ## also store tile mean
+        var_mem[f'{var_name}_mean'].shape += (1, 1)  ## make 1,1 dimensions
 
-    del geom_mean
+    return var_mem, use_revlut, per_pixel_geometry
 
-    return data_mem, use_revlut, per_pixel_geometry
+def _tiling(var_mem:dict, var_list:list[str], per_pixel_geometry:bool, user_settings:dict, global_attrs:dict):
 
-def _tiling(data_mem, mean_ds, user_settings, global_attrs, per_pixel_geometry):
+    def _load_params():
+
+        if 'dsf_tile_dimensions' not in user_settings:
+            user_settings['dsf_tile_dimensions'] = None
+
+        tile_dimensions:list[int] = user_settings['dsf_tile_dimensions']
+        aot_estimate:str = user_settings['dsf_aot_estimate']
+        return tile_dimensions, aot_estimate
+
+    tile_dimensions, aot_estimate = _load_params()
 
     ## for tiled processing track tile positions and average geometry
     tiles = []
-    if 'dsf_tile_dimensions' not in user_settings:
-        user_settings['dsf_tile_dimensions'] = None
 
-    if user_settings['dsf_aot_estimate'] == 'tiled' and user_settings['dsf_tile_dimensions'] is not None:
-        ni = np.ceil(global_attrs['data_dimensions'][0] / user_settings['dsf_tile_dimensions'][0]).astype(int)
-        nj = np.ceil(global_attrs['data_dimensions'][1] / user_settings['dsf_tile_dimensions'][1]).astype(int)
-        if (ni <= 1) | (nj <= 1):
+    if aot_estimate == 'tiled' and tile_dimensions is not None:
+        ni = np.ceil(global_attrs['data_dimensions'][0] / tile_dimensions[0]).astype(int)
+        nj = np.ceil(global_attrs['data_dimensions'][1] / tile_dimensions[1]).astype(int)
+        if ni <= 1 or nj <= 1:
             # print(f'Scene too small for tiling ({ni}x{nj} tiles of {user_settings["dsf_tile_dimensions"][0]}x{user_settings["dsf_tile_dimensions"][1]} pixels), using fixed processing')
             user_settings['dsf_aot_estimate'] = 'fixed'
         else:
@@ -48,35 +54,35 @@ def _tiling(data_mem, mean_ds, user_settings, global_attrs, per_pixel_geometry):
             ## compute tile dimensions
             for ti in range(ni):
                 for tj in range(nj):
-                    subti = [user_settings['dsf_tile_dimensions'][0] * ti,
-                             user_settings['dsf_tile_dimensions'][0] * (ti + 1)]
+                    subti = [tile_dimensions[0] * ti,
+                             tile_dimensions[0] * (ti + 1)]
                     subti[1] = np.min((subti[1], global_attrs['data_dimensions'][0]))
-                    subtj = [user_settings['dsf_tile_dimensions'][1] * tj,
-                             user_settings['dsf_tile_dimensions'][1] * (tj + 1)]
+                    subtj = [tile_dimensions[1] * tj,
+                             tile_dimensions[1] * (tj + 1)]
                     subtj[1] = np.min((subtj[1], global_attrs['data_dimensions'][1]))
                     tiles.append((ti, tj, subti, subtj))
 
             ## create tile geometry datasets
-            for ds in mean_ds:
-                if len(np.atleast_1d(data_mem[ds])) > 1:  ## if not fixed geometry
-                    data_mem[f'{ds}_tiled'] = np.zeros((ni, nj), dtype=np.float32) + np.nan
+            for ds in var_list:
+                if len(np.atleast_1d(var_mem[ds])) > 1:  ## if not fixed geometry
+                    var_mem[f'{ds}_tiled'] = np.zeros((ni, nj), dtype=np.float32) + np.nan
                     for t in range(ntiles):
                         ti, tj, subti, subtj = tiles[t]
-                        data_mem[f'{ds}_tiled'][ti, tj] = \
-                            np.nanmean(data_mem[ds][subti[0]:subti[1], subtj[0]:subtj[1]])
+                        var_mem[f'{ds}_tiled'][ti, tj] = \
+                            np.nanmean(var_mem[ds][subti[0]:subti[1], subtj[0]:subtj[1]])
                 else:  ## if fixed geometry
                     if per_pixel_geometry:
-                        data_mem[f'{ds}_tiled'] = np.zeros((ni, nj), dtype=np.float32) + data_mem[ds]
+                        var_mem[f'{ds}_tiled'] = np.zeros((ni, nj), dtype=np.float32) + var_mem[ds]
                     else:
-                        data_mem[f'{ds}_tiled'] = 1.0 * data_mem[ds]
+                        var_mem[f'{ds}_tiled'] = 1.0 * var_mem[ds]
 
             ## remove full geom datasets as tiled will be used
-            for ds in mean_ds:
-                if f'{ds}_tiled' in data_mem:
-                    del data_mem[ds]
+            for ds in var_list:
+                if f'{ds}_tiled' in var_mem:
+                    del var_mem[ds]
     ## end tiling
 
-    return data_mem, tiles
+    return var_mem, tiles
 
 def _segmenting(data_mem, mean_ds, rhot_bands, segment_data, user_settings):
 
@@ -102,11 +108,6 @@ def _segmenting(data_mem, mean_ds, rhot_bands, segment_data, user_settings):
         # print('Proceeding with dsf_aot_estimate=fixed')
         user_settings['dsf_aot_estimate'] = 'fixed'
     else:
-        # if user_settings['verbosity'] > 3:
-            # print(f'Found {len(segment_data)} segments')
-        # for segment in segment_data:
-            # if user_settings['verbosity'] > 4:
-                # print(f'Segment {segment}/{len(segment_data)}: {len(segment_data[segment]["sub"][0])} pixels')
         ## convert geometry and ancillary data
         for ds in mean_ds:
             if len(np.atleast_1d(data_mem[ds])) > 1:  ## if not fixed geometry
@@ -118,32 +119,42 @@ def _segmenting(data_mem, mean_ds, rhot_bands, segment_data, user_settings):
     ## end segmenting
     return data_mem, segment_data
 
-def build_l1r_mem(l1r, geom_mean, mean_ds, l1r_ds, rhot_bands, user_settings, global_attrs, is_hyper):
+def build_l1r_mem(l1r:dict, var_mean:dict, var_list:list[str], l1r_band_list:list[str], rhot_bands:dict, user_settings:dict, global_attrs:dict, is_hyper:bool):
+
+    def _load_params():
+        aot_estimate:str = user_settings['dsf_aot_estimate']
+        resolved_geometry:bool = user_settings['resolved_geometry']
+        return aot_estimate, resolved_geometry
+
+    aot_estimate, resolved_geometry = _load_params()
 
     use_revlut = False
     per_pixel_geometry = False
 
-    data_mem = {}
-    data_mem, use_revlut, per_pixel_geometry = _calcuate_mean(data_mem, use_revlut, per_pixel_geometry, l1r, geom_mean, mean_ds, l1r_ds)
-    data_mem, tiles = _tiling(data_mem, mean_ds, user_settings, global_attrs, per_pixel_geometry)
+    var_mem = {}
+    var_mem, use_revlut, per_pixel_geometry = _calcuate_var_means(var_mem, use_revlut, per_pixel_geometry, var_mean=var_mean, l1r=l1r, var_list=var_list, l1r_band_list=l1r_band_list)
+    var_mem, tiles = _tiling(var_mem, var_list, per_pixel_geometry, user_settings=user_settings, global_attrs=global_attrs)
 
-    segment_data = {}
-    if user_settings['dsf_aot_estimate'] == 'segmented':
-        data_mem, segment_data = _segmenting(data_mem, mean_ds, rhot_bands, segment_data, user_settings)
+    segment_data = None
+    if aot_estimate == 'segmented':
+        segment_data = dict()
+        var_mem, segment_data = _segmenting(var_mem, var_list, rhot_bands, segment_data, user_settings)
 
-    if (not user_settings['resolved_geometry']) & (user_settings['dsf_aot_estimate'] != 'tiled'):
+    if not resolved_geometry and aot_estimate != 'tiled':
         use_revlut = False
-    if user_settings['dsf_aot_estimate'] in ['fixed', 'segmented']:
+
+    if aot_estimate in ['fixed', 'segmented']:
         use_revlut = False
+
     if is_hyper:
         use_revlut = False
 
     ## set LUT dimension parameters to correct shape if resolved processing
-    if use_revlut and per_pixel_geometry and user_settings['dsf_aot_estimate'] == 'resolved':
-        for ds in mean_ds:
-            if len(np.atleast_1d(data_mem[ds])) != 1:
+    if use_revlut and per_pixel_geometry and aot_estimate == 'resolved':
+        for ds in var_list:
+            if len(np.atleast_1d(var_mem[ds])) != 1:
                 continue
             # print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]} pixels for resolved processing')
-            data_mem[ds] = np.repeat(data_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
+            var_mem[ds] = np.repeat(var_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
-    return data_mem, tiles, segment_data, use_revlut, per_pixel_geometry
+    return var_mem, tiles, segment_data, use_revlut, per_pixel_geometry

@@ -17,7 +17,8 @@
 
 import scipy.interpolate
 import numpy as np
-from core import atmos
+import core.atmos as atmos
+from core.util import rsr_read
 
 def import_luts(pressures = [500, 750, 1013, 1100],
                 base_luts = ['ACOLITE-LUT-202110-MOD1', 'ACOLITE-LUT-202110-MOD2'],
@@ -38,8 +39,11 @@ def import_luts(pressures = [500, 750, 1013, 1100],
 
     if add_rsky:
         klist = ['utott', 'dtott', 'astot', 'romix']
-        if (par == 'romix+rsky_t') & (use_merged_lut): klist += ['romix+rsky_t']
-        if par == 'romix+rsurf': klist += ['rsurf']
+        if par == 'romix+rsky_t' and use_merged_lut:
+            klist += ['romix+rsky_t']
+
+        if par == 'romix+rsurf':
+            klist += ['rsurf']
 
         for k in klist:
             if k not in lut_par:
@@ -54,33 +58,34 @@ def import_luts(pressures = [500, 750, 1013, 1100],
     for lut in base_luts:
         ## run through pressures
         for ip, pr in enumerate(pressures):
-            lutid = '{}-{}mb'.format(lut, '{}'.format(pr).zfill(4))
-            lutdir = '{}/{}'.format(atmos.config['lut_dir'], '-'.join(lutid.split('-')[0:3]))
+            lutid = f'{lut}-{f"{pr}".zfill(4)}mb'
+            lutdir = f'{atmos.config["lut_dir"]}/{"-".join(lutid.split("-")[0:3])}'
 
             if sensor is None:
                 ## indices for reducing LUT size
                 vza_idx, aot_idx = 4, 7
-                if not add_rsky: aot_idx = 6
-                if (add_rsky) & (par == 'romix+rsky_t') & (use_merged_lut): ## load merged lut
-                    lut_data, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut, pr, sensor = sensor,
-                                                              store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
+                if not add_rsky:
+                    aot_idx = 6
+                if add_rsky and (par == 'romix+rsky_t') and use_merged_lut: ## load merged lut
+                    lut_data, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut, pr, sensor = sensor, store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
                 else:
                     lut_data, lut_meta = atmos.aerlut.import_lut(lutid, lutdir, sensor = sensor, lut_par = lut_par, get_remote = get_remote)
             else:
                 ## indices for reducing LUT size
                 vza_idx, aot_idx = 3, 6
-                if not add_rsky: aot_idx = 5
+                if not add_rsky:
+                    aot_idx = 5
 
-                if (add_rsky) & (par == 'romix+rsky_t') & (use_merged_lut):  ## load merged lut
-                    lut_data_dict, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut, pr, sensor = sensor,
-                                                                   store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
+                # param maps for utott(up-ward total transmittion), dtott(down-ward), astot(total scattering coef), romix(rho for mixture), ttot(total transmission) using 5 different variables(azi, thv, ths, wind, tau)
+                if add_rsky and (par == 'romix+rsky_t') and use_merged_lut:  ## load merged lut
+                    lut_data_dict, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut, pr, sensor = sensor, store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
                 else:
                     lut_data_dict, lut_meta = atmos.aerlut.import_lut(lutid, lutdir, sensor = sensor, lut_par = lut_par, get_remote = get_remote)
 
                 if 'bands' not in lut_meta:
                     # get bands from rsr_file as different systems may not keep dict keys in the same order
                     rsr_file = atmos.config['data_dir']+'/RSR/'+sensor+'.txt'
-                    rsr, rsr_bands = core.util.rsr_read(file=rsr_file)
+                    rsr, rsr_bands = rsr_read(file=rsr_file)
                 else:
                     rsr_bands = lut_meta['bands']
 
@@ -91,7 +96,7 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 if sensor is None:
                     lutd = []
                     lut_dim += [lut_meta['wave']]
-                if (add_rsky) & (par == 'romix+rsky_t') & (use_merged_lut): ## add wind dimension
+                if (add_rsky) and (par == 'romix+rsky_t') and (use_merged_lut): ## add wind dimension
                     lut_dim += [lut_meta[k] for k in ['azi', 'thv', 'ths', 'wnd', 'tau']]
                 else:
                     lut_dim += [lut_meta[k] for k in ['azi', 'thv', 'ths', 'tau']]
@@ -104,12 +109,12 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                     for vi, v in enumerate(lut_meta['thv']):
                         if v <= vza_range[0]:
                             vza_sub[0] = vi
-                        if (v >= vza_range[1]) & (vza_sub[1] == -1):
+                        if (v >= vza_range[1]) and (vza_sub[1] == -1):
                             vza_sub[1] = vi+1
                     for vi, v in enumerate(lut_meta['tau']):
                         if v <= aot_range[0]:
                             aot_sub[0] = vi
-                        if (v >= aot_range[1]) & (aot_sub[1] == -1):
+                        if (v >= aot_range[1]) and (aot_sub[1] == -1):
                             aot_sub[1] = vi+1
 
                 if sensor is not None:
@@ -119,14 +124,14 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 lutd.append(lut_data)
             else:
                 for band in rsr_bands:
-                    lut_dict[lut]['lut'][band].append(lut_data_dict[band])
+                    lut_dict[lut]['lut'][band].append(lut_data_dict[band]) # lut_dict(lut_type:MOD_n, pressure, meta, dim, param_index_map, lut_data)
 
         ## generic LUT
         if sensor is None:
             lut_dict[lut]['lut'] = np.stack(lutd)
             ipd = lut_dict[lut]['ipd']
 
-            if (add_rsky) & (par == 'romix+rsky_t') & (not use_merged_lut):
+            if (add_rsky) and (par == 'romix+rsky_t') and (not use_merged_lut):
                 tlut = lut_dict[lut]['lut']
                 rskyd = atmos.aerlut.import_rsky_luts(models=[int(lut[-1])], lutbase=rsky_lut, get_remote = get_remote)
                 rlut = rskyd[int(lut[-1])]['lut']
@@ -176,7 +181,7 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 lut_dict[lut]['dim'] = dim
                 ## end add rsky romix+rsky_t
 
-            if (add_rsky) & (par == 'romix+rsurf'):
+            if (add_rsky) and (par == 'romix+rsurf'):
                 ax = len(ipd)
                 tmp = lut_dict[lut]['lut'][:, ipd['romix'],:,:,:,:,:] + lut_dict[lut]['lut'][:, ipd['rsurf'],:,:,:,:,:]
                 lut_dict[lut]['lut'] = np.insert(lut_dict[lut]['lut'], (ax), tmp, axis=1)
@@ -227,7 +232,7 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 lut_dict[lut]['lut'][band] = np.stack(lut_dict[lut]['lut'][band])
 
             ## add rsky if requested
-            if (add_rsky) & (par == 'romix+rsky_t') & (not use_merged_lut):
+            if (add_rsky) and (par == 'romix+rsky_t') and (not use_merged_lut):
                 rskyd = atmos.aerlut.import_rsky_luts(models=[int(lut[-1])], lutbase=rsky_lut, sensor=sensor, get_remote=get_remote)
                 rlut = rskyd[int(lut[-1])]['lut']
                 if 'wind' in rskyd[int(lut[-1])]['meta']:
@@ -287,7 +292,7 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 lut_dict[lut]['dim'] = dim
                 ## end add rsky
 
-            if (add_rsky) & (par == 'romix+rsurf'):
+            if (add_rsky) and (par == 'romix+rsurf'):
                 ## current pars
                 ipd = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
                 ax = len(ipd)

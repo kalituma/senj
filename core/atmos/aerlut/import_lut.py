@@ -31,20 +31,21 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
     if sensor is None:
         ## extract bz2 files
         unzipped = False
-        lutncbz2 = '{}.bz2'.format(lutnc)
+        lutncbz2 = f'{lutnc}.bz2'
 
         ## try downloading LUT from GitHub
-        if (not os.path.isfile(lutnc)) & (not os.path.isfile(lutncbz2)) & (get_remote):
-            remote_lut = '{}/{}/{}'.format(remote_base, '-'.join(lutid.split('-')[0:3]), os.path.basename(lutncbz2))
+        if (not os.path.isfile(lutnc)) and (not os.path.isfile(lutncbz2)) and get_remote:
+            remote_lut = f'{remote_base}/{"-".join(lutid.split("-")[0:3])}/{os.path.basename(lutncbz2)}'
             try:
                 print('Getting remote LUT {}'.format(remote_lut))
                 atmos.shared.download_file(remote_lut, lutncbz2)
             except:
                 print('Could not download remote lut {} to {}'.format(remote_lut, lutncbz2))
-                if os.path.exists(lutncbz2): os.remove(lutncbz2)
+                if os.path.exists(lutncbz2):
+                    os.remove(lutncbz2)
 
         ## extract bz LUT
-        if (not os.path.isfile(lutnc)) & (os.path.isfile(lutncbz2)):
+        if (not os.path.isfile(lutnc)) and (os.path.isfile(lutncbz2)):
             import bz2, shutil
             with bz2.BZ2File(lutncbz2) as fi, open(lutnc,"wb") as fo:
                 shutil.copyfileobj(fi,fo)
@@ -58,7 +59,8 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
             print(sys.exc_info()[0])
             print('Failed to open LUT data from NetCDF (id='+lutid+')')
 
-        if unzipped: os.remove(lutnc) ## clear unzipped LUT
+        if unzipped:
+            os.remove(lutnc) ## clear unzipped LUT
 
         if lut is None:
             print('Could not import LUT {} from {}'.format(lutid, lutdir))
@@ -70,24 +72,28 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
             lut_sub_par = []
             for i, ik in enumerate(lut_par):
                 for j, jk in enumerate(meta['par']):
-                    if (ik == jk):
+                    if ik == jk:
                         lut_sub_idx.append(j)
                         lut_sub_par.append(jk)
             ## add ttot if not in NetCDF
-            if ('ttot' in lut_par) & ('ttot' not in meta['par']):
+            if ('ttot' in lut_par) and ('ttot' not in meta['par']): # ttot(transmittance) = tray(rayleigh) + taer(aerosol)
                 for j, jk in enumerate(meta['par']):
-                    if 'tray' == jk: tri = j
-                    if 'taer' == jk: tai = j
+                    if 'tray' == jk:
+                        tri = j
+                    if 'taer' == jk:
+                        tai = j
                 lut = np.append(lut, lut[[tri], :,:,:,:,:,:]+lut[[tai], :,:,:,:,:,:], axis=0)
                 lut_sub_par.append('ttot')
                 lut_sub_idx.append(lut.shape[0]-1)
 
             ## add romix+rsurf if not in NetCDF
-            if ('romix+rsurf' in lut_par) & ('romix+rsurf' not in meta['par']) & \
-               (('romix' in meta['par']) & ('rsurf' in meta['par'])):
+            if ('romix+rsurf' in lut_par) and ('romix+rsurf' not in meta['par']) and \
+               (('romix' in meta['par']) and ('rsurf' in meta['par'])):
                 for j, jk in enumerate(meta['par']):
-                    if 'romix' == jk: pi = j
-                    if 'rsurf' == jk: pj = j
+                    if 'romix' == jk:
+                        pi = j
+                    if 'rsurf' == jk:
+                        pj = j
                 lut = np.append(lut, lut[[pi], :,:,:,:,:,:]+lut[[pj], :,:,:,:,:,:], axis=0)
                 lut_sub_par.append('romix+rsurf')
                 lut_sub_idx.append(lut.shape[0]-1)
@@ -102,20 +108,22 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
         ## if any nans set then to 0
         sub = np.where(np.isnan(lut))
         lut[sub] = 0
-        return(lut, meta)
+        return lut, meta
 
     ## sensor specific LUT
     else:
         ## sensor LUT NetCDF is stored here
-        lutnc_s='{}/{}/{}_{}.nc'.format(lutdir,sensor,lutid,sensor)
-        if not os.path.exists(os.path.dirname(lutnc_s)): os.makedirs(os.path.dirname(lutnc_s))
-        if (os.path.isfile(lutnc_s)) & (override): os.remove(lutnc_s)
+        lutnc_s=f'{lutdir}/{sensor}/{lutid}_{sensor}.nc'
+        if not os.path.exists(os.path.dirname(lutnc_s)):
+            os.makedirs(os.path.dirname(lutnc_s))
+        if (os.path.isfile(lutnc_s)) and (override):
+            os.remove(lutnc_s)
 
-        if (not os.path.isfile(lutnc_s)) | (override):
+        if (not os.path.isfile(lutnc_s)) or override:
             ## try downloading LUT from GitHub
-            if (get_remote):
-                slut = '{}_{}'.format(lutid, sensor)
-                remote_lut = '{}/{}/{}/{}.nc'.format(remote_base, '-'.join(lutid.split('-')[0:3]), sensor, slut)
+            if get_remote:
+                slut = f'{lutid}_{sensor}'
+                remote_lut = f'{remote_base}/{"-".join(lutid.split("-")[0:3])}/{sensor}/{slut}.nc'
                 try:
                     print('Getting remote LUT {}'.format(remote_lut))
                     atmos.shared.download_file(remote_lut, lutnc_s)
@@ -176,6 +184,7 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
         ## read dataset from NetCDF
         if os.path.isfile(lutnc_s):
             try:
+                # load params in shape of (19,13,13,16,1,16) for 13 bands, and each shape means (par, azi'muth', thv'view zenith angle', ths'solar zenith angle', wnd, tau)
                 lut_sensor, meta = atmos.shared.lutnc_import(lutnc_s)
             except:
                 print(sys.exc_info()[0])
@@ -187,14 +196,17 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
             lut_sub_par = []
             for i, ik in enumerate(lut_par):
                 for j, jk in enumerate(meta['par']):
-                    if (ik == jk):
+                    if ik == jk:
                         lut_sub_idx.append(j)
                         lut_sub_par.append(jk)
             ## add ttot if not in NetCDF
-            if ('ttot' in lut_par) & ('ttot' not in meta['par']):
+            if ('ttot' in lut_par) and ('ttot' not in meta['par']):
                 for j, jk in enumerate(meta['par']):
-                    if 'tray' == jk: tri = j
-                    if 'taer' == jk: tai = j
+                    if 'tray' == jk:
+                        tri = j
+                    if 'taer' == jk:
+                        tai = j
+
                 for dataset in lut_sensor:
                     lut_sensor[dataset] = np.append(lut_sensor[dataset], \
                         lut_sensor[dataset][[tri],:,:,:,:,:]+lut_sensor[dataset][[tai],:,:,:,:,:], axis=0)
@@ -202,8 +214,7 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
                 lut_sub_idx.append(lut_sensor[dataset].shape[0]-1)
 
             ## add romix+rsurf if not in NetCDF
-            if ('romix+rsurf' in lut_par) & ('romix+rsurf' not in meta['par']) &\
-               (('romix' in meta['par']) & ('rsurf' in meta['par'])):
+            if ('romix+rsurf' in lut_par) and ('romix+rsurf' not in meta['par']) and (('romix' in meta['par']) and ('rsurf' in meta['par'])):
                 for j, jk in enumerate(meta['par']):
                     if 'romix' == jk: pi = j
                     if 'rsurf' == jk: pj = j

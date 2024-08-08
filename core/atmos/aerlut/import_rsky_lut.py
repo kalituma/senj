@@ -14,7 +14,9 @@
 import os
 import numpy as np
 import scipy.interpolate
-from core import atmos
+
+import core.atmos as atmos
+from core.util import rsr_read
 
 def import_rsky_lut(model, lutbase='ACOLITE-RSKY-202102-82W', sensor=None, override=False,
                     get_remote = True, remote_base = None):
@@ -72,7 +74,7 @@ def import_rsky_lut(model, lutbase='ACOLITE-RSKY-202102-82W', sensor=None, overr
                 ## get sensor RSR
                 lutdir=atmos.config['lut_dir']
                 rsr_file = atmos.config['data_dir']+'/RSR/'+sensor+'.txt'
-                rsr, rsr_bands = core.util.rsr_read(file=rsr_file)
+                rsr, rsr_bands = rsr_read(file=rsr_file)
 
                 ## make new sensor lutfile
                 if (override) & (os.path.isfile(lutnc_s)): os.remove(lutnc_s)

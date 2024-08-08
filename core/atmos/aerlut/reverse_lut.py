@@ -12,21 +12,21 @@ import numpy as np
 from netCDF4 import Dataset
 import scipy.interpolate
 
-from core import atmos
+import core.atmos as atmos
+from core.util import rsr_read
 
 def reverse_lut(sensor, lutdw=None, par = 'romix',
-                       pct = (1,60), nbins = 20, override = False,
-                       pressures = [500, 750, 1013, 1100],
-                       base_luts = ['ACOLITE-LUT-202110-MOD1', 'ACOLITE-LUT-202110-MOD2'],
-                       rsky_lut = 'ACOLITE-RSKY-202102-82W',
-                       get_remote = True, remote_base = None):
+                pct = (1,60), nbins = 20, override = False, pressures = [500, 750, 1013, 1100],
+                base_luts = ['ACOLITE-LUT-202110-MOD1', 'ACOLITE-LUT-202110-MOD2'],
+                rsky_lut = 'ACOLITE-RSKY-202102-82W',
+                get_remote = True, remote_base = None):
 
     ## use URL from main config
     if remote_base is None: remote_base = '{}'.format(atmos.config['lut_url'])
 
     if lutdw is None:
         rsrf = atmos.config['data_dir']+'/RSR/{}.txt'.format(sensor)
-        rsr, rsr_bands = core.util.rsr_read(rsrf)
+        rsr, rsr_bands = rsr_read(rsrf)
         bands = [b for b in rsr_bands]
     else:
         lut = list(lutdw.keys())[0]
@@ -46,7 +46,7 @@ def reverse_lut(sensor, lutdw=None, par = 'romix',
                 if os.path.exists(lutnc): os.remove(lutnc)
 
                 ## try downloading LUT from GitHub
-                if (get_remote):
+                if get_remote:
                     remote_lut = '{}/{}-Reverse/{}/{}.nc'.format(remote_base, '-'.join(lut.split('-')[0:3]), sensor, slut)
                     try:
                         print('Getting remote LUT {}'.format(remote_lut))
@@ -148,6 +148,7 @@ def reverse_lut(sensor, lutdw=None, par = 'romix',
                 else:
                     rgi[b] = scipy.interpolate.RegularGridInterpolator([meta[k] for k in meta['lut_dimensions']],
                                                                      lutb,bounds_error=False, fill_value=None)
-        revl[lut]={'rgi':rgi, 'minaot':minaot, 'maxaot':maxaot,
-                   'model':int(lut[-1]), 'meta':meta}
+
+        revl[lut]={'rgi':rgi, 'minaot':minaot, 'maxaot':maxaot, 'model':int(lut[-1]), 'meta':meta}
+
     return(revl)

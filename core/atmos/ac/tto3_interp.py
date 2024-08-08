@@ -13,11 +13,11 @@ def tto3_interp(sza, vza, uoz = 0.3, sensor = None, total = True):
     ## import ozone pars
     ko3 = atmos.ac.ko3_read()
 
-    ## cosine of sun and sensor zenith angles
+    ## cosine of sun and sensor zenith angles (path lengths)
     mu0 = np.cos(sza*(np.pi/180))
     muv = np.cos(vza*(np.pi/180))
 
-    ## compute ozone transmittance
+    ## compute ozone transmittance (uoz : ozone column, ko3 : ozone absorption cross section)
     if sensor is None:
         tau_oz = ko3['data'] * uoz
         t0_ozone = np.exp(-1.*(tau_oz) / mu0)

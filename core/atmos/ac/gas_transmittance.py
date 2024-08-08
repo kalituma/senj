@@ -16,7 +16,7 @@ def gas_transmittance(sza, vza, pressure = 1013, waves = None, uoz = 0.3, uwv = 
         ## compute ozone transmittance
         wv_o3_hs, tt_o3_hs = atmos.ac.tto3_interp(sza, vza, uoz=uoz)
 
-        ## compute co2, o2, n2o, ch4 transmittance
+        ## compute co2(dica), o2(oxyg), n2o(niox), ch4(meth) transmittance
         tg_hyp = atmos.ac.gaslut_interp(sza, vza, pressure=pressure, lutconfig=lutconfig)
 
         ## compute water transmittance

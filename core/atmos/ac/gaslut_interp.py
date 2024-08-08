@@ -9,7 +9,9 @@
 import numpy as np
 import os, sys
 import scipy.interpolate
+
 from core import atmos
+from core.util import rsr_convolute_nd
 
 def gaslut_interp(sza, vza, pressure = 1013, sensor = None,
                   lutconfig = '202106F', pars = ['ttdica','ttoxyg','ttniox','ttmeth'],
@@ -84,7 +86,7 @@ def gaslut_interp(sza, vza, pressure = 1013, sensor = None,
         ## convolution lut and make rgi
         tg = {}
         for band in rsr_bands:
-            blut = atmos.shared.rsr_convolute_nd(lut, meta['wave'],rsr[band]['response'], rsr[band]['wave'], axis=2)
+            blut = rsr_convolute_nd(lut, meta['wave'],rsr[band]['response'], rsr[band]['wave'], axis=2)
             rgi = scipy.interpolate.RegularGridInterpolator([meta['pressure'], range(len(meta['par'])),
                                                              meta['vza'], meta['sza']],blut,
                                                              bounds_error=False, fill_value=None)

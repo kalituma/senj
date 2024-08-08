@@ -125,11 +125,7 @@ def calculate_aot(band_data, band_slot:str, data_mem, luts, gk, band_sub, left, 
 
     return aot_band
 
-def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem,
-                        luts, lutdw, aot_estimate_method,
-                        use_revlut, revl, is_hyper,
-                        tiles, segment_data, left, right,
-                        user_settings):
+def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem, luts, lutdw, aot_estimate_method, use_revlut, revl, is_hyper, tiles, segment_data, left, right, user_settings):
     def _load_params():
         percentile = user_settings['dsf_percentile']
         intercept_pixels = user_settings['dsf_intercept_pixels']
