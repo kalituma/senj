@@ -14,7 +14,7 @@ from core.atmos.run.l2r.ac import apply_dsf, apply_ac_exp, correct_cirrus, calc_
 
 def apply_l2r(l1r:dict, global_attrs:dict):
 
-    param_mem = {}
+    var_mem = {}
     l2r = {}
     l2r_band_list = []
     rhos_to_band_name = {}
@@ -76,7 +76,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     ## dem pressure
     if user_settings['dem_pressure']:
         # print(f'Extracting {user_settings["dem_source"]} DEM data')
-        param_mem, l1r_band_list, global_attrs = get_dem_pressure(l1r, l1r_band_list, global_attrs, user_settings, param_mem)
+        var_mem, l1r_band_list, global_attrs = get_dem_pressure(l1r, l1r_band_list, global_attrs, user_settings, var_mem)
 
     # print(f'default uoz: {user_settings["uoz_default"]:.2f} uwv: {user_settings["uwv_default"]:.2f} pressure: {user_settings["pressure_default"]:.2f}')
     # print(f'current uoz: {global_attrs["uoz"]:.2f} uwv: {global_attrs["uwv"]:.2f} pressure: {global_attrs["pressure"]:.2f}')
@@ -118,7 +118,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
         user_settings['resolved_geometry'] = False
 
     # prepare granule and environmental vars(sza, vza, raa, pressure, wind) and means of them in specific type(tile, segment, ...)
-    param_mem, tiles, segment_data, use_rev_lut, per_pixel_geometry = build_l1r_mem(l1r, var_mean, var_list=var_list, l1r_band_list=l1r_band_list, rhot_bands=rhot_bands,
+    var_mem, tiles, segment_data, use_rev_lut, per_pixel_geometry = build_l1r_mem(l1r, var_mean, var_list=var_list, l1r_band_list=l1r_band_list, rhot_bands=rhot_bands,
                                                                                   user_settings=user_settings, global_attrs=global_attrs, is_hyper=is_hyper)
     del var_mean
 
@@ -134,28 +134,26 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     ## QV 2022-04-04 interface reflectance is always loaded since we include wind in the interpolation below
     ## not necessary for runs with par == romix, to be fixed
     ### romix = mixed rho, rsky = sky rho, rsurf = surface rho
-    lut_table = atmos.aerlut.import_luts(add_rsky=True, par=(ro_type if ro_type == 'romix+rsurf' else 'romix+rsky_t'),
-                                     sensor=None if is_hyper else global_attrs['sensor'],
-                                     rsky_lut=user_settings['dsf_interface_lut'],
-                                     base_luts=user_settings['luts'], pressures=user_settings['luts_pressures'],
-                                     reduce_dimensions=user_settings['luts_reduce_dimensions'])
+    lut_table = atmos.aerlut.import_luts(add_rsky=True, par=(ro_type if ro_type == 'romix+rsurf' else 'romix+rsky_t'), sensor=None if is_hyper else global_attrs['sensor'], rsky_lut_name=user_settings['dsf_interface_lut'],
+                                         base_luts=user_settings['luts'], pressures=user_settings['luts_pressures'], reduce_dimensions=user_settings['luts_reduce_dimensions'])
     lut_mod_names = list(lut_table.keys())
     # print(f'Loading LUTs took {(time.time() - t0):.1f} s')
 
     gk = ''
     if ac_opt == 'dsf':
-        aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands, gk = apply_dsf(band_table=band_table, param_mem=param_mem, lut_table=lut_table, rsrd=rsrd, lut_mod_names=lut_mod_names, l1r_band_list=l1r_band_list,
+        aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands, gk = apply_dsf(band_table=band_table, var_mem=var_mem, lut_table=lut_table, rsrd=rsrd, lut_mod_names=lut_mod_names, l1r_band_list=l1r_band_list,
                                                                                 ro_type=ro_type, user_settings=user_settings, use_rev_lut=use_rev_lut, rev_lut_table=rev_lut_table,
                                                                                 tiles=tiles, segment_data=segment_data, is_hyper=is_hyper)
 
-        corr_func = partial(dsf_correction, gk=gk, aot_sel=aot_sel, aot_lut=aot_lut, rsrd=rsrd, luts=lut_mod_names, lutdw=lut_table, data_mem=param_mem,
-                            segment_data=segment_data, use_revlut=use_rev_lut, par=ro_type, is_hyper=is_hyper)
+        corr_func = partial(dsf_correction, aot_sel=aot_sel, aot_lut=aot_lut, rsrd=rsrd, lut_mod_names=lut_mod_names, lut_table=lut_table, var_mem=var_mem, segment_data=segment_data,
+                            use_revlut=use_rev_lut, gk=gk, ro_type=ro_type, is_hyper=is_hyper)
     ## exponential
     elif ac_opt == 'exp':
         rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam, global_attrs = \
-            apply_ac_exp(band_ds=band_table, l1r_band_list=l1r_band_list, data_mem=param_mem, rsrd=rsrd, luts=lut_mod_names, lutdw=lut_table, par=ro_type, user_settings=user_settings, global_attrs=global_attrs)
+            apply_ac_exp(band_table=band_table, l1r_band_list=l1r_band_list, var_mem=var_mem, rsrd=rsrd, lut_mod_names=lut_mod_names, lut_table=lut_table, ro_type=ro_type,
+                         user_settings=user_settings, global_attrs=global_attrs)
 
-        corr_func = partial(exp_correction, lutdw=lut_table, par=ro_type, rhoam=rhoam, xi=xi, exp_lut=exp_lut, short_wv=short_wv, long_wv=long_wv, epsilon=epsilon, mask=mask,
+        corr_func = partial(exp_correction, lut_table=lut_table, ro_type=ro_type, rhoam=rhoam, xi=xi, exp_lut=exp_lut, short_wv=short_wv, long_wv=long_wv, epsilon=epsilon, mask=mask,
                             fixed_epsilon=fixed_epsilon, fixed_rhoam=fixed_rhoam)
     else:
         raise ValueError(f'Unknown atmospheric correction method {ac_opt}')
@@ -171,15 +169,15 @@ def apply_l2r(l1r:dict, global_attrs:dict):
             global_attrs['ac_aot_550'] = aot_sel[0][0]
             global_attrs['ac_model'] = lut_mod_names[aot_lut[0][0]]
 
-        if user_settings['dsf_fixed_aot'] is None:
-            ## store fitting parameter
-            global_attrs['ac_fit'] = aot_sel_par[0][0]
-            ## store bands used for DSF
-            global_attrs['ac_bands'] = ','.join([str(b) for b in aot_stack[global_attrs['ac_model']]['band_list']])
-            global_attrs['ac_nbands_fit'] = user_settings['dsf_nbands']
-            for bbi, bn in enumerate(aot_sel_bands):
-                global_attrs['ac_band{}_idx'.format(bbi + 1)] = aot_sel_bands[bbi]
-                global_attrs['ac_band{}'.format(bbi + 1)] = aot_stack[global_attrs['ac_model']]['band_list'][ aot_sel_bands[bbi]]
+            if user_settings['dsf_fixed_aot'] is None:
+                ## store fitting parameter
+                global_attrs['ac_fit'] = aot_sel_par[0][0]
+                ## store bands used for DSF
+                global_attrs['ac_bands'] = ','.join([str(b) for b in aot_stack[global_attrs['ac_model']]['band_list']])
+                global_attrs['ac_nbands_fit'] = user_settings['dsf_nbands']
+                for bbi, bn in enumerate(aot_sel_bands):
+                    global_attrs['ac_band{}_idx'.format(bbi + 1)] = aot_sel_bands[bbi]
+                    global_attrs['ac_band{}'.format(bbi + 1)] = aot_stack[global_attrs['ac_model']]['band_list'][aot_sel_bands[bbi]]
 
         ## write aot to outputfile
         if user_settings['dsf_write_aot_550']:
@@ -211,26 +209,26 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     ## for ease of subsetting later, repeat single element datasets to the tile shape
     if use_rev_lut and (ac_opt == 'dsf') and (user_settings['dsf_aot_estimate'] != 'tiled'):
         for ds in var_list:
-            if len(np.atleast_1d(param_mem[ds])) != 1:
+            if len(np.atleast_1d(var_mem[ds])) != 1:
                 continue
 
             # print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]}')
-            param_mem[ds] = np.repeat(param_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
+            var_mem[ds] = np.repeat(var_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
     rho_cirrus = None
     ## figure out cirrus bands
     if user_settings['cirrus_correction']:
-        rho_cirrus, l2r, l2r_band_list, user_settings = correct_cirrus(band_ds=band_table, l1r_band_list=l1r_band_list, data_mem=param_mem,
-                                                           luts=lut_mod_names, lutdw=lut_table, par=ro_type, is_hyper=is_hyper, rsrd=rsrd,
-                                                           l2r=l2r, l2r_band_list=l2r_band_list, user_settings=user_settings)
+        rho_cirrus, l2r, l2r_band_list, user_settings = correct_cirrus(band_table=band_table, l1r_band_list=l1r_band_list, var_mem=var_mem,
+                                                                       lut_mod_names=lut_mod_names, lut_table=lut_table, ro_type=ro_type, is_hyper=is_hyper, rsrd=rsrd,
+                                                                       l2r=l2r, l2r_band_list=l2r_band_list, user_settings=user_settings)
 
     # print('use_revlut', use_revlut)
-    calc_surface_reflectance(xnew=xnew, ynew=ynew, band_ds=band_table, data_mem=param_mem, l1r_band_list=l1r_band_list,
-                             gk=gk, lutdw=lut_table, rho_cirrus=rho_cirrus, par=ro_type, use_revlut=use_rev_lut, segment_data=segment_data, is_hyper=is_hyper, ac_opt=ac_opt, luts=lut_mod_names, rsrd=rsrd,
-                             global_attrs=global_attrs, user_settings=user_settings, l2r=l2r, l2r_band_list=l2r_band_list, rhos_to_band_name=rhos_to_band_name, corr_func=corr_func)
+    calc_surface_reflectance(xnew=xnew, ynew=ynew, band_table=band_table, var_mem=var_mem, l1r_band_list=l1r_band_list,
+                             gk=gk, lut_table=lut_table, rho_cirrus=rho_cirrus, ro_type=ro_type, use_revlut=use_rev_lut, segment_data=segment_data, is_hyper=is_hyper, ac_opt=ac_opt, luts=lut_mod_names, rsrd=rsrd,
+                             l2r=l2r, l2r_band_list=l2r_band_list, rhos_to_band_name=rhos_to_band_name, corr_func=corr_func, global_attrs=global_attrs, user_settings=user_settings)
 
     ## glint correction
-    if (ac_opt == 'dsf') & (user_settings['dsf_residual_glint_correction']) & (user_settings['dsf_residual_glint_correction_method'] == 'default'):
+    if (ac_opt == 'dsf') and (user_settings['dsf_residual_glint_correction']) and (user_settings['dsf_residual_glint_correction_method'] == 'default'):
         ## find bands for glint correction
         gc_swir1, gc_swir2 = None, None
         gc_swir1_b, gc_swir2_b = None, None
@@ -533,14 +531,14 @@ def apply_l2r(l1r:dict, global_attrs:dict):
                 # if len(np.atleast_1d(raa)) == 1:
                 if hyper:
                     surf = lut_table[gc_lut]['rgi'](
-                        (param_mem['pressure' + gk][sidx], lut_table[gc_lut]['ipd']['rsky_s'], lut_table[gc_lut]['meta']['wave'],
-                         param_mem['raa' + gk_raa][sidx], param_mem['vza' + gk_vza][sidx], param_mem['sza' + gk][sidx], gc_wind, gc_aot))
+                        (var_mem['pressure' + gk][sidx], lut_table[gc_lut]['ipd']['rsky_s'], lut_table[gc_lut]['meta']['wave'],
+                         var_mem['raa' + gk_raa][sidx], var_mem['vza' + gk_vza][sidx], var_mem['sza' + gk][sidx], gc_wind, gc_aot))
 
                     surf_res[segment] = atmos.shared.rsr_convolute_dict(lut_table[gc_lut]['meta']['wave'], surf, rsrd['rsr'])
                 else:
                     surf_res[segment] = {b: lut_table[gc_lut]['rgi'][b](
-                        (param_mem['pressure' + gk][sidx], lut_table[gc_lut]['ipd']['rsky_s'], param_mem['raa' + gk_raa][sidx], param_mem['vza' + gk_vza][sidx],
-                         param_mem['sza' + gk][sidx], gc_wind, gc_aot)
+                        (var_mem['pressure' + gk][sidx], lut_table[gc_lut]['ipd']['rsky_s'], var_mem['raa' + gk_raa][sidx], var_mem['vza' + gk_vza][sidx],
+                         var_mem['sza' + gk][sidx], gc_wind, gc_aot)
                     ) for b in lut_table[gc_lut]['rgi']}
 
         ## get reference surface reflectance

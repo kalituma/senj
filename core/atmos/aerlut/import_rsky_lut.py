@@ -130,4 +130,4 @@ def import_rsky_lut(model, lutbase='ACOLITE-RSKY-202102-82W', sensor=None, overr
                     rgi_sensor = {}
                     for band in rsr_bands:
                         rgi_sensor[band] = scipy.interpolate.RegularGridInterpolator(dim, lut_sensor[band], bounds_error=False, fill_value=np.nan)
-                    return(lut_sensor, meta, dim, rgi_sensor)
+                    return(lut_sensor, meta, dim, rgi_sensor) # y, meta, x, rgi

@@ -4,8 +4,8 @@ import numpy as np
 from core.atmos.run.l2r.ac import percentile_filter, band_data_fixed, band_data_tiled, band_data_segmented
 from core.util import fillnan, rsr_convolute_nd
 
-def calculate_aot(band_data, band_slot:str, data_mem, luts, gk, band_sub, left, right,
-                  gk_raa, gk_vza, use_revlut, revl, lutdw, par, rsrd, is_hyper, user_settings):
+def calculate_aot(band_data:np.ndarray, band_slot:str, var_mem:dict, lut_mod_names:list, b_finite_mask:tuple, left:float, right:float, use_revlut:bool, rev_lut_table:dict, lut_table:dict, ro_type:str, rsrd:dict,
+                  gk:str, gk_raa:str, gk_vza:str, is_hyper:bool, user_settings:dict):
 
     def _load_params():
         aot_fill_nan = user_settings['dsf_aot_fillnan']
@@ -18,33 +18,33 @@ def calculate_aot(band_data, band_slot:str, data_mem, luts, gk, band_sub, left, 
     aot_fill_nan, is_tiled, min_tile, max_tile = _load_params()
 
     aot_band = {}
-    for l_i, lut_name in enumerate(luts):
+    for l_i, lut_name in enumerate(lut_mod_names):
         aot_band[lut_name] = np.zeros(band_data.shape, dtype=np.float32) + np.nan
         t0 = time.time()
         band_num = band_slot[1:]
 
         ## reverse lut interpolates rhot directly to aot
         if use_revlut:
-            if len(revl[lut_name]['rgi'][band_num].grid) == 5:
-                aot_band[lut_name][band_sub] = revl[lut_name]['rgi'][band_num](
-                    (data_mem['pressure' + gk][band_sub],
-                     data_mem['raa' + gk_raa][band_sub],
-                     data_mem['vza' + gk_vza][band_sub],
-                     data_mem['sza' + gk][band_sub],
-                     band_data[band_sub])
+            if len(rev_lut_table[lut_name]['rgi'][band_num].grid) == 5:
+                aot_band[lut_name][b_finite_mask] = rev_lut_table[lut_name]['rgi'][band_num](
+                    (var_mem['pressure' + gk][b_finite_mask],
+                     var_mem['raa' + gk_raa][b_finite_mask],
+                     var_mem['vza' + gk_vza][b_finite_mask],
+                     var_mem['sza' + gk][b_finite_mask],
+                     band_data[b_finite_mask])
                 )
             else:
-                aot_band[lut_name][band_sub] = revl[lut_name]['rgi'][band_num](
-                    (data_mem['pressure' + gk][band_sub],
-                     data_mem['raa' + gk_raa][band_sub],
-                     data_mem['vza' + gk_vza][band_sub],
-                     data_mem['sza' + gk][band_sub],
-                     data_mem['wind' + gk][band_sub],
-                     band_data[band_sub]))
+                aot_band[lut_name][b_finite_mask] = rev_lut_table[lut_name]['rgi'][band_num](
+                    (var_mem['pressure' + gk][b_finite_mask],
+                     var_mem['raa' + gk_raa][b_finite_mask],
+                     var_mem['vza' + gk_vza][b_finite_mask],
+                     var_mem['sza' + gk][b_finite_mask],
+                     var_mem['wind' + gk][b_finite_mask],
+                     band_data[b_finite_mask]))
 
             # mask out of range aot
-            aot_band[lut_name][aot_band[lut_name] <= revl[lut_name]['minaot']] = np.nan
-            aot_band[lut_name][aot_band[lut_name] >= revl[lut_name]['maxaot']] = np.nan
+            aot_band[lut_name][aot_band[lut_name] <= rev_lut_table[lut_name]['minaot']] = np.nan
+            aot_band[lut_name][aot_band[lut_name] >= rev_lut_table[lut_name]['maxaot']] = np.nan
 
             ## replace nans with closest aot
             if aot_fill_nan:
@@ -56,76 +56,77 @@ def calculate_aot(band_data, band_slot:str, data_mem, luts, gk, band_sub, left, 
             if is_hyper:
                 # get modeled rhot for each wavelength
                 ## set up array to store modeled rhot
-                rhot_aot = np.zeros((len(lutdw[lut_name]['meta']['tau']), \
-                                     len(lutdw[lut_name]['meta']['wave']), \
-                                     len(data_mem['pressure' + gk].flatten())))
+                rhot_aot = np.zeros((len(lut_table[lut_name]['meta']['tau']), \
+                                     len(lut_table[lut_name]['meta']['wave']), \
+                                     len(var_mem['pressure' + gk].flatten())))
 
                 ## compute rhot for range of aot
-                for ai, aot in enumerate(lutdw[lut_name]['meta']['tau']):
+                for ai, aot in enumerate(lut_table[lut_name]['meta']['tau']):
                     for pi in range(rhot_aot.shape[2]):
-                        tmp = lutdw[lut_name]['rgi']((data_mem['pressure' + gk].flatten()[pi],
-                                                      lutdw[lut_name]['ipd'][par],
-                                                      lutdw[lut_name]['meta']['wave'],
-                                                      data_mem['raa' + gk_raa].flatten()[pi],
-                                                      data_mem['vza' + gk_vza].flatten()[pi],
-                                                      data_mem['sza' + gk].flatten()[pi],
-                                                      data_mem['wind' + gk].flatten()[pi], aot))
+                        tmp = lut_table[lut_name]['rgi']((var_mem['pressure' + gk].flatten()[pi],
+                                                          lut_table[lut_name]['ipd'][ro_type],
+                                                          lut_table[lut_name]['meta']['wave'],
+                                                          var_mem['raa' + gk_raa].flatten()[pi],
+                                                          var_mem['vza' + gk_vza].flatten()[pi],
+                                                          var_mem['sza' + gk].flatten()[pi],
+                                                          var_mem['wind' + gk].flatten()[pi], aot))
                         ## store current result
                         rhot_aot[ai, :, pi] = tmp.flatten()
                 # print('Shape of modeled rhot: {}'.format(rhot_aot.shape))
 
                 ## resample modeled results to current band
-                tmp = rsr_convolute_nd(rhot_aot, lutdw[lut_name]['meta']['wave'],
-                                                    rsrd['rsr'][band_num]['response'],
-                                                    rsrd['rsr'][band_num]['wave'],
-                                                    axis=1)
+                tmp = rsr_convolute_nd(rhot_aot, lut_table[lut_name]['meta']['wave'],
+                                       rsrd['rsr'][band_num]['response'],
+                                       rsrd['rsr'][band_num]['wave'],
+                                       axis=1)
 
                 ## interpolate rho path to observation
-                aotret = np.zeros(aot_band[lut_name][band_sub].flatten().shape)
+                aotret = np.zeros(aot_band[lut_name][b_finite_mask].flatten().shape)
                 ## interpolate to observed rhot
                 for ri, crho in enumerate(band_data.flatten()):
-                    aotret[ri] = np.interp(crho, tmp[:, ri], lutdw[lut_name]['meta']['tau'], left=left, right=right)
+                    aotret[ri] = np.interp(crho, tmp[:, ri], lut_table[lut_name]['meta']['tau'], left=left, right=right)
                 # print('Shape of computed aot: {}'.format(aotret.shape))
-                aot_band[lut_name][band_sub] = aotret.reshape(aot_band[lut_name][band_sub].shape)
+                aot_band[lut_name][b_finite_mask] = aotret.reshape(aot_band[lut_name][b_finite_mask].shape)
             else:
-                if len(data_mem['pressure' + gk]) > 1:
-                    for gki in range(len(data_mem['pressure' + gk])):
-                        tmp = lutdw[lut_name]['rgi'][band_num]((data_mem['pressure' + gk][gki],
-                                                                lutdw[lut_name]['ipd'][par],
-                                                                data_mem['raa' + gk_raa][gki],
-                                                                data_mem['vza' + gk_vza][gki],
-                                                                data_mem['sza' + gk][gki],
-                                                                data_mem['wind' + gk][gki],
-                                                                lutdw[lut_name]['meta']['tau']))
+                if len(var_mem['pressure' + gk]) > 1:
+                    for gki in range(len(var_mem['pressure' + gk])):
+                        tmp = lut_table[lut_name]['rgi'][band_num]((var_mem['pressure' + gk][gki],
+                                                                    lut_table[lut_name]['ipd'][ro_type],
+                                                                    var_mem['raa' + gk_raa][gki],
+                                                                    var_mem['vza' + gk_vza][gki],
+                                                                    var_mem['sza' + gk][gki],
+                                                                    var_mem['wind' + gk][gki],
+                                                                    lut_table[lut_name]['meta']['tau']))
                         tmp = tmp.flatten()
-                        aot_band[lut_name][gki] = np.interp(band_data[gki], tmp, lutdw[lut_name]['meta']['tau'],
+                        aot_band[lut_name][gki] = np.interp(band_data[gki], tmp, lut_table[lut_name]['meta']['tau'],
                                                             left=left, right=right)
                 else:
-                    tmp = lutdw[lut_name]['rgi'][band_num]((data_mem['pressure' + gk],
-                                                            lutdw[lut_name]['ipd'][par],
-                                                            data_mem['raa' + gk_raa],
-                                                            data_mem['vza' + gk_vza],
-                                                            data_mem['sza' + gk],
-                                                            data_mem['wind' + gk],
-                                                            lutdw[lut_name]['meta']['tau']))
+                    tmp = lut_table[lut_name]['rgi'][band_num]((var_mem['pressure' + gk],
+                                                                lut_table[lut_name]['ipd'][ro_type],
+                                                                var_mem['raa' + gk_raa],
+                                                                var_mem['vza' + gk_vza],
+                                                                var_mem['sza' + gk],
+                                                                var_mem['wind' + gk],
+                                                                lut_table[lut_name]['meta']['tau']))
                     tmp = tmp.flatten()
 
                     ## interpolate rho path to observation
-                    aot_band[lut_name][band_sub] = np.interp(band_data[band_sub], tmp,
-                                                             lutdw[lut_name]['meta']['tau'], left=left,
-                                                             right=right)
+                    aot_band[lut_name][b_finite_mask] = np.interp(band_data[b_finite_mask], tmp,
+                                                                  lut_table[lut_name]['meta']['tau'], left=left,
+                                                                  right=right)
 
         ## mask minimum/maximum tile aots
         if is_tiled == 'tiled':
             aot_band[lut_name][aot_band[lut_name] < min_tile] = np.nan
             aot_band[lut_name][aot_band[lut_name] > max_tile] = np.nan
 
-        aot_td = time.time() - t0
+        # aot_td = time.time() - t0
         # print(f'{global_attrs["sensor"]}/{band_slot} {lut_name} took {tel:.3f}s ({"RevLUT" if use_revlut else "StdLUT"})')
 
     return aot_band
 
-def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem, luts, lutdw, aot_estimate_method, use_revlut, revl, is_hyper, tiles, segment_data, left, right, user_settings):
+def calculate_aot_bands(band_table:dict, l1r_band_list:list, rsrd:dict, var_mem:dict, lut_mod_names:list, lut_table:dict, aot_estimate_method:str,
+                        use_revlut:bool, rev_lut_table:dict, is_hyper:bool, tiles:list, segment_data:dict, left:float, right:float, ro_type:str, user_settings:dict):
     def _load_params():
         percentile = user_settings['dsf_percentile']
         intercept_pixels = user_settings['dsf_intercept_pixels']
@@ -145,16 +146,16 @@ def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem, luts, lutdw, aot_estima
     percentile, intercept_pixels, spectrum_option, bandslot_exclude, is_filter_rhot, \
         min_gas, wave_range, filter_box, filter_percentile, min_tile_cover, resolved_geometry = _load_params()
 
-    aot_bands = []
+    aot_band_list = []
     aot_dict = {}
     dsf_rhod = {}
 
-    for bi, (band_slot, b_v) in enumerate(band_ds.items()):
+    for bi, (band_slot, b_v) in enumerate(band_table.items()):
         if band_slot in bandslot_exclude:
             continue
         if ('rhot_ds' not in b_v['att']) or ('tt_gas' not in b_v['att']):
             continue
-        if b_v['att']['rhot_ds'] not in l1r_ds:
+        if b_v['att']['rhot_ds'] not in l1r_band_list:
             continue
 
         ## skip band for aot computation
@@ -169,14 +170,14 @@ def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem, luts, lutdw, aot_estima
 
         # print(band_slot, b_v['att']['rhot_ds'])
 
-        band_data = b_v['data'] * 1.0
-        valid = np.isfinite(band_data) * (band_data > 0)
+        estimated_data = b_v['data'] * 1.0
+        valid = np.isfinite(estimated_data) * (estimated_data > 0)
         mask = valid == False
 
         ## apply TOA filter
         if is_filter_rhot:
-            band_data = percentile_filter(band_data, mask, filter_box, filter_percentile)
-        band_sub = np.where(valid)
+            estimated_data = percentile_filter(estimated_data, mask, filter_box, filter_percentile)
+        b_finite_mask = np.where(valid)
         del valid, mask
 
         ## geometry key '' if using resolved, otherwise '_mean' or '_tiled'
@@ -184,17 +185,17 @@ def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem, luts, lutdw, aot_estima
 
         ## fixed path reflectance
         if aot_estimate_method == 'fixed':
-            band_data, gk = band_data_fixed(band_data, band_sub,
+            estimated_data, gk = band_data_fixed(estimated_data, b_finite_mask,
                                             percentile, intercept_pixels, spectrum_option)
 
         ## tiled path reflectance
         elif aot_estimate_method == 'tiled':
-            band_data, gk = band_data_tiled(band_data, tiles,
+            estimated_data, gk = band_data_tiled(estimated_data, tiles,
                                             percentile, intercept_pixels, spectrum_option, min_tile_cover)
 
         ## image is segmented based on input vector mask
         elif aot_estimate_method == 'segmented':
-            band_data, gk = band_data_segmented(band_data, segment_data,
+            estimated_data, gk = band_data_segmented(estimated_data, segment_data,
                                                 percentile, intercept_pixels, spectrum_option)
 
         ## resolved per pixel dsf
@@ -205,34 +206,33 @@ def calculate_aot_bands(band_ds, l1r_ds, rsrd, data_mem, luts, lutdw, aot_estima
             # print(f'DSF option {user_settings["dsf_aot_estimate"]} not configured')
             continue
 
-        del band_sub
+        del b_finite_mask
 
         ## do gas correction
-        band_sub = np.where(np.isfinite(band_data))
-        if len(band_sub[0]) > 0:
-            band_data[band_sub] /= b_v['att']['tt_gas']
+        b_finite_mask = np.where(np.isfinite(estimated_data))
+        if len(b_finite_mask[0]) > 0:
+            estimated_data[b_finite_mask] /= b_v['att']['tt_gas']
 
         ## store rhod
         if aot_estimate_method in ['fixed', 'tiled', 'segmented']:
-            dsf_rhod[band_slot] = band_data
+            dsf_rhod[band_slot] = estimated_data
 
         ## use band specific geometry if available
         gk_raa = f'{gk}'
         gk_vza = f'{gk}'
-        if f'raa_{b_v["att"]["wave_name"]}' in l1r_ds:
+        if f'raa_{b_v["att"]["wave_name"]}' in l1r_band_list:
             gk_raa = f'_{b_v["att"]["wave_name"]}' + gk_raa
-        if f'vza_{b_v["att"]["wave_name"]}' in l1r_ds:
+        if f'vza_{b_v["att"]["wave_name"]}' in l1r_band_list:
             gk_vza = f'_{b_v["att"]["wave_name"]}' + gk_vza
 
         ## compute aot
 
-        aot_band = calculate_aot(band_data, band_slot, data_mem, luts, gk, band_sub, left, right,
-                                 gk_raa, gk_vza, use_revlut, revl, lutdw, b_v['att']['par'], rsrd,
-                                 is_hyper, user_settings)
+        aot_band = calculate_aot(estimated_data, band_slot, var_mem, lut_mod_names, b_finite_mask, left, right, use_revlut, rev_lut_table, lut_table, ro_type, rsrd,
+                                 gk, gk_raa, gk_vza, is_hyper, user_settings)
 
         ## store current band results
         aot_dict[band_slot] = aot_band
-        aot_bands.append(band_slot)
-        del band_data, band_sub, aot_band
+        aot_band_list.append(band_slot)
+        del estimated_data, b_finite_mask, aot_band
 
-    return aot_dict, aot_bands, dsf_rhod, gk
+    return aot_band_list, aot_dict, dsf_rhod, gk

@@ -2,11 +2,11 @@ import numpy as np
 from core.util import rsr_convolute_nd, tiles_interp
 
 def exp_correction(b_dict, b_data, b_num,
-                   lutdw, par, rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam):
+                   lut_table, ro_type, rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam):
 
     ## get Rayleigh correction
-    rorayl_cur = lutdw[exp_lut]['rgi'][b_num]((xi[0], lutdw[exp_lut]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
-    dutotr_cur = lutdw[exp_lut]['rgi'][b_num]((xi[0], lutdw[exp_lut]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], 0.001))
+    rorayl_cur = lut_table[exp_lut]['rgi'][b_num]((xi[0], lut_table[exp_lut]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], 0.001))
+    dutotr_cur = lut_table[exp_lut]['rgi'][b_num]((xi[0], lut_table[exp_lut]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], 0.001))
 
     ## get epsilon in current band
     delta = (long_wv - b_dict['att']['wave_nm']) / (long_wv - short_wv)
@@ -25,11 +25,10 @@ def exp_correction(b_dict, b_data, b_num,
 
     return b_data, rorayl_cur, dutotr_cur
 
-def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_vza, gk_raa, hyper_res, user_settings, global_attrs, l2r,
-                   gk, aot_sel, aot_lut, rsrd, luts, lutdw, data_mem, segment_data, use_revlut, par, is_hyper):
+def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_vza, gk_raa, hyper_res, l2r, aot_sel, aot_lut, rsrd, lut_mod_names, lut_table, var_mem, segment_data,
+                   use_revlut:bool, gk:str, ro_type:str, is_hyper:bool, user_settings:dict, global_attrs:dict):
 
     def _load_params():
-
         slicing = user_settings['slicing']
         aot_estimate = user_settings['dsf_aot_estimate']
         residual_glint_correction = user_settings['dsf_residual_glint_correction']
@@ -67,7 +66,7 @@ def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_
     if glint_correction and glint_correction_method == 'default':
         ttot_all[b_slot] = np.zeros(atm_shape, dtype=np.float32) + np.nan
 
-    for li, lut in enumerate(luts):
+    for li, lut in enumerate(lut_mod_names):
         ls = np.where(aot_lut == li)
         if len(ls[0]) == 0:
             continue
@@ -78,9 +77,9 @@ def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_
             ls = np.where(b_data)
 
         if use_revlut:
-            xi = [data_mem['pressure' + gk][ls], data_mem['raa' + gk_raa][ls], data_mem['vza' + gk_vza][ls], data_mem['sza' + gk][ls], data_mem['wind' + gk][ls]]
+            xi = [var_mem['pressure' + gk][ls], var_mem['raa' + gk_raa][ls], var_mem['vza' + gk_vza][ls], var_mem['sza' + gk][ls], var_mem['wind' + gk][ls]]
         else:
-            xi = [data_mem['pressure' + gk], data_mem['raa' + gk_raa], data_mem['vza' + gk_vza], data_mem['sza' + gk], data_mem['wind' + gk]]
+            xi = [var_mem['pressure' + gk], var_mem['raa' + gk_raa], var_mem['vza' + gk_vza], var_mem['sza' + gk], var_mem['wind' + gk]]
             # subset to number of estimates made for this LUT
             ## QV 2022-07-28 maybe not needed any more?
             # if len(xi[0]) > 1:
@@ -90,57 +89,57 @@ def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_
             ## compute hyper results and resample later
             if hyper_res is None:
                 hyper_res = {}
-                for prm in [par, 'astot', 'dutott', 'ttot']:
+                for prm in [ro_type, 'astot', 'dutott', 'ttot']:
                     if len(ai) == 1:  ## fixed DSF
-                        hyper_res[prm] = lutdw[lut]['rgi']((xi[0], lutdw[lut]['ipd'][prm],
-                                                            lutdw[lut]['meta']['wave'], xi[1], xi[2], xi[3],
-                                                            xi[4], ai)).flatten()
+                        hyper_res[prm] = lut_table[lut]['rgi']((xi[0], lut_table[lut]['ipd'][prm],
+                                                                lut_table[lut]['meta']['wave'], xi[1], xi[2], xi[3],
+                                                                xi[4], ai)).flatten()
                     else:  ## tiled/resolved DSF
-                        hyper_res[prm] = np.zeros((len(lutdw[lut]['meta']['wave']), len(ai))) + np.nan
+                        hyper_res[prm] = np.zeros((len(lut_table[lut]['meta']['wave']), len(ai))) + np.nan
                         for iii in range(len(ai)):
                             if len(xi[0]) == 1:
-                                hyper_res[prm][:, iii] = lutdw[lut]['rgi']((xi[0], lutdw[lut]['ipd'][prm],
-                                                                            lutdw[lut]['meta']['wave'], xi[1],
-                                                                            xi[2], xi[3], xi[4],
-                                                                            ai[iii])).flatten()
+                                hyper_res[prm][:, iii] = lut_table[lut]['rgi']((xi[0], lut_table[lut]['ipd'][prm],
+                                                                                lut_table[lut]['meta']['wave'], xi[1],
+                                                                                xi[2], xi[3], xi[4],
+                                                                                ai[iii])).flatten()
                             else:
-                                hyper_res[prm][:, iii] = lutdw[lut]['rgi'](
-                                    (xi[0].flatten()[iii], lutdw[lut]['ipd'][prm],
-                                     lutdw[lut]['meta']['wave'], xi[1].flatten()[iii], xi[2].flatten()[iii],
+                                hyper_res[prm][:, iii] = lut_table[lut]['rgi'](
+                                    (xi[0].flatten()[iii], lut_table[lut]['ipd'][prm],
+                                     lut_table[lut]['meta']['wave'], xi[1].flatten()[iii], xi[2].flatten()[iii],
                                      xi[3].flatten()[iii], xi[4].flatten()[iii], ai[iii])).flatten()
 
             ## resample to current band
             ### path reflectance
-            romix[ls] = rsr_convolute_nd(hyper_res[par], lutdw[lut]['meta']['wave'],
+            romix[ls] = rsr_convolute_nd(hyper_res[ro_type], lut_table[lut]['meta']['wave'],
                                          rsrd['rsr'][b_num]['response'],
                                          rsrd['rsr'][b_num]['wave'], axis=0)
             ## transmittance and spherical albedo
-            astot[ls] = rsr_convolute_nd(hyper_res['astot'], lutdw[lut]['meta']['wave'],
+            astot[ls] = rsr_convolute_nd(hyper_res['astot'], lut_table[lut]['meta']['wave'],
                                          rsrd['rsr'][b_num]['response'],
                                          rsrd['rsr'][b_num]['wave'], axis=0)
-            dutott[ls] = rsr_convolute_nd(hyper_res['dutott'], lutdw[lut]['meta']['wave'],
+            dutott[ls] = rsr_convolute_nd(hyper_res['dutott'], lut_table[lut]['meta']['wave'],
                                           rsrd['rsr'][b_num]['response'],
                                           rsrd['rsr'][b_num]['wave'], axis=0)
 
             ## total transmittance
             if glint_correction and glint_correction_method == 'default':
-                ttot_all[b_slot][ls] = rsr_convolute_nd(hyper_res['ttot'], lutdw[lut]['meta']['wave'],
+                ttot_all[b_slot][ls] = rsr_convolute_nd(hyper_res['ttot'], lut_table[lut]['meta']['wave'],
                                                         rsrd['rsr'][b_num]['response'],
                                                         rsrd['rsr'][b_num]['wave'],
                                                         axis=0)
         else:
             ## path reflectance
-            romix[ls] = lutdw[lut]['rgi'][b_num]((xi[0], lutdw[lut]['ipd'][par], xi[1], xi[2], xi[3], xi[4], ai))
+            romix[ls] = lut_table[lut]['rgi'][b_num]((xi[0], lut_table[lut]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], ai))
 
             ## transmittance and spherical albedo
-            astot[ls] = lutdw[lut]['rgi'][b_num]((xi[0], lutdw[lut]['ipd']['astot'], xi[1], xi[2], xi[3], xi[4], ai))
-            dutott[ls] = lutdw[lut]['rgi'][b_num](
-                (xi[0], lutdw[lut]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], ai))
+            astot[ls] = lut_table[lut]['rgi'][b_num]((xi[0], lut_table[lut]['ipd']['astot'], xi[1], xi[2], xi[3], xi[4], ai))
+            dutott[ls] = lut_table[lut]['rgi'][b_num](
+                (xi[0], lut_table[lut]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], ai))
 
             ## total transmittance
             if glint_correction and glint_correction_method == 'default':
-                ttot_all[b_slot][ls] = lutdw[lut]['rgi'][b_num](
-                    (xi[0], lutdw[lut]['ipd']['ttot'], xi[1], xi[2], xi[3], xi[4], ai))
+                ttot_all[b_slot][ls] = lut_table[lut]['rgi'][b_num](
+                    (xi[0], lut_table[lut]['ipd']['ttot'], xi[1], xi[2], xi[3], xi[4], ai))
         del ls, ai, xi
 
     ## interpolate tiled processing to full scene

@@ -5,8 +5,8 @@ import core.atmos as atmos
 from core.util import rsr_convolute_nd
 from core.atmos.run.l2r.ac.aot_band import calculate_aot_bands
 
-def apply_dsf(band_table, param_mem, lut_table, rsrd, lut_mod_names, l1r_band_list, ro_type, user_settings:dict, use_rev_lut:bool,
-              rev_lut_table=None, tiles=None, segment_data=None, is_hyper=False):
+def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_names:list, l1r_band_list:list, ro_type:str, user_settings:dict, use_rev_lut:bool,
+              rev_lut_table:dict=None, tiles:list=None, segment_data:dict=None, is_hyper:bool=False):
 
     def _load_parmams():
         aot_estimate_method = user_settings['dsf_aot_estimate'] # fixed, tiled, segmented
@@ -67,8 +67,9 @@ def apply_dsf(band_table, param_mem, lut_table, rsrd, lut_mod_names, l1r_band_li
             user_settings['dsf_spectrum_option'] = 'darkest'
 
         ## run through bands to get aot
-        aot_bands, aot_dict, dsf_rhod, gk = calculate_aot_bands(band_table, l1r_band_list, rsrd, param_mem, luts=lut_mod_names, lutdw=lut_table, aot_estimate_method=aot_estimate_method, use_revlut=use_rev_lut, revl=rev_lut_table, is_hyper=is_hyper,
-                                                                tiles=tiles, segment_data=segment_data, left=left, right=right, user_settings=user_settings)
+        aot_bands, aot_dict, dsf_rhod, gk = calculate_aot_bands(band_table, l1r_band_list, rsrd, var_mem, lut_mod_names=lut_mod_names, lut_table=lut_table, aot_estimate_method=aot_estimate_method,
+                                                                use_revlut=use_rev_lut, rev_lut_table=rev_lut_table, is_hyper=is_hyper, tiles=tiles, segment_data=segment_data,
+                                                                left=left, right=right, ro_type=ro_type, user_settings=user_settings)
         ## get min aot per pixel
         aot_stack = {}
         for l_i, lut_name in enumerate(lut_mod_names):
@@ -152,8 +153,8 @@ def apply_dsf(band_table, param_mem, lut_table, rsrd, lut_mod_names, l1r_band_li
                 ## array idices
                 aid = np.indices(aot_stack[lut_name]['all'].shape[0:2])
                 ## abs difference between first and second band tau
-                aot_stack[lut_name]['dtau'] = np.abs(aot_stack[lut_name]['all'][aid[0, :], aid[1, :], tmp[:, :, 0]] - \
-                                                     aot_stack[lut_name]['all'][aid[0, :], aid[1, :], tmp[:, :, 1]])
+                aot_stack[lut_name]['dtau'] = np.abs(aot_stack[lut_name]['all'][aid[0, :], aid[1, :], tmp[:, :, 0]] - aot_stack[lut_name]['all'][aid[0, :], aid[1, :], tmp[:, :, 1]])
+
             ## remove sorted indices
             tmp = None
         ## select model based on min rmsd for 2 bands
@@ -193,9 +194,9 @@ def apply_dsf(band_table, param_mem, lut_table, rsrd, lut_mod_names, l1r_band_li
                         ## get rho path for current band
                         if len(aot_sub[0]) > 0:
                             if use_rev_lut:
-                                xi = [param_mem['pressure' + gk][aot_sub], param_mem['raa' + gk_raa][aot_sub], param_mem['vza' + gk_vza][aot_sub], param_mem['sza' + gk][aot_sub], param_mem['wind' + gk][aot_sub]]
+                                xi = [var_mem['pressure' + gk][aot_sub], var_mem['raa' + gk_raa][aot_sub], var_mem['vza' + gk_vza][aot_sub], var_mem['sza' + gk][aot_sub], var_mem['wind' + gk][aot_sub]]
                             else:
-                                xi = [param_mem['pressure' + gk], param_mem['raa' + gk_raa], param_mem['vza' + gk_vza], param_mem['sza' + gk], param_mem['wind' + gk]]
+                                xi = [var_mem['pressure' + gk], var_mem['raa' + gk_raa], var_mem['vza' + gk_vza], var_mem['sza' + gk], var_mem['wind' + gk]]
 
                             if is_hyper:
                                 ## get hyperspectral results and resample to band
@@ -221,7 +222,7 @@ def apply_dsf(band_table, param_mem, lut_table, rsrd, lut_mod_names, l1r_band_li
                             else:
                                 if aot_estimate_method == 'segmented':
                                     for gki in range(len(aot_sub[0])):
-                                        rhop_f[aot_sub[0][gki], aot_sub[1][gki], ai] = lut_table[lut_name]['rgi'][band_slot]((xi[0][aot_sub[0][gki]], lut_table[lut_name]['ipd'][ro_type],
+                                        rhop_f[aot_sub[0][gki], aot_sub[1][gki], ai] = lut_table[lut_name]['rgi'][band_num]((xi[0][aot_sub[0][gki]], lut_table[lut_name]['ipd'][ro_type],
                                                                                                                               xi[1][aot_sub[0][gki]], xi[2][aot_sub[0][gki]],
                                                                                                                               xi[3][aot_sub[0][gki]], xi[4][aot_sub[0][gki]],
                                                                                                                               aot_stack[lut_name]['aot'][aot_sub][gki]))
@@ -291,4 +292,4 @@ def apply_dsf(band_table, param_mem, lut_table, rsrd, lut_mod_names, l1r_band_li
         # print(f'Selected {aot_sel_lut}, mean aot = {np.nanmean(aot_sel):.2f}')
     ### end dark_spectrum_fitting
 
-    return aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands, gk
+    return aot_lut, aot_sel, aot_stack, aot_sel_par, aot_sel_bands, gk

@@ -2,7 +2,7 @@ import numpy as np
 
 from core.util import rsr_convolute_nd
 
-def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper, rsrd,
+def correct_cirrus(band_table, l1r_band_list, var_mem, lut_mod_names, lut_table, ro_type, is_hyper, rsrd,
                    l2r, l2r_band_list, user_settings:dict):
 
     def _load_params():
@@ -14,20 +14,20 @@ def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper,
     rho_cirrus = None
 
     ## use mean geometry to compute cirrus band Rayleigh
-    xi = [data_mem['pressure' + '_mean'][0][0],
-          data_mem['raa' + '_mean'][0][0],
-          data_mem['vza' + '_mean'][0][0],
-          data_mem['sza' + '_mean'][0][0],
-          data_mem['wind' + '_mean'][0][0]]
+    xi = [var_mem['pressure' + '_mean'][0][0],
+          var_mem['raa' + '_mean'][0][0],
+          var_mem['vza' + '_mean'][0][0],
+          var_mem['sza' + '_mean'][0][0],
+          var_mem['wind' + '_mean'][0][0]]
 
     ## compute Rayleigh reflectance for hyperspectral sensors
     if is_hyper:
-        rorayl_hyp = lutdw[luts[0]]['rgi']((xi[0], lutdw[luts[0]]['ipd'][par],
-                                            lutdw[luts[0]]['meta']['wave'], xi[1], xi[2], xi[3], xi[4],
-                                            0.001)).flatten()
+        rorayl_hyp = lut_table[lut_mod_names[0]]['rgi']((xi[0], lut_table[lut_mod_names[0]]['ipd'][ro_type],
+                                                         lut_table[lut_mod_names[0]]['meta']['wave'], xi[1], xi[2], xi[3], xi[4],
+                                                         0.001)).flatten()
 
     ## find cirrus bands
-    for bi, band_slot, b_v in enumerate(band_ds.items()):
+    for bi, band_slot, b_v in enumerate(band_table.items()):
         band_num = band_slot[1:]
         if ('rhot_ds' not in b_v['att']):
             continue
@@ -40,12 +40,12 @@ def correct_cirrus(band_ds, l1r_band_list, data_mem, luts, lutdw, par, is_hyper,
 
         ## compute Rayleigh reflectance
         if is_hyper:
-            rorayl_cur = rsr_convolute_nd(rorayl_hyp, lutdw[luts[0]]['meta']['wave'], rsrd['rsr'][band_num]['response'], rsrd['rsr'][band_num]['wave'], axis=0)
+            rorayl_cur = rsr_convolute_nd(rorayl_hyp, lut_table[lut_mod_names[0]]['meta']['wave'], rsrd['rsr'][band_num]['response'], rsrd['rsr'][band_num]['wave'], axis=0)
         else:
-            rorayl_cur = lutdw[luts[0]]['rgi'][band_slot]((xi[0], lutdw[luts[0]]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
+            rorayl_cur = lut_table[lut_mod_names[0]]['rgi'][band_slot]((xi[0], lut_table[lut_mod_names[0]]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], 0.001))
 
         ## cirrus reflectance = rho_t - rho_Rayleigh
-        cur_data = band_ds[band_slot]['data'] - rorayl_cur
+        cur_data = band_table[band_slot]['data'] - rorayl_cur
 
         if rho_cirrus is None:
             rho_cirrus = cur_data * 1.0

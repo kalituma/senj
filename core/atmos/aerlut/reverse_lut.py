@@ -17,8 +17,8 @@ from core.util import rsr_read
 
 def reverse_lut(sensor, lutdw=None, par = 'romix',
                 pct = (1,60), nbins = 20, override = False, pressures = [500, 750, 1013, 1100],
-                base_luts = ['ACOLITE-LUT-202110-MOD1', 'ACOLITE-LUT-202110-MOD2'],
-                rsky_lut = 'ACOLITE-RSKY-202102-82W',
+                base_luts:list = ['ACOLITE-LUT-202110-MOD1', 'ACOLITE-LUT-202110-MOD2'],
+                rsky_lut:str = 'ACOLITE-RSKY-202102-82W',
                 get_remote = True, remote_base = None):
 
     ## use URL from main config
@@ -63,9 +63,9 @@ def reverse_lut(sensor, lutdw=None, par = 'romix',
                     if lutdw is None:
                         print('Importing source LUTs')
                         lutdw = atmos.aerlut.import_luts(sensor=sensor, base_luts = base_luts,
-                                                        lut_par = [par], par = par, return_lut_array=True,
-                                                        pressures = pressures, get_remote = get_remote,
-                                                        add_rsky = par == 'romix+rsky_t', rsky_lut = rsky_lut)
+                                                         lut_par = [par], par = par, return_lut_array=True,
+                                                         pressures = pressures, get_remote = get_remote,
+                                                         add_rsky = par == 'romix+rsky_t', rsky_lut_name= rsky_lut)
                     pid = lutdw[lut]['ipd'][par]
                     if len(lutdw[lut]['dim']) == 7:
                         wind_dim = True
@@ -143,12 +143,15 @@ def reverse_lut(sensor, lutdw=None, par = 'romix',
 
                 ## band specific interpolator
                 if len(np.atleast_1d(meta['wind'])) == 1:
-                    rgi[b] = scipy.interpolate.RegularGridInterpolator([meta[k] for k in meta['lut_dimensions'] if k not in ['wind']],
-                                                                     lutb[:,:,:,:,0,:],bounds_error=False, fill_value=None)
+                    # pressure, raa, vza, sza, rho
+                    x = [meta[k] for k in meta['lut_dimensions'] if k not in ['wind']]
+                    y = lutb[:,:,:,:,0,:]
                 else:
-                    rgi[b] = scipy.interpolate.RegularGridInterpolator([meta[k] for k in meta['lut_dimensions']],
-                                                                     lutb,bounds_error=False, fill_value=None)
+                    x = [meta[k] for k in meta['lut_dimensions']]
+                    y = lutb
 
-        revl[lut]={'rgi':rgi, 'minaot':minaot, 'maxaot':maxaot, 'model':int(lut[-1]), 'meta':meta}
+                rgi[b] = scipy.interpolate.RegularGridInterpolator(x, y, bounds_error=False, fill_value=None)
+
+        revl[lut]={'rgi':rgi, 'minaot':minaot, 'maxaot':maxaot, 'model':int(lut[-1]), 'meta': meta}
 
     return(revl)

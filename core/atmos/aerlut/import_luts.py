@@ -22,11 +22,11 @@ from core.util import rsr_read
 
 def import_luts(pressures = [500, 750, 1013, 1100],
                 base_luts = ['ACOLITE-LUT-202110-MOD1', 'ACOLITE-LUT-202110-MOD2'],
-                rsky_lut = 'ACOLITE-RSKY-202102-82W',
+                rsky_lut_name ='ACOLITE-RSKY-202102-82W',
                 lut_par = ['utott', 'dtott', 'astot', 'ttot', 'romix'],
                 reduce_dimensions = False, return_lut_array = False,
                 par = 'romix',
-                vza_range = [0, 16],  aot_range = [0, 1.5],
+                vza_range = [0, 16], aot_range = [0, 1.5],
                 use_merged_lut = False, store_merged_lut = False,
                 get_remote = True, sensor = None, add_rsky = False, add_dutott = True):
 
@@ -67,7 +67,7 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 if not add_rsky:
                     aot_idx = 6
                 if add_rsky and (par == 'romix+rsky_t') and use_merged_lut: ## load merged lut
-                    lut_data, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut, pr, sensor = sensor, store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
+                    lut_data, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut_name, pr, sensor = sensor, store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
                 else:
                     lut_data, lut_meta = atmos.aerlut.import_lut(lutid, lutdir, sensor = sensor, lut_par = lut_par, get_remote = get_remote)
             else:
@@ -78,14 +78,16 @@ def import_luts(pressures = [500, 750, 1013, 1100],
 
                 # param maps for utott(up-ward total transmittion), dtott(down-ward), astot(total scattering coef), romix(rho for mixture), ttot(total transmission) using 5 different variables(azi, thv, ths, wind, tau)
                 if add_rsky and (par == 'romix+rsky_t') and use_merged_lut:  ## load merged lut
-                    lut_data_dict, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut, pr, sensor = sensor, store = store_merged_lut, lut_par = lut_par, get_remote = get_remote)
+                    lut_data_dict, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut_name, pr, sensor=sensor, store=store_merged_lut, lut_par=lut_par, get_remote=get_remote)
                 else:
-                    lut_data_dict, lut_meta = atmos.aerlut.import_lut(lutid, lutdir, sensor = sensor, lut_par = lut_par, get_remote = get_remote)
+                    lut_data_dict, lut_meta = atmos.aerlut.import_lut(lutid, lutdir, sensor=sensor, lut_par=lut_par, get_remote=get_remote)
 
                 if 'bands' not in lut_meta:
                     # get bands from rsr_file as different systems may not keep dict keys in the same order
                     rsr_file = atmos.config['data_dir']+'/RSR/'+sensor+'.txt'
+                    # rsr contains response functions for each band, and rsr_bands contains the band numbers
                     rsr, rsr_bands = rsr_read(file=rsr_file)
+
                 else:
                     rsr_bands = lut_meta['bands']
 
@@ -102,6 +104,7 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                     lut_dim += [lut_meta[k] for k in ['azi', 'thv', 'ths', 'tau']]
                 ipd = {par:ip for ip,par in enumerate(lut_meta['par'])}
 
+                # lut_meta = input vars for lut, lut_dim = dimensions for lut, ipd = index for parameters
                 lut_dict[lut] = {'meta':lut_meta, 'dim':lut_dim, 'ipd':ipd}
 
                 ## find indices to reduce dimensions
@@ -133,8 +136,8 @@ def import_luts(pressures = [500, 750, 1013, 1100],
 
             if (add_rsky) and (par == 'romix+rsky_t') and (not use_merged_lut):
                 tlut = lut_dict[lut]['lut']
-                rskyd = atmos.aerlut.import_rsky_luts(models=[int(lut[-1])], lutbase=rsky_lut, get_remote = get_remote)
-                rlut = rskyd[int(lut[-1])]['lut']
+                rskyd = atmos.aerlut.import_rsky_luts(models=[int(lut[-1])], lutbase=rsky_lut_name, get_remote = get_remote)
+                rsky_lut = rskyd[int(lut[-1])]['lut']
                 rsky_winds  = rskyd[int(lut[-1])]['meta']['wind']
                 rskyd = None
 
@@ -142,31 +145,31 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 tlut = np.repeat(tlut, len(rsky_winds), axis=-2)
 
                 ## repeat for pressures
-                rlut = np.repeat(rlut[np.newaxis,:], len(pressures), axis=0)
+                rsky_lut = np.repeat(rsky_lut[np.newaxis,:], len(pressures), axis=0)
 
                 ## add to the LUT
                 ## model rsky at surface
-                ax = len(ipd)
-                tlut = np.insert(tlut, (ax), rlut, axis=1)
+                sky_i = len(ipd)
+                tlut = np.insert(tlut, (sky_i), rsky_lut, axis=1)
 
                 ## model rsky at toa
                 ## (utott * dtott * rsky) / (1. - rsky * astot)
-                tmp = (tlut[:, ipd['utott'],:,:,:,:,:]*\
+                tmp_sky = (tlut[:, ipd['utott'],:,:,:,:,:]*\
                        tlut[:, ipd['dtott'],:,:,:,:,:]*
-                       tlut[:, ax,:,:,:,:,:]) /\
-                       (1.-tlut[:, ax,:,:,:,:,:] *\
+                       tlut[:, sky_i,:,:,:,:,:]) /\
+                       (1.-tlut[:, sky_i,:,:,:,:,:] *\
                        tlut[:, ipd['astot'],:,:,:,:,:])
-                tlut = np.insert(tlut, (ax+1), tmp, axis=1)
+                tlut = np.insert(tlut, (sky_i+1), tmp_sky, axis=1)
 
                 ## add romix+rsky
-                tmp = tlut[:, ipd['romix'],:,:,:,:,:] + tlut[:, ax+1,:,:,:,:,:]
-                tlut = np.insert(tlut, (ax+2), tmp, axis=1)
+                tmp_sky = tlut[:, ipd['romix'],:,:,:,:,:] + tlut[:, sky_i+1,:,:,:,:,:]
+                tlut = np.insert(tlut, (sky_i+2), tmp_sky, axis=1)
 
                 ## replace lut and add these parameters
                 lut_dict[lut]['lut'] = tlut
                 lut_dict[lut]['meta']['par'] += ['rsky_s', 'rsky_t', 'romix+rsky_t']
                 lut_dict[lut]['ipd'] = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
-                lut_dict[lut]['dim'][1]+= [ax, ax+1, ax+2]
+                lut_dict[lut]['dim'][1]+= [sky_i, sky_i+1, sky_i+2]
                 ## end add rsky
 
                 ## create new dim with winds
@@ -182,13 +185,13 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 ## end add rsky romix+rsky_t
 
             if (add_rsky) and (par == 'romix+rsurf'):
-                ax = len(ipd)
-                tmp = lut_dict[lut]['lut'][:, ipd['romix'],:,:,:,:,:] + lut_dict[lut]['lut'][:, ipd['rsurf'],:,:,:,:,:]
-                lut_dict[lut]['lut'] = np.insert(lut_dict[lut]['lut'], (ax), tmp, axis=1)
-                tmp = None
+                sky_i = len(ipd)
+                tmp_sky = lut_dict[lut]['lut'][:, ipd['romix'],:,:,:,:,:] + lut_dict[lut]['lut'][:, ipd['rsurf'],:,:,:,:,:]
+                lut_dict[lut]['lut'] = np.insert(lut_dict[lut]['lut'], (sky_i), tmp_sky, axis=1)
+                tmp_sky = None
                 lut_dict[lut]['meta']['par'] += ['romix+rsurf']
                 lut_dict[lut]['ipd'] = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
-                lut_dict[lut]['dim'][1]+= [ax]
+                lut_dict[lut]['dim'][1]+= [sky_i]
                 ## create new dim with winds
                 dim = [np.asarray(pressures),
                        np.asarray(lut_dict[lut]['dim'][1]),
@@ -209,13 +212,13 @@ def import_luts(pressures = [500, 750, 1013, 1100],
             ## add product of transmittances
             if add_dutott:
                 lut_dict[lut]['meta']['par']+=['dutott']
-                ax = int(lut_dict[lut]['dim'][1][-1])+1
-                lut_dict[lut]['dim'][1]=np.append(lut_dict[lut]['dim'][1],ax)
+                sky_i = int(lut_dict[lut]['dim'][1][-1])+1
+                lut_dict[lut]['dim'][1]=np.append(lut_dict[lut]['dim'][1],sky_i)
                 lut_dict[lut]['ipd'] = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
                 iu = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}['utott']
                 id = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}['dtott']
-                tmp = lut_dict[lut]['lut'][:,iu,:,:,:,:,:,:]*lut_dict[lut]['lut'][:,id,:,:,:,:,:,:]
-                lut_dict[lut]['lut'] = np.insert(lut_dict[lut]['lut'], (ax), tmp, axis=1)
+                tmp_sky = lut_dict[lut]['lut'][:,iu,:,:,:,:,:,:]*lut_dict[lut]['lut'][:,id,:,:,:,:,:,:]
+                lut_dict[lut]['lut'] = np.insert(lut_dict[lut]['lut'], (sky_i), tmp_sky, axis=1)
 
             ## set up LUT interpolator
             if add_rsky:
@@ -229,14 +232,16 @@ def import_luts(pressures = [500, 750, 1013, 1100],
         else:
             ## make arrays
             for band in rsr_bands:
+                # stack each band data in pressure dimension (4, 5, 13, 13, 16, 1, 16) (pressure, par, wave, azi, thv, ths, wind, tau)
                 lut_dict[lut]['lut'][band] = np.stack(lut_dict[lut]['lut'][band])
 
             ## add rsky if requested
             if (add_rsky) and (par == 'romix+rsky_t') and (not use_merged_lut):
-                rskyd = atmos.aerlut.import_rsky_luts(models=[int(lut[-1])], lutbase=rsky_lut, sensor=sensor, get_remote=get_remote)
-                rlut = rskyd[int(lut[-1])]['lut']
+                # get x(including tau), y(lut), meta, rgi funcs for sky reflectance
+                rskyd = atmos.aerlut.import_rsky_luts(models=[int(lut[-1])], lutbase=rsky_lut_name, sensor=sensor, get_remote=get_remote)
+                rsky_lut = rskyd[int(lut[-1])]['lut']
                 if 'wind' in rskyd[int(lut[-1])]['meta']:
-                    rsky_winds  = rskyd[int(lut[-1])]['meta']['wind']
+                    rsky_winds = rskyd[int(lut[-1])]['meta']['wind']
                 else:
                     rsky_winds = np.atleast_1d([0,20])
                 #rskyd = None
@@ -245,41 +250,37 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 ipd = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
 
                 ## run through bands
-                for band in rlut:
-                    tmp = rlut[band] * 1.0
+                for band in rsky_lut:
                     tlut = lut_dict[lut]['lut'][band]
-                    tmp = rlut[band] * 1.0
+                    tmp_sky = rsky_lut[band] * 1.0
 
                     ## add wind axis
                     if 'wind' not in rskyd[int(lut[-1])]['meta']:
-                        tmp = np.expand_dims(tmp, -2)
-                        tmp = np.repeat(tmp, len(rsky_winds), axis=-2)
+                        tmp_sky = np.expand_dims(tmp_sky, -2)
+                        tmp_sky = np.repeat(tmp_sky, len(rsky_winds), axis=-2)
                     tlut = np.repeat(tlut, len(rsky_winds), axis=-2)
 
                     ## add to the LUT
                     ## model rsky at surface
-                    ax = len(ipd)
-                    tlut = np.insert(tlut, (ax), tmp, axis=1)
+                    sky_i = len(ipd)
+                    tlut = np.insert(tlut, (sky_i), tmp_sky, axis=1) # pressure(4), var(+sky)(6), azi(13), thv(13), ths(16), wind(8), tau(16)
 
                     ## model rsky at toa
                     ## (utott * dtott * rsky) / (1. - rsky * astot)
-                    tmp = (tlut[:, ipd['utott'],:,:,:,:,:]*\
-                           tlut[:, ipd['dtott'],:,:,:,:,:]*
-                           tlut[:, ax,:,:,:,:,:]) /\
-                          (1.-tlut[:, ax,:,:,:,:,:] *\
-                           tlut[:, ipd['astot'],:,:,:,:,:])
-                    tlut = np.insert(tlut, (ax+1), tmp, axis=1)
+                    tmp_sky = (tlut[:, ipd['utott'],:,:,:,:,:] * tlut[:, ipd['dtott'],:,:,:,:,:] * tlut[:, sky_i,:,:,:,:,:]) / \
+                              (1. - tlut[:, sky_i,:,:,:,:,:] * tlut[:, ipd['astot'],:,:,:,:,:])
+                    tlut = np.insert(tlut, (sky_i+1), tmp_sky, axis=1)
 
                     ## add romix+rsky
-                    tmp = tlut[:, ipd['romix'],:,:,:,:,:] + tlut[:, ax+1,:,:,:,:,:]
-                    tlut = np.insert(tlut, (ax+2), tmp, axis=1)
+                    tmp_sky = tlut[:, ipd['romix'],:,:,:,:,:] + tlut[:, sky_i+1,:,:,:,:,:]
+                    tlut = np.insert(tlut, (sky_i+2), tmp_sky, axis=1)
 
                     ## replace in dict
                     lut_dict[lut]['lut'][band] = tlut
 
                 ## add new pars
                 lut_dict[lut]['meta']['par'] += ['rsky_s', 'rsky_t', 'romix+rsky_t']
-                lut_dict[lut]['dim'][1]+= [ax, ax+1, ax+2]
+                lut_dict[lut]['dim'][1]+= [sky_i, sky_i+1, sky_i+2]
 
                 ## create new dim with winds
                 dim = [np.asarray(pressures),
@@ -292,19 +293,19 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                 lut_dict[lut]['dim'] = dim
                 ## end add rsky
 
-            if (add_rsky) and (par == 'romix+rsurf'):
+            if add_rsky and par == 'romix+rsurf':
                 ## current pars
                 ipd = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
-                ax = len(ipd)
+                sky_i = len(ipd)
 
                 ## run through bands
                 for band in lut_dict[lut]['lut']:
-                    tmp = lut_dict[lut]['lut'][band][:, ipd['romix'],:,:,:,:] + lut_dict[lut]['lut'][band][:, ipd['rsurf'],:,:,:,:]
-                    lut_dict[lut]['lut'][band] = np.insert(lut_dict[lut]['lut'][band], (ax), tmp, axis=1)
-                    tmp = None
+                    tmp_sky = lut_dict[lut]['lut'][band][:, ipd['romix'],:,:,:,:] + lut_dict[lut]['lut'][band][:, ipd['rsurf'],:,:,:,:]
+                    lut_dict[lut]['lut'][band] = np.insert(lut_dict[lut]['lut'][band], (sky_i), tmp_sky, axis=1)
+                    tmp_sky = None
                 lut_dict[lut]['meta']['par'] += ['romix+rsurf']
                 lut_dict[lut]['ipd'] = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
-                lut_dict[lut]['dim'][1]+= [ax]
+                lut_dict[lut]['dim'][1]+= [sky_i]
                 ## create new dim with winds
                 dim = [np.asarray(pressures),
                        np.asarray(lut_dict[lut]['dim'][1]),
@@ -325,13 +326,13 @@ def import_luts(pressures = [500, 750, 1013, 1100],
             ## add product of transmittances
             if add_dutott:
                 lut_dict[lut]['meta']['par']+=['dutott']
-                ax = int(lut_dict[lut]['dim'][1][-1])+1
-                lut_dict[lut]['dim'][1]=np.append(lut_dict[lut]['dim'][1],ax)
+                dutott_i = int(lut_dict[lut]['dim'][1][-1])+1
+                lut_dict[lut]['dim'][1]=np.append(lut_dict[lut]['dim'][1],dutott_i)
                 iu = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}['utott']
                 id = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}['dtott']
                 for band in rsr_bands:
-                    tmp = lut_dict[lut]['lut'][band][:,iu,:,:,:,:,:]*lut_dict[lut]['lut'][band][:,id,:,:,:,:,:]
-                    lut_dict[lut]['lut'][band] = np.insert(lut_dict[lut]['lut'][band], (ax), tmp, axis=1)
+                    dutott = lut_dict[lut]['lut'][band][:,iu,:,:,:,:,:]*lut_dict[lut]['lut'][band][:,id,:,:,:,:,:] # dtott * utott
+                    lut_dict[lut]['lut'][band] = np.insert(lut_dict[lut]['lut'][band], (dutott_i), dutott, axis=1)
 
             lut_dict[lut]['rgi'] = {}
             lut_dict[lut]['ipd'] = {p:i for i,p in enumerate(lut_dict[lut]['meta']['par'])}
@@ -349,5 +350,5 @@ def import_luts(pressures = [500, 750, 1013, 1100],
     if not return_lut_array:
         for lut in lut_dict:
             del lut_dict[lut]['lut']
-
+    # utott(0), dtott(1), astot(2), ttot(3), romix(4), rsky_s(5), rsky_t(6), romix+rsky_t(7), dutott(8)
     return(lut_dict)

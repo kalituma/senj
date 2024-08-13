@@ -2,7 +2,7 @@ import numpy as np
 
 import core.atmos as atmos
 
-def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw, par,
+def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_names, lut_table, ro_type,
                  user_settings: dict, global_attrs: dict):
 
     def _get_params():
@@ -34,7 +34,7 @@ def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw,
     exp_mask = None
     exp_mask_diff = 1000
 
-    for band_slot, b_v in band_ds.items():
+    for band_slot, b_v in band_table.items():
         sd = np.abs(b_v['att']['wave_nm'] - wave1)
         if (sd < 100) and (sd < exp_b1_diff):
             exp_b1_diff = sd
@@ -55,12 +55,12 @@ def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw,
         raise ValueError('Stopped: EXP bands not found in L1R bands')
 
     # print(f'Selected bands {exp_b1} and {exp_b2} for EXP processing')
-    if (band_ds[exp_b1]['att']['rhot_ds'] not in l1r_band_list) | ( band_ds[exp_b2]['att']['rhot_ds'] not in l1r_band_list):
+    if (band_table[exp_b1]['att']['rhot_ds'] not in l1r_band_list) | (band_table[exp_b2]['att']['rhot_ds'] not in l1r_band_list):
         # print(f'Selected bands are not available in {user_settings["inputfile"]}')
-        if (band_ds[exp_b1]['att']['rhot_ds'] not in l1r_band_list):
-            print(f'EXP B1: {band_ds[exp_b1]["att"]["rhot_ds"]}')
-        if (band_ds[exp_b2]['att']['rhot_ds'] not in l1r_band_list):
-            print(f'EXP B2: {band_ds[exp_b2]["att"]["rhot_ds"]}')
+        if (band_table[exp_b1]['att']['rhot_ds'] not in l1r_band_list):
+            print(f'EXP B1: {band_table[exp_b1]["att"]["rhot_ds"]}')
+        if (band_table[exp_b2]['att']['rhot_ds'] not in l1r_band_list):
+            print(f'EXP B2: {band_table[exp_b2]["att"]["rhot_ds"]}')
         return ()
 
     ## determine processing option
@@ -72,19 +72,19 @@ def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw,
         exp_option = 'SWIR'
 
     ## read data
-    exp_d1 = band_ds[exp_b1]['data'] * 1.0
-    exp_d2 = band_ds[exp_b2]['data'] * 1.0
+    exp_d1 = band_table[exp_b1]['data'] * 1.0
+    exp_d2 = band_table[exp_b2]['data'] * 1.0
 
     ## use mean geometry
-    xi = [data_mem['pressure' + '_mean'][0][0], data_mem['raa' + '_mean'][0][0], data_mem['vza' + '_mean'][0][0], data_mem['sza' + '_mean'][0][0], data_mem['wind' + '_mean'][0][0]]
+    xi = [var_mem['pressure' + '_mean'][0][0], var_mem['raa' + '_mean'][0][0], var_mem['vza' + '_mean'][0][0], var_mem['sza' + '_mean'][0][0], var_mem['wind' + '_mean'][0][0]]
 
-    exp_lut = luts[0]
+    exp_lut = lut_mod_names[0]
     exp_cwlim = 0.005
     exp_initial_epsilon = 1.0
 
     ## Rayleigh reflectance
-    rorayl_b1 = lutdw[exp_lut]['rgi'][exp_b1]((xi[0], lutdw[exp_lut]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
-    rorayl_b2 = lutdw[exp_lut]['rgi'][exp_b2]((xi[0], lutdw[exp_lut]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
+    rorayl_b1 = lut_table[exp_lut]['rgi'][exp_b1]((xi[0], lut_table[exp_lut]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], 0.001))
+    rorayl_b2 = lut_table[exp_lut]['rgi'][exp_b2]((xi[0], lut_table[exp_lut]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], 0.001))
 
     ## subtract Rayleigh reflectance
     exp_d1 -= rorayl_b1
@@ -96,8 +96,8 @@ def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw,
     elif exp_mask == exp_b2:
         mask = exp_d2 >= swir_threshold
     else:
-        exp_dm = band_ds[exp_mask]["data"] * 1.0
-        rorayl_mask = lutdw[exp_lut]['rgi'][exp_mask]((xi[0], lutdw[exp_lut]['ipd'][par], xi[1], xi[2], xi[3], xi[4], 0.001))
+        exp_dm = band_table[exp_mask]["data"] * 1.0
+        rorayl_mask = lut_table[exp_lut]['rgi'][exp_mask]((xi[0], lut_table[exp_lut]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], 0.001))
         exp_dm -= rorayl_mask
         mask = exp_dm >= swir_threshold
         exp_dm = None
@@ -116,13 +116,13 @@ def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw,
         exp_fixed_epsilon = True
 
         ## Rayleigh transmittances in both bands
-        dtotr_b1 = lutdw[exp_lut]['rgi'][exp_b1]((xi[0], lutdw[exp_lut]['ipd']['dtott'], xi[1], xi[2], xi[3], xi[4], 0.001))
-        utotr_b1 = lutdw[exp_lut]['rgi'][exp_b1]((xi[0], lutdw[exp_lut]['ipd']['utott'], xi[1], xi[2], xi[3], xi[4], 0.001))
-        dtotr_b2 = lutdw[exp_lut]['rgi'][exp_b2]((xi[0], lutdw[exp_lut]['ipd']['dtott'], xi[1], xi[2], xi[3], xi[4], 0.001))
-        utotr_b2 = lutdw[exp_lut]['rgi'][exp_b2]((xi[0], lutdw[exp_lut]['ipd']['utott'], xi[1], xi[2], xi[3], xi[4], 0.001))
+        dtotr_b1 = lut_table[exp_lut]['rgi'][exp_b1]((xi[0], lut_table[exp_lut]['ipd']['dtott'], xi[1], xi[2], xi[3], xi[4], 0.001))
+        utotr_b1 = lut_table[exp_lut]['rgi'][exp_b1]((xi[0], lut_table[exp_lut]['ipd']['utott'], xi[1], xi[2], xi[3], xi[4], 0.001))
+        dtotr_b2 = lut_table[exp_lut]['rgi'][exp_b2]((xi[0], lut_table[exp_lut]['ipd']['dtott'], xi[1], xi[2], xi[3], xi[4], 0.001))
+        utotr_b2 = lut_table[exp_lut]['rgi'][exp_b2]((xi[0], lut_table[exp_lut]['ipd']['utott'], xi[1], xi[2], xi[3], xi[4], 0.001))
 
-        tr_b1 = (dtotr_b1 * utotr_b1 * band_ds[exp_b1]['att']['tt_gas'])
-        tr_b2 = (dtotr_b2 * utotr_b2 * band_ds[exp_b2]['att']['tt_gas'])
+        tr_b1 = (dtotr_b1 * utotr_b1 * band_table[exp_b1]['att']['tt_gas'])
+        tr_b2 = (dtotr_b2 * utotr_b2 * band_table[exp_b2]['att']['tt_gas'])
 
         ## get gamma
         exp_gamma = tr_b1 / tr_b2 if gamma is None else float(gamma)
@@ -138,8 +138,8 @@ def apply_ac_exp(band_ds:dict, l1r_band_list, data_mem, rsrd: dict, luts, lutdw,
                 exp_alpha = ssd[exp_b1] / ssd[exp_b2]
             ## or use closest bands
             else:
-                ssi0, ssw0 = atmos.shared.closest_idx(simspec['wave'], band_ds[exp_b1]['att']['wave_mu'])
-                ssi1, ssw1 = atmos.shared.closest_idx(simspec['wave'], band_ds[exp_b2]['att']['wave_mu'])
+                ssi0, ssw0 = atmos.shared.closest_idx(simspec['wave'], band_table[exp_b1]['att']['wave_mu'])
+                ssi1, ssw1 = atmos.shared.closest_idx(simspec['wave'], band_table[exp_b2]['att']['wave_mu'])
                 exp_alpha = simspec['ave'][ssi0] / simspec['ave'][ssi1]
         else:
             exp_alpha = float(alpha)

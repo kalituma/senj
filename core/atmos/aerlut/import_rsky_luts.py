@@ -17,8 +17,8 @@ def import_rsky_luts(models=[1,2], lutbase='ACOLITE-RSKY-202102-82W', sensor=Non
 
     for mod in models:
         lut = None
-        ret = atmos.aerlut.import_rsky_lut(mod, lutbase=lutbase, sensor=sensor, get_remote = get_remote)
-        rskyd[mod] = {'lut':ret[0], 'meta':ret[1], 'dims':ret[2], 'rgi':ret[3]}
+        y, meta, x, rgi_func  = atmos.aerlut.import_rsky_lut(mod, lutbase=lutbase, sensor=sensor, get_remote = get_remote)
+        rskyd[mod] = {'lut': y, 'meta': meta, 'dims': x, 'rgi': rgi_func}
 
         if sensor is None: ## generic model
             if 'wind' in rskyd[mod]['meta']:

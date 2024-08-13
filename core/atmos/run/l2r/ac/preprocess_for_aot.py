@@ -28,32 +28,31 @@ def band_data_fixed(band_data:np.ndarray, band_sub:np.ndarray, percentile, inter
     return band_data, gk
 
 def band_data_tiled(band_data:np.ndarray, tiles:list,
-                    percentile, intercept_pixels, dsf_spectrum_option, min_tile_cover):
+                    percentile:float, intercept_pixels:int, dsf_spectrum_option:str, min_tile_cover:float):
 
 
     gk = '_tiled'
     ## tile this band data
     tile_data = np.zeros((tiles[-1][0] + 1, tiles[-1][1] + 1), dtype=np.float32) + np.nan
-    for t in range(len(tiles)):
-        ti, tj, subti, subtj = tiles[t]
-        tsub = band_data[subti[0]:subti[1], subtj[0]:subtj[1]]
-        tel = (subtj[1] - subtj[0]) * (subti[1] - subti[0])
-        nsub = len(np.where(np.isfinite(tsub))[0])
-        if nsub < tel * float(min_tile_cover):
+    for t_id in range(len(tiles)):
+        ti, tj, t_y_range, t_x_range = tiles[t_id]
+        tiled_band = band_data[t_y_range[0]:t_y_range[1], t_x_range[0]:t_x_range[1]]
+        t_ele = (t_x_range[1] - t_x_range[0]) * (t_y_range[1] - t_y_range[0])
+        n_finite = len(np.where(np.isfinite(tiled_band))[0])
+        if n_finite < t_ele * float(min_tile_cover):
             continue
 
         ## get per tile darkest
         if dsf_spectrum_option == 'darkest':
-            tile_data[ti, tj] = np.array((np.nanpercentile(tsub, 0)))
+            tile_data[ti, tj] = np.array((np.nanpercentile(tiled_band, 0)))
         if dsf_spectrum_option == 'percentile':
-            tile_data[ti, tj] = np.array((np.nanpercentile(tsub, percentile)))
+            tile_data[ti, tj] = np.array((np.nanpercentile(tiled_band, percentile)))
         if dsf_spectrum_option == 'intercept':
-            tile_data[ti, tj] = atmos.shared.intercept(tsub, int(intercept_pixels))
-        del tsub
+            tile_data[ti, tj] = atmos.shared.intercept(tiled_band, int(intercept_pixels))
+        del tiled_band
 
     ## fill nan tiles with closest values
-    ind = scipy.ndimage.distance_transform_edt(np.isnan(tile_data), return_distances=False,
-                                               return_indices=True)
+    ind = scipy.ndimage.distance_transform_edt(np.isnan(tile_data), return_distances=False, return_indices=True)
     band_data = tile_data[tuple(ind)]
     del tile_data, ind
 

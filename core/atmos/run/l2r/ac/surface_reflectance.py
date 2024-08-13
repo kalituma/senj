@@ -4,10 +4,10 @@ import numpy as np
 from core.util import rsr_convolute_nd, tiles_interp
 
 
-def calc_surface_reflectance(xnew, ynew, band_ds, data_mem, l1r_band_list,
-                             gk, lutdw, rho_cirrus, par, use_revlut, segment_data, is_hyper, ac_opt:str, luts, rsrd, # common
-                             global_attrs, user_settings:dict, # params
-                             l2r, l2r_band_list, rhos_to_band_name, corr_func # out
+def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
+                             gk, lut_table, rho_cirrus, ro_type, use_revlut, segment_data, is_hyper, ac_opt:str, luts, rsrd,  # common
+                             global_attrs, user_settings:dict,  # params
+                             l2r, l2r_band_list, rhos_to_band_name, corr_func  # out
                              ):
 
     def _load_params():
@@ -45,7 +45,7 @@ def calc_surface_reflectance(xnew, ynew, band_ds, data_mem, l1r_band_list,
     gk_vza = f'{gk}'
 
     ## compute surface reflectances
-    for bi, (b_slot, b_dict) in enumerate(band_ds.items()):
+    for bi, (b_slot, b_dict) in enumerate(band_table.items()):
         b_num = b_slot[1:]
         if ('rhot_ds' not in b_dict['att']) or ('tt_gas' not in b_dict['att']):
             # print(f'Band {band_slot} at {b_v["att"]["wave_name"]} nm not in bands dataset')
@@ -59,7 +59,7 @@ def calc_surface_reflectance(xnew, ynew, band_ds, data_mem, l1r_band_list,
             print(f'Band {b_slot} at {b_dict["att"]["wave_name"]} nm wavelength < 345 nm')
             continue  ## skip if below LUT range
 
-        rhot_name = b_dict['att']['rhot_ds']  # dsi
+        # rhot_name = b_dict['att']['rhot_ds']  # dsi
         rhos_name = b_dict['att']['rhos_ds']  # dso
         b_data, b_att = b_dict['data'].copy(), b_dict['att'].copy()
 
@@ -99,20 +99,20 @@ def calc_surface_reflectance(xnew, ynew, band_ds, data_mem, l1r_band_list,
             ## compute Rayleigh parameters for DSF
             if ac_opt == 'dsf':
                 ## no subset
-                dsf_xi = [data_mem['pressure' + gk], data_mem['raa' + gk_raa], data_mem['vza' + gk_vza], data_mem['sza' + gk], data_mem['wind' + gk]]
+                dsf_xi = [var_mem['pressure' + gk], var_mem['raa' + gk_raa], var_mem['vza' + gk_vza], var_mem['sza' + gk], var_mem['wind' + gk]]
 
                 ## get Rayleigh parameters
                 if is_hyper:
-                    rorayl_hyper = lutdw[luts[0]]['rgi']((dsf_xi[0], lutdw[luts[0]]['ipd'][par], lutdw[luts[0]]['meta']['wave'], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001)).flatten()
-                    dutotr_hyper = lutdw[luts[0]]['rgi']((dsf_xi[0], lutdw[luts[0]]['ipd']['dutott'], lutdw[luts[0]]['meta']['wave'], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001)).flatten()
+                    rorayl_hyper = lut_table[luts[0]]['rgi']((dsf_xi[0], lut_table[luts[0]]['ipd'][ro_type], lut_table[luts[0]]['meta']['wave'], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001)).flatten()
+                    dutotr_hyper = lut_table[luts[0]]['rgi']((dsf_xi[0], lut_table[luts[0]]['ipd']['dutott'], lut_table[luts[0]]['meta']['wave'], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001)).flatten()
 
-                    rorayl_cur = rsr_convolute_nd(rorayl_hyper, lutdw[luts[0]]['meta']['wave'], rsrd['rsr'][b_num]['response'], rsrd['rsr'][b_num]['wave'], axis=0)
-                    dutotr_cur = rsr_convolute_nd(dutotr_hyper, lutdw[luts[0]]['meta']['wave'], rsrd['rsr'][b_num]['response'], rsrd['rsr'][b_num]['wave'], axis=0)
+                    rorayl_cur = rsr_convolute_nd(rorayl_hyper, lut_table[luts[0]]['meta']['wave'], rsrd['rsr'][b_num]['response'], rsrd['rsr'][b_num]['wave'], axis=0)
+                    dutotr_cur = rsr_convolute_nd(dutotr_hyper, lut_table[luts[0]]['meta']['wave'], rsrd['rsr'][b_num]['response'], rsrd['rsr'][b_num]['wave'], axis=0)
 
                     del rorayl_hyper, dutotr_hyper
                 else:
-                    rorayl_cur = lutdw[luts[0]]['rgi'][b_num]((dsf_xi[0], lutdw[luts[0]]['ipd'][par], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001))
-                    dutotr_cur = lutdw[luts[0]]['rgi'][b_num]((dsf_xi[0], lutdw[luts[0]]['ipd']['dutott'], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001))
+                    rorayl_cur = lut_table[luts[0]]['rgi'][b_num]((dsf_xi[0], lut_table[luts[0]]['ipd'][ro_type], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001))
+                    dutotr_cur = lut_table[luts[0]]['rgi'][b_num]((dsf_xi[0], lut_table[luts[0]]['ipd']['dutott'], dsf_xi[1], dsf_xi[2], dsf_xi[3], dsf_xi[4], 0.001))
 
                 del dsf_xi
 
