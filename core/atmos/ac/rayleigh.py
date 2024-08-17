@@ -50,9 +50,10 @@ def ray_refl(wl, theta_0, theta_v, phi_0, phi_v, Patm=1013.25, tau_ray=None):
 def sky_refl(theta, n_w=1.34):
 
     # angle of transmittance theta_t for air incident rays (Mobley, 1994 p156)
-    theta_t = arcsin(1./n_w*sin(theta))
-    r_int=0.5*(power(sin(theta-theta_t)/sin(theta+theta_t),2)+\
-              power(tan(theta-theta_t)/tan(theta+theta_t),2))
+    theta_t = arcsin(1./n_w*sin(theta)) # threshold angle for total internal reflection
+
+    # Fresnel reflection coefficient
+    r_int=0.5*(power(sin(theta-theta_t)/sin(theta+theta_t),2)+ power(tan(theta-theta_t)/tan(theta+theta_t),2))
     return r_int
 
 

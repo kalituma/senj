@@ -7,7 +7,6 @@ import core.atmos as atmos
 def refri():
 
 
-
     file = '{}/{}'.format(atmos.config['data_dir'], 'Shared/WOPP/computed_refri_T27_S0.dat')
 
     data = {'wave':[], 'n':[]}

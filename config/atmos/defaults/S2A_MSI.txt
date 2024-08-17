@@ -39,7 +39,7 @@ luts_reduce_dimensions=True
 write_l1r=False
 
 dsf_aot_estimate=tiled
-dsf_residual_glint_correction=False
+dsf_residual_glint_correction=True
 dsf_residual_glint_correction_method=default
 dsf_write_tiled_parameters=False
 glint_write_rhog_all=False

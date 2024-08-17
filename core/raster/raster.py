@@ -1,9 +1,12 @@
-from typing import Union, TypeVar
+from typing import Union, TypeVar, TYPE_CHECKING
 from osgeo.gdal import Dataset
 from esa_snappy import Product
 from pathlib import Path
 
-from core.raster import RasterType, ProductType
+from core.util import ProductType
+from core.raster import RasterType
+
+
 T = TypeVar('T', bound='Raster')
 
 class Raster:

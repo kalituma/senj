@@ -208,8 +208,7 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
                         tai = j
 
                 for dataset in lut_sensor:
-                    lut_sensor[dataset] = np.append(lut_sensor[dataset], \
-                        lut_sensor[dataset][[tri],:,:,:,:,:]+lut_sensor[dataset][[tai],:,:,:,:,:], axis=0)
+                    lut_sensor[dataset] = np.append(lut_sensor[dataset],lut_sensor[dataset][[tri],:,:,:,:,:]+lut_sensor[dataset][[tai],:,:,:,:,:], axis=0)
                 lut_sub_par.append('ttot')
                 lut_sub_idx.append(lut_sensor[dataset].shape[0]-1)
 
@@ -219,8 +218,7 @@ def import_lut(lutid, lutdir, lut_par = ['utott', 'dtott', 'astot', 'ttot', 'rom
                     if 'romix' == jk: pi = j
                     if 'rsurf' == jk: pj = j
                 for dataset in lut_sensor:
-                    lut_sensor[dataset] = np.append(lut_sensor[dataset], \
-                        lut_sensor[dataset][[pi],:,:,:,:,:]+lut_sensor[dataset][[pj],:,:,:,:,:], axis=0)
+                    lut_sensor[dataset] = np.append(lut_sensor[dataset], lut_sensor[dataset][[pi],:,:,:,:,:]+lut_sensor[dataset][[pj],:,:,:,:,:], axis=0)
                 lut_sub_par.append('romix+rsurf')
                 lut_sub_idx.append(lut_sensor[dataset].shape[0]-1)
 

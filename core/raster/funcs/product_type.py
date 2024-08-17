@@ -1,5 +1,5 @@
 from jsonpath_ng.ext import parse
-from core.raster import ProductType
+from core.util import ProductType
 
 def check_product_type(meta_dict: dict) -> ProductType:
     if meta_dict is None or len(meta_dict) == 0:

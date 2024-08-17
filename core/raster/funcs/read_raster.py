@@ -1,6 +1,5 @@
 from typing import Union
-from core.raster import RasterType, Raster, ProductType
-
+from core.raster import RasterType, Raster
 from core.raster.gdal_module import load_raster_gdal
 from core.raster.gpf_module import load_raster_gpf
 from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, set_raw_metadict, get_band_name_and_index

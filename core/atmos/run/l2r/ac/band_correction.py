@@ -25,8 +25,10 @@ def exp_correction(b_dict, b_data, b_num,
 
     return b_data, rorayl_cur, dutotr_cur
 
-def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_vza, gk_raa, hyper_res, l2r, aot_sel, aot_lut, rsrd, lut_mod_names, lut_table, var_mem, segment_data,
-                   use_revlut:bool, gk:str, ro_type:str, is_hyper:bool, user_settings:dict, global_attrs:dict):
+def dsf_correction(b_dict, b_data, b_slot:str, b_num:str, xnew:np.ndarray, ynew:np.ndarray, l1r_band_list:list, hyper_res:dict, ttot_all:dict,
+                   aot_sel:np.ndarray, aot_lut:np.ndarray, rsrd:dict, lut_mod_names:list, lut_table:dict, var_mem:dict,
+                   segment_data:dict, use_revlut:bool, gk:str, gk_vza:str, gk_raa:str, ro_type:str, is_hyper:bool, user_settings:dict, global_attrs:dict,
+                   l2r:dict):
 
     def _load_params():
         slicing = user_settings['slicing']
@@ -41,8 +43,9 @@ def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_
 
     slicing, aot_estimate, glint_correction, glint_correction_method, tile_smoothing, tile_smoothing_kernel_size, tile_interp_method = _load_params()
 
-    ttot_all = {}
 
+
+    valid_mask = None
     if slicing:
         valid_mask = np.isfinite(b_data)
 
@@ -66,18 +69,18 @@ def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_
     if glint_correction and glint_correction_method == 'default':
         ttot_all[b_slot] = np.zeros(atm_shape, dtype=np.float32) + np.nan
 
-    for li, lut in enumerate(lut_mod_names):
-        ls = np.where(aot_lut == li)
-        if len(ls[0]) == 0:
+    for li, lut_name in enumerate(lut_mod_names):
+        aot_loc = np.where(aot_lut == li)
+        if len(aot_loc[0]) == 0:
             continue
-        ai = aot_sel[ls]
+        aot_vals = aot_sel[aot_loc]
 
         ## resolved geometry with fixed path reflectance
         if use_revlut and aot_estimate == 'fixed':
-            ls = np.where(b_data)
+            aot_loc = np.where(b_data)
 
         if use_revlut:
-            xi = [var_mem['pressure' + gk][ls], var_mem['raa' + gk_raa][ls], var_mem['vza' + gk_vza][ls], var_mem['sza' + gk][ls], var_mem['wind' + gk][ls]]
+            xi = [var_mem['pressure' + gk][aot_loc], var_mem['raa' + gk_raa][aot_loc], var_mem['vza' + gk_vza][aot_loc], var_mem['sza' + gk][aot_loc], var_mem['wind' + gk][aot_loc]]
         else:
             xi = [var_mem['pressure' + gk], var_mem['raa' + gk_raa], var_mem['vza' + gk_vza], var_mem['sza' + gk], var_mem['wind' + gk]]
             # subset to number of estimates made for this LUT
@@ -90,57 +93,55 @@ def dsf_correction(b_dict, b_data, b_slot, b_num, xnew, ynew, l1r_band_list, gk_
             if hyper_res is None:
                 hyper_res = {}
                 for prm in [ro_type, 'astot', 'dutott', 'ttot']:
-                    if len(ai) == 1:  ## fixed DSF
-                        hyper_res[prm] = lut_table[lut]['rgi']((xi[0], lut_table[lut]['ipd'][prm],
-                                                                lut_table[lut]['meta']['wave'], xi[1], xi[2], xi[3],
-                                                                xi[4], ai)).flatten()
+                    if len(aot_vals) == 1:  ## fixed DSF
+                        hyper_res[prm] = lut_table[lut_name]['rgi']((xi[0], lut_table[lut_name]['ipd'][prm],
+                                                                lut_table[lut_name]['meta']['wave'], xi[1], xi[2], xi[3],
+                                                                xi[4], aot_vals)).flatten()
                     else:  ## tiled/resolved DSF
-                        hyper_res[prm] = np.zeros((len(lut_table[lut]['meta']['wave']), len(ai))) + np.nan
-                        for iii in range(len(ai)):
+                        hyper_res[prm] = np.zeros((len(lut_table[lut_name]['meta']['wave']), len(aot_vals))) + np.nan
+                        for iii in range(len(aot_vals)):
                             if len(xi[0]) == 1:
-                                hyper_res[prm][:, iii] = lut_table[lut]['rgi']((xi[0], lut_table[lut]['ipd'][prm],
-                                                                                lut_table[lut]['meta']['wave'], xi[1],
+                                hyper_res[prm][:, iii] = lut_table[lut_name]['rgi']((xi[0], lut_table[lut_name]['ipd'][prm],
+                                                                                lut_table[lut_name]['meta']['wave'], xi[1],
                                                                                 xi[2], xi[3], xi[4],
-                                                                                ai[iii])).flatten()
+                                                                                aot_vals[iii])).flatten()
                             else:
-                                hyper_res[prm][:, iii] = lut_table[lut]['rgi'](
-                                    (xi[0].flatten()[iii], lut_table[lut]['ipd'][prm],
-                                     lut_table[lut]['meta']['wave'], xi[1].flatten()[iii], xi[2].flatten()[iii],
-                                     xi[3].flatten()[iii], xi[4].flatten()[iii], ai[iii])).flatten()
+                                hyper_res[prm][:, iii] = lut_table[lut_name]['rgi'](
+                                    (xi[0].flatten()[iii], lut_table[lut_name]['ipd'][prm],
+                                     lut_table[lut_name]['meta']['wave'], xi[1].flatten()[iii], xi[2].flatten()[iii],
+                                     xi[3].flatten()[iii], xi[4].flatten()[iii], aot_vals[iii])).flatten()
 
             ## resample to current band
             ### path reflectance
-            romix[ls] = rsr_convolute_nd(hyper_res[ro_type], lut_table[lut]['meta']['wave'],
+            romix[aot_loc] = rsr_convolute_nd(hyper_res[ro_type], lut_table[lut_name]['meta']['wave'],
                                          rsrd['rsr'][b_num]['response'],
                                          rsrd['rsr'][b_num]['wave'], axis=0)
             ## transmittance and spherical albedo
-            astot[ls] = rsr_convolute_nd(hyper_res['astot'], lut_table[lut]['meta']['wave'],
+            astot[aot_loc] = rsr_convolute_nd(hyper_res['astot'], lut_table[lut_name]['meta']['wave'],
                                          rsrd['rsr'][b_num]['response'],
                                          rsrd['rsr'][b_num]['wave'], axis=0)
-            dutott[ls] = rsr_convolute_nd(hyper_res['dutott'], lut_table[lut]['meta']['wave'],
+            dutott[aot_loc] = rsr_convolute_nd(hyper_res['dutott'], lut_table[lut_name]['meta']['wave'],
                                           rsrd['rsr'][b_num]['response'],
                                           rsrd['rsr'][b_num]['wave'], axis=0)
 
             ## total transmittance
             if glint_correction and glint_correction_method == 'default':
-                ttot_all[b_slot][ls] = rsr_convolute_nd(hyper_res['ttot'], lut_table[lut]['meta']['wave'],
+                ttot_all[b_slot][aot_loc] = rsr_convolute_nd(hyper_res['ttot'], lut_table[lut_name]['meta']['wave'],
                                                         rsrd['rsr'][b_num]['response'],
                                                         rsrd['rsr'][b_num]['wave'],
                                                         axis=0)
         else:
             ## path reflectance
-            romix[ls] = lut_table[lut]['rgi'][b_num]((xi[0], lut_table[lut]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], ai))
+            romix[aot_loc] = lut_table[lut_name]['rgi'][b_num]((xi[0], lut_table[lut_name]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4], aot_vals))
 
             ## transmittance and spherical albedo
-            astot[ls] = lut_table[lut]['rgi'][b_num]((xi[0], lut_table[lut]['ipd']['astot'], xi[1], xi[2], xi[3], xi[4], ai))
-            dutott[ls] = lut_table[lut]['rgi'][b_num](
-                (xi[0], lut_table[lut]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], ai))
+            astot[aot_loc] = lut_table[lut_name]['rgi'][b_num]((xi[0], lut_table[lut_name]['ipd']['astot'], xi[1], xi[2], xi[3], xi[4], aot_vals))
+            dutott[aot_loc] = lut_table[lut_name]['rgi'][b_num]((xi[0], lut_table[lut_name]['ipd']['dutott'], xi[1], xi[2], xi[3], xi[4], aot_vals))
 
             ## total transmittance
             if glint_correction and glint_correction_method == 'default':
-                ttot_all[b_slot][ls] = lut_table[lut]['rgi'][b_num](
-                    (xi[0], lut_table[lut]['ipd']['ttot'], xi[1], xi[2], xi[3], xi[4], ai))
-        del ls, ai, xi
+                ttot_all[b_slot][aot_loc] = lut_table[lut_name]['rgi'][b_num]((xi[0], lut_table[lut_name]['ipd']['ttot'], xi[1], xi[2], xi[3], xi[4], aot_vals))
+        del aot_loc, aot_vals, xi
 
     ## interpolate tiled processing to full scene
     if aot_estimate == 'tiled':

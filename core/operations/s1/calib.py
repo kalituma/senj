@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, CALIBRATE_OP
-from core.util import assert_bnames
-from core.raster import ProductType, RasterType
+from core.util import assert_bnames, ProductType
+from core.raster import RasterType
 from core.util import check_product_type, check_module_type
 from core.raster import Raster
 from core.raster.gpf_module import calibrate, get_polarization

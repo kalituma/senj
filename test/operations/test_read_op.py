@@ -2,7 +2,7 @@ import os
 import unittest
 
 from core.config import expand_var
-from core.raster import ProductType
+from core.util import ProductType
 from core.util.errors import ContainedBandError, ModuleError, ExtensionNotSupportedError
 from core.operations import Read
 from core.logic.context import Context
@@ -111,3 +111,6 @@ class TestReadOp(unittest.TestCase):
         with self.subTest('try to open tif with band name included option'):
             with self.assertRaises(AssertionError):
                 Read(module='gdal', bands=[1])(self.s1_tif_snap_path, context, bname_word_included=True)
+
+    def test_read_each_product_type(self):
+        pass

@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 
 from core import OPERATIONS
 from core.operations import Op, THERM_NOISE_OP
-from core.util import check_product_type, check_module_type
+from core.util import check_product_type, check_module_type, ProductType
 from core.util import assert_bnames
-from core.raster import Raster, RasterType, ProductType
+from core.raster import Raster, RasterType
 from core.raster.gpf_module import get_polarization, thermal_noise_removal
 
 if TYPE_CHECKING:

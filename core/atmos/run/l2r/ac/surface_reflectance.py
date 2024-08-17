@@ -1,14 +1,15 @@
+from typing import Callable
 import time
 import numpy as np
 
 from core.util import rsr_convolute_nd, tiles_interp
 
 
-def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
-                             gk, lut_table, rho_cirrus, ro_type, use_revlut, segment_data, is_hyper, ac_opt:str, luts, rsrd,  # common
-                             global_attrs, user_settings:dict,  # params
-                             l2r, l2r_band_list, rhos_to_band_name, corr_func  # out
-                             ):
+def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dict, var_mem:dict, l1r_band_list:list,
+                                gk:str, lut_table, rho_cirrus, ro_type, use_revlut, segment_data, is_hyper, ac_opt:str, luts, rsrd,  # common
+                                global_attrs, user_settings:dict, corr_func:Callable,  # params
+                                l2r:dict, l2r_band_list:list, rhos_to_band_name:dict  # out
+                                ):
 
     def _load_params():
         cirrus_correction = user_settings['cirrus_correction']
@@ -44,6 +45,8 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
     gk_raa = f'{gk}'
     gk_vza = f'{gk}'
 
+    l2r['bands'] = {}
+    l2r['inputs'] = {}
     ## compute surface reflectances
     for bi, (b_slot, b_dict) in enumerate(band_table.items()):
         b_num = b_slot[1:]
@@ -61,7 +64,7 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
 
         # rhot_name = b_dict['att']['rhot_ds']  # dsi
         rhos_name = b_dict['att']['rhos_ds']  # dso
-        b_data, b_att = b_dict['data'].copy(), b_dict['att'].copy()
+        corrected_b_data, b_att = b_dict['data'].copy(), b_dict['att'].copy()
 
         ## store rhot in output file
 
@@ -74,7 +77,7 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
             g = cirrus_g_vnir * 1.0
             if b_dict['att']['wave_nm'] > 1000:
                 g = cirrus_g_swir * 1.0
-            b_data -= (rho_cirrus * g)
+            corrected_b_data -= (rho_cirrus * g)
 
         t0 = time.time()
         # print('Computing surface reflectance', band_slot, b_v['att']['wave_name'], f'{b_v["att"]["tt_gas"]:.3f}')
@@ -84,12 +87,12 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
 
         ## dark spectrum fitting
         if ac_opt == 'dsf':
-            b_data, ttot_all, valid_mask = corr_func(b_dict=b_dict, b_data=b_data, b_slot=b_slot, b_num=b_num, xnew=xnew, ynew=ynew,
+            corrected_b_data, ttot_all, valid_mask = corr_func(b_dict=b_dict, b_data=corrected_b_data, b_slot=b_slot, b_num=b_num, xnew=xnew, ynew=ynew,
                                                      l1r_band_list=l1r_band_list, gk_vza=gk_vza, gk_raa=gk_raa, hyper_res=hyper_res,
                                                      user_settings=user_settings, global_attrs=global_attrs, l2r=l2r)
         ## exponential
         elif ac_opt == 'exp':
-            b_data, rorayl_cur, dutotr_cur = corr_func(b_dict=b_dict, b_data=b_data, b_num=b_num)
+            corrected_b_data, rorayl_cur, dutotr_cur = corr_func(b_dict=b_dict, b_data=corrected_b_data, b_num=b_num)
 
         ## write rhorc
         if output_rhorc:
@@ -131,22 +134,23 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
             if aot_estimate == 'tiled' and use_revlut:
                 # print('Interpolating tiles for rhorc')
                 rorayl_cur = tiles_interp(rorayl_cur, xnew, ynew,
-                                                       target_mask=(valid_mask if slicing else None),
-                                                       target_mask_full=True,
-                                                       smooth=tile_smoothing,
-                                                       kern_size=tile_smoothing_kernel_size,
-                                                       method=tile_interp_method)
+                                          target_mask=(valid_mask if slicing else None),
+                                          target_mask_full=True,
+                                          smooth=tile_smoothing,
+                                          kern_size=tile_smoothing_kernel_size,
+                                          method=tile_interp_method)
+
                 dutotr_cur = tiles_interp(dutotr_cur, xnew, ynew,
-                                                       target_mask=(valid_mask if slicing else None), \
-                                                       target_mask_full=True,
-                                                       smooth=tile_smoothing,
-                                                       kern_size=tile_smoothing_kernel_size,
-                                                       method=tile_interp_method)
+                                          target_mask=(valid_mask if slicing else None),
+                                          target_mask_full=True,
+                                          smooth=tile_smoothing,
+                                          kern_size=tile_smoothing_kernel_size,
+                                          method=tile_interp_method)
 
             ## write ac parameters
             # if write_tiled_parameters:
             if len(np.atleast_1d(rorayl_cur) > 1):
-                if rorayl_cur.shape == b_data.shape:
+                if rorayl_cur.shape == corrected_b_data.shape:
                     d_k = f'rorayl_{b_dict["att"]["wave_name"]}'
                     l2r[d_k] = rorayl_cur
                     l2r_band_list.append(d_k)
@@ -154,7 +158,7 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
                     b_dict['att']['rorayl'] = rorayl_cur[0]
 
             if len(np.atleast_1d(dutotr_cur) > 1):
-                if dutotr_cur.shape == b_data.shape:
+                if dutotr_cur.shape == corrected_b_data.shape:
                     d_k = f'dutotr_{b_dict["att"]["wave_name"]}'
                     l2r[d_k] = dutotr_cur
                     l2r_band_list.append(d_k)
@@ -175,9 +179,12 @@ def calc_surface_reflectance(xnew, ynew, band_table, var_mem, l1r_band_list,
             del valid_mask
 
         ## write rhos
-        l2r['bands'][b_slot] = {'data': b_data, 'att': b_dict['att']}
+        l2r['bands'][b_slot] = {'data': corrected_b_data, 'att': b_att}
         rhos_to_band_name[b_dict['att']['rhos_ds']] = b_slot
         l2r_band_list.append(rhos_name)
 
-        del b_data
+        del corrected_b_data
+
         # print(f'{global_attrs["sensor"]}/{band_slot} took {(time.time() - t0):.1f}s ({"RevLUT" if use_revlut else "StdLUT"})')
+
+    return l2r, l2r_band_list, rhos_to_band_name, gk_vza, gk_raa

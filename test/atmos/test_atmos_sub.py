@@ -16,6 +16,7 @@ from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run
 
 from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickle, wkt_to_epsg
 
+
 from core.raster.funcs import read_band_from_raw, get_band_grid_size
 
 from core.raster.gpf_module import find_grids_and_angle_meta, read_grid_angle_meta_from_product, \
@@ -38,8 +39,13 @@ class TestAtmosSubFuncs(unittest.TestCase):
 
         self.s2_dim_path = os.path.join(self.project_path, 'data', 'test', 'dim', 's2', 'snap',
                                         'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
+
+        self.s2_dim_path = os.path.join(self.project_path, 'data', 'test', 'dim', 's2', 'snap',
+                                        'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
         self.s2_safe_path = os.path.join(self.test_root, 'safe', 's2',
                                          'S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE')
+        self.s1_safe_grdh_path = os.path.join(self.test_root, 'safe', 's1',
+                                              'S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE')
 
         self.res_60_path = os.path.join(input_dir, 'split_safe_0_B1_B_detector_footprint_B1.tif')
         self.res_10_path = os.path.join(input_dir, 'split_safe_1_B2_B_detector_footprint_B2.tif')
@@ -247,7 +253,7 @@ class TestAtmosSubFuncs(unittest.TestCase):
         dim_raster = Read(module='snap')(self.s2_dim_path, Context())
 
         with self.subTest(msg='test L1R'):
-            target_bands = ['B1','B2','B3','B4','B5','B6','B7','B8','B8A']
+            target_bands = ['B1','B2','B3','B4','B5','B6','B7','B8','B8A', 'B9', 'B10', 'B11', 'B12']
             det_bands = 'B_detector_*'
             target_slots = target_bands
             l1r, global_attrs = apply_atmos(dim_raster,
@@ -256,5 +262,8 @@ class TestAtmosSubFuncs(unittest.TestCase):
                                             det_bands=det_bands,
                                             atmos_conf_path=self.atmos_user_conf)
 
-            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'b1_l1r_out.dim.pkl'))
-            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.dim.pkl'))
+            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'l1r_out.full.dim.pkl'))
+            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.full.dim.pkl'))
+
+
+

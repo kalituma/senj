@@ -5,7 +5,7 @@ import core.atmos as atmos
 def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_names, lut_table, ro_type,
                  user_settings: dict, global_attrs: dict):
 
-    def _get_params():
+    def _load_params():
         wave1 = user_settings['exp_wave1']
         wave2 = user_settings['exp_wave2']
         l2w_mask_wave = user_settings['l2w_mask_wave']
@@ -24,7 +24,7 @@ def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_na
             fixed_aerosol_reflectance, fixed_epsilon_percentile, exp_epsilon, output_intermediate, fixed_aerosol_reflectance_percentile
 
     wave1, wave2, l2w_mask_wave, swir_threshold, fixed_epsilon, gamma, alpha, alpha_weighted, \
-        fixed_aerosol_reflectance, fixed_epsilon_percentile, exp_epsilon, output_intermediate, fixed_aerosol_reflectance_percentile = _get_params()
+        fixed_aerosol_reflectance, fixed_epsilon_percentile, exp_epsilon, output_intermediate, fixed_aerosol_reflectance_percentile = _load_params()
 
     ## find bands to use
     exp_b1 = None

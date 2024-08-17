@@ -4,8 +4,7 @@ import unittest
 import core.atmos as atmos
 from core.atmos.setting import parse
 from core.atmos.run import set_l2w_and_polygon
-from core.logic import Context
-from core.operations import Read
+
 from core.config import expand_var
 from core.atmos.run import apply_l2r
 from core.util import write_pickle, read_pickle, get_files_recursive
@@ -42,12 +41,12 @@ class TestAtmosL2R(unittest.TestCase):
         l2r, global_attrs = apply_l2r(l1r, global_attrs)
 
     def test_l2r_dim(self):
-        l1r_path = os.path.join(self.l1r_dir, 'b1_l1r_out.dim.pkl')
+        l1r_path = os.path.join(self.l1r_dir, 'l1r_out.full.dim.pkl')
         l1r = read_pickle(l1r_path)
-        global_attrs_path = os.path.join(self.l1r_dir, 'global_attrs.dim.pkl')
+        global_attrs_path = os.path.join(self.l1r_dir, 'global_attrs.full.dim.pkl')
         global_attrs = read_pickle(global_attrs_path)
 
         atmos.settings['user'] = parse(None, self.atmos_user_conf, merge=False)
         atmos.settings['user'] = set_l2w_and_polygon(atmos.settings['user'])
 
-        l2r, global_attrs = apply_l2r(l1r, global_attrs)
+        l2r = apply_l2r(l1r, global_attrs)
