@@ -21,3 +21,5 @@ from .percentile_norm import *
 from .asserts import *
 from .dict_compare import *
 from .product_type import *
+from .polygon_from_wkt import *
+from .identify_input import *

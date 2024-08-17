@@ -3,7 +3,7 @@ from pathlib import Path
 from lxml import etree
 from jsonpath_ng.ext import parse
 
-from core.util import ProductType
+from core.util import ProductType, read_pickle
 from core.util.identify import safe_test, dim_test, planet_test, worldview_test
 
 def identify_product(src_path_str:str) -> ProductType:
@@ -11,6 +11,13 @@ def identify_product(src_path_str:str) -> ProductType:
     src_path = Path(src_path_str)
     if not src_path.exists():
         raise FileNotFoundError(f'{src_path_str} does not exist.')
+
+    ext = src_path.suffix
+
+    # if ext == '.tif':
+    #     pkl = src_path.with_suffix('.pkl')
+    #     if pkl.exists():
+    #         meta_dict = read_pickle(pkl)
 
     try:
         ################

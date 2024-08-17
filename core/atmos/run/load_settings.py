@@ -1,9 +1,9 @@
-from typing import Union
 import os
 
 import core.atmos as atmos
 from core import ATMOS_SCRATCH_PATH
-from core.util.atmos import polygon_from_wkt
+from util import polygon_from_wkt
+
 
 def set_l2w_and_polygon(user_settings:dict) -> dict:
 
@@ -21,7 +21,7 @@ def set_l2w_and_polygon(user_settings:dict) -> dict:
         if user_settings['polygon'] is not None:
             if not os.path.exists(user_settings['polygon']):
                 try:
-                    polygon_new = polygon_from_wkt(user_settings['polygon'], file = f'{ATMOS_SCRATCH_PATH}/polygon_{atmos.settings["run"]["runid"]}.json')
+                    polygon_new = polygon_from_wkt(user_settings['polygon'], file =f'{ATMOS_SCRATCH_PATH}/polygon_{atmos.settings["run"]["runid"]}.json')
                     user_settings['polygon_old'] = '{}'.format(user_settings['polygon'])
                     user_settings['polygon'] = '{}'.format(polygon_new)
                 except:

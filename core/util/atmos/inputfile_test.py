@@ -8,7 +8,6 @@ from core.atmos.api.earthexplorer import download as earth_download
 
 def inputfile_test(inputfile):
 
-
     ## check if a list of files is given
     if type(inputfile) == str:
         tmp_files = inputfile.split(',')

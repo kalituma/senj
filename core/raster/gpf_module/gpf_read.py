@@ -29,7 +29,7 @@ def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=Non
 
     return selected
 
-def load_raster_gpf(in_path, selected_bands:list[str]=None, bname_word_included=False) -> Tuple[dict, Product, list[str]]:
+def load_raster_gpf(in_path, selected_bands:list[str]=None, bname_word_included=False) -> Tuple[Product, list[str]]:
 
     path_ext = Path(in_path).suffix[1:]
 
@@ -39,20 +39,19 @@ def load_raster_gpf(in_path, selected_bands:list[str]=None, bname_word_included=
     product = GPF.createProduct('Read', params)
 
     src_bnames = list(product.getBandNames())
-
     selected_bands = get_selected_bands_names(src_bnames, selected_bands, bname_word_included)
 
-    if path_ext == 'tif':
-        pkl_path = in_path.replace('.tif', '.pkl')
-        if Path(pkl_path).exists():
-            meta_dict = read_pickle(pkl_path)
+    # if path_ext == 'tif':
+    #     pkl_path = in_path.replace('.tif', '.pkl')
+    #     if Path(pkl_path).exists():
+    #         meta_dict = read_pickle(pkl_path)
+    #
+    #     if meta_dict:
+    #         set_meta_to_product(product, meta_dict)
+    # else:
+    #     meta_dict = make_meta_dict(product)
 
-        if meta_dict:
-            set_meta_to_product(product, meta_dict)
-    else:
-        meta_dict = make_meta_dict(product)
-
-    return meta_dict, product, selected_bands
+    return product, selected_bands
 
 def read_gpf_bands_as_dict(product, selected_bands:list[str]=None) -> Tuple[dict, list[str]]:
     result = {}

@@ -60,4 +60,5 @@ class TestAtmosSubFuncs(unittest.TestCase):
 
         with self.subTest(msg='Planet test'):
             type = identify_product(self.ps_path)
+            self.assertEqual(type, ProductType.PS)
 

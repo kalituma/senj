@@ -113,4 +113,14 @@ class TestReadOp(unittest.TestCase):
                 Read(module='gdal', bands=[1])(self.s1_tif_snap_path, context, bname_word_included=True)
 
     def test_read_each_product_type(self):
-        pass
+
+        wv_path = '/home/airs_khw/mount/expand/data/etri/1.WV-2_20190404_강릉/014493935010_01_P001_MUL/19APR04021253-M2AS_R1C1-014493935010_01_P001.TIF'
+        ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
+        ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
+
+        context = Context()
+        with self.subTest('read wv tif'):
+            Read(module='gdal')(wv_path, context)
+
+        with self.subTest('read ge tif'):
+            Read(module='gdal')(ge_path, context)

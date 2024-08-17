@@ -50,11 +50,11 @@ def load_raster_gdal(path, selected_bands:list[int]=None):
     if selected_bands:
         assert_bnames(selected_bands, band_range, f'selected bands {selected_bands} is not found in {band_range}')
 
-    meta_path = path.replace(ext, '.pkl')
-    if Path(meta_path).exists():
-        meta_dict = read_pickle(meta_path)
-    else:
-        print(f'No meta file is found for {path}')
-        meta_dict = None
+    # meta_path = path.replace(ext, '.pkl')
+    # if Path(meta_path).exists():
+    #     meta_dict = read_pickle(meta_path)
+    # else:
+    #     print(f'No meta file is found for {path}')
+    #     meta_dict = None
 
-    return meta_dict, ds, selected_bands
+    return ds, selected_bands
