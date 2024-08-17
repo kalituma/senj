@@ -2,7 +2,6 @@ from .wkt_funcs import *
 from .sort_funcs import *
 from .funcs import *
 from .op_decorator import *
-
 from .read_yaml import *
 from .distance_se import *
 from. rsr_convolute_dict import *
@@ -22,4 +21,5 @@ from .asserts import *
 from .dict_compare import *
 from .product_type import *
 from .polygon_from_wkt import *
-from .identify_input import *
+from .identify_product import *
+from .parse_meta_from_xml import *

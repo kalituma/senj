@@ -29,6 +29,7 @@ def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union
             new_meta = update_meta_band_map(raster_obj.meta_dict, selected_bands)
         else:
             new_meta = None
+
         raster_obj = set_raw_metadict(raster_obj, raw=raw, meta_dict=new_meta,selected_bands=selected_bands)
     else:
         raster_obj = convert_raster(raster_obj, out_module_type)

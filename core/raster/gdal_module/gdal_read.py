@@ -7,7 +7,7 @@ from core.util import read_pickle, assert_bnames
 
 def read_tif(path):
 
-    ext = Path(path).suffix
+    ext = Path(path).suffix.lower()
     assert ext == '.tif', f'input file must be a tif file, but got {ext}'
 
     ds = gdal.Open(path)

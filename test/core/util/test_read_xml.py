@@ -3,9 +3,7 @@ import unittest
 from lxml import objectify, etree
 
 from core.config import expand_var
-from core.util import ProductType
-from core.util.atmos import identify_product
-
+from core.util import ProductType, identify_product
 
 class TestAtmosSubFuncs(unittest.TestCase):
     def setUp(self) -> None:
@@ -62,3 +60,10 @@ class TestAtmosSubFuncs(unittest.TestCase):
             type = identify_product(self.ps_path)
             self.assertEqual(type, ProductType.PS)
 
+    def test_original_parse_func(self):
+        from core.util.meta import metadata_parse as parse_wv_meta
+        from core.util.identify import worldview_test
+
+        datafiles = worldview_test(self.wv_path)
+        wv_meta_path = str(datafiles['metadata']['path'])
+        meta = parse_wv_meta(wv_meta_path)

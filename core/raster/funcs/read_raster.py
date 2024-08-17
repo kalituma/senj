@@ -3,7 +3,7 @@ from core.util import identify_product
 from core.raster import RasterType, Raster
 from core.raster.gdal_module import load_raster_gdal
 from core.raster.gpf_module import load_raster_gpf
-from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, set_raw_metadict, get_band_name_and_index
+from core.raster.funcs import read_gdal_bands_as_dict, read_gpf_bands_as_dict, set_raw_metadict, get_band_name_and_index, create_meta_dict
 
 
 def load_raster(raster:Raster, in_module:RasterType, selected_bands:list[Union[str, int]]=None, bname_word_included:bool=False):
@@ -29,13 +29,12 @@ def load_raster(raster:Raster, in_module:RasterType, selected_bands:list[Union[s
     else:
         raise NotImplementedError(f'Module type({in_module}) is not implemented for the input process.')
 
-    meta_dict = None
-
+    meta_dict = create_meta_dict(raw, product_type, path)
 
     if selected_bands:
-        raster = set_raw_metadict(raster, raw=raw, meta_dict=meta_dict, selected_bands=new_selected_bands)
+        raster = set_raw_metadict(raster, raw=raw, meta_dict=meta_dict, product_type=product_type, selected_bands=new_selected_bands)
     else:
-        raster = set_raw_metadict(raster, raw=raw, meta_dict=meta_dict)
+        raster = set_raw_metadict(raster, raw=raw, meta_dict=meta_dict, product_type=product_type)
 
     return raster
 

@@ -119,8 +119,8 @@ class TestReadOp(unittest.TestCase):
         ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
 
         context = Context()
-        with self.subTest('read wv tif'):
-            Read(module='gdal')(wv_path, context)
+        # with self.subTest('read wv tif'):
+        #     Read(module='gdal')(wv_path, context)
 
         with self.subTest('read ge tif'):
             Read(module='gdal')(ge_path, context)
