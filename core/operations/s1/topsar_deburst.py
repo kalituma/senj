@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, TOPSAR_DEBURST_OP
-from core.util import assert_bnames, check_product_type, check_module_type, ProductType
+from core.util import assert_bnames, op_product_type, check_module_type, ProductType
 from core.raster import Raster, RasterType
 from core.raster.gpf_module import get_polarization, topsar_deburst
 
@@ -18,7 +18,7 @@ class TopsarDeburst(Op):
         }
 
     @check_module_type(RasterType.SNAP)
-    @check_product_type(ProductType.S1)
+    @op_product_type(ProductType.S1)
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
         pols = get_polarization(raster.meta_dict)
         assert pols is not None, "Polarization not found in metadata"

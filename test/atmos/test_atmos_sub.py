@@ -8,7 +8,7 @@ import core.atmos as atmos
 from core.config import expand_var
 
 from core.atmos.run import l1r_meta_to_global_attrs, meta_dict_to_l1r_meta, apply_atmos
-from core.atmos.run.l1r import preprocess_l1r_band
+from core.atmos.run.l1r import process_l1r_band
 from core.atmos.meta import build_angles
 
 from core.atmos.setting import parse
@@ -191,9 +191,9 @@ class TestAtmosSubFuncs(unittest.TestCase):
         percentiles_compute = True
         percentiles = (0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)
 
-        band_out = preprocess_l1r_band(bands=b1_bands, user_settings=user_settings, l1r_meta=l1r_meta,
-                                       global_attrs=global_attrs, warp_option_for_angle=warp_option_for_angle,
-                                       percentiles_compute=percentiles_compute, percentiles=percentiles)
+        band_out = process_l1r_band(bands=b1_bands, user_settings=user_settings, l1r_meta=l1r_meta,
+                                    global_attrs=global_attrs, warp_option_for_angle=warp_option_for_angle,
+                                    percentiles_compute=percentiles_compute, percentiles=percentiles)
 
         self.assertTrue(np.isclose(np.mean(band_out['B1']['data']), 0.13849235))
 
@@ -257,10 +257,10 @@ class TestAtmosSubFuncs(unittest.TestCase):
             det_bands = 'B_detector_*'
             target_slots = target_bands
             l1r, global_attrs = apply_atmos(dim_raster,
+                                            dim_raster.product_type,
                                             target_band_names=target_bands,
                                             target_band_slot=target_slots,
-                                            det_bands=det_bands,
-                                            atmos_conf_path=self.atmos_user_conf)
+                                            det_bands=det_bands)
 
             write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'l1r_out.full.dim.pkl'))
             write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.full.dim.pkl'))

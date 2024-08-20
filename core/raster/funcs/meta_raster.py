@@ -2,7 +2,7 @@ from typing import Union
 from warnings import warn
 from core.util import assert_bnames, ProductType
 from core.raster import Raster, RasterType
-from core.raster.funcs import check_product_type, get_band_name_and_index
+from core.raster.funcs import get_band_name_and_index
 from core.raster.gpf_module import get_band_grid_size_gpf, build_grid_meta_from_gpf
 from core.raster.gdal_module import get_band_grid_size_gdal, build_grid_meta_from_gdal
 

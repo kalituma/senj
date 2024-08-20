@@ -1,11 +1,11 @@
 import os, glob
 from pathlib import Path
 
-def worldview_test(bundle_in):
+def worldview_test(tif_or_xml_path:str, file_dim=None):
 
     datafiles = {}
 
-    wv_path = Path(bundle_in)
+    wv_path = Path(tif_or_xml_path)
     if wv_path.is_dir():
         raise ValueError('Worldview bundle should be a file, not a directory')
     else:

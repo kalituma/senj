@@ -69,6 +69,24 @@ def build_topsar_deburst_params(selectedPolarisations:list[str]):
     polarArray = jpy.array('java.lang.String', selectedPolarisations)
     return _build_params(selectedPolarisations=polarArray)
 
+def build_mosaic_params(geo_spec:dict, **kwargs):
+
+    OpVar = jpy.get_type('org.esa.snap.core.gpf.common.MosaicOp$Variable')
+    vars = [OpVar(k, v) for k, v in kwargs['variables']]
+
+    kwargs['variables'] = jpy.array('org.esa.snap.core.gpf.common.MosaicOp$Variable', vars)
+
+    kwargs['westBound'] = geo_spec['ul_x'] + geo_spec['res_x'] / 2
+    kwargs['eastBound'] = geo_spec['lr_x'] + geo_spec['res_x'] / 2
+
+    kwargs['northBound'] = geo_spec['ul_y'] + geo_spec['res_y'] / 2
+    kwargs['southBound'] = geo_spec['lr_y'] + geo_spec['res_y']
+
+    kwargs['pixelSizeX'] = geo_spec['res_x']
+    kwargs['pixelSizeY'] = -geo_spec['res_y']
+
+    return _build_params(**kwargs)
+
 def build_speckle_filter_params(**kwargs):
     assert kwargs['sourceBandNames'], "sourceBandNames must be provided"
     assert kwargs['filter'] in [BOXCAR, MEDIAN, FROST, GAMMA_MAP, LEE_SPECKLE, LEE_REFINED, LEE_SIGMA, IDAN, MEAN_SPECKLE], "Invalid filter type"

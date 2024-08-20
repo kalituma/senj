@@ -3,7 +3,7 @@ from core import OPERATIONS
 from core.operations import Op, CALIBRATE_OP
 from core.util import assert_bnames, ProductType
 from core.raster import RasterType
-from core.util import check_product_type, check_module_type
+from core.util import op_product_type, check_module_type
 from core.raster import Raster
 from core.raster.gpf_module import calibrate, get_polarization
 
@@ -27,7 +27,7 @@ class Calibrate(Op):
         }
 
     @check_module_type(RasterType.SNAP)
-    @check_product_type(ProductType.S1)
+    @op_product_type(ProductType.S1)
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
         pols = get_polarization(raster.meta_dict)

@@ -10,6 +10,7 @@ from .rsr_read import *
 from .filter_dict_keys import *
 from .fillnan import *
 from .projection_geo import *
+from .projection_read import *
 from .tiles_interp import *
 from .grid_extend import *
 from .region_to_wkt import *
@@ -23,3 +24,4 @@ from .product_type import *
 from .polygon_from_wkt import *
 from .identify_product import *
 from .parse_meta_from_xml import *
+from .match_str import *

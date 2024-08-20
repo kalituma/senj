@@ -18,9 +18,9 @@
 import os
 from pathlib import Path
 
-def planet_test(bundle_in):
+def planet_test(tif_or_xml_path):
 
-    ps_path = Path(bundle_in)
+    ps_path = Path(tif_or_xml_path)
     if ps_path.is_dir():
         raise ValueError('The input path is a directory. Please provide a file path.')
 

@@ -30,3 +30,4 @@ from .gdal_read import *
 from .gdal_write import *
 from .gdal_ds import *
 from .gdal_merge import *
+from .load_gdal import *

@@ -1,12 +1,11 @@
 import re
 import numpy as np
-from typing import Tuple
-from pathlib import Path
+from typing import Tuple, TYPE_CHECKING
 from esa_snappy import GPF, Product, ProductData
 
-from core.util import read_pickle, assert_bnames
+from core.util import assert_bnames
 from core.util.errors import ContainedBandError
-from core.raster.gpf_module import build_read_params, set_meta_to_product, make_meta_dict
+from core.raster.gpf_module import build_read_params
 
 def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=None, bname_word_included:bool=False):
     selected = []
@@ -29,29 +28,10 @@ def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=Non
 
     return selected
 
-def load_raster_gpf(in_path, selected_bands:list[str]=None, bname_word_included=False) -> Tuple[Product, list[str]]:
-
-    path_ext = Path(in_path).suffix[1:]
-
-    meta_dict = None
-
+def read_gpf(in_path:str) -> Product:
     params = build_read_params(file=in_path)
     product = GPF.createProduct('Read', params)
-
-    src_bnames = list(product.getBandNames())
-    selected_bands = get_selected_bands_names(src_bnames, selected_bands, bname_word_included)
-
-    # if path_ext == 'tif':
-    #     pkl_path = in_path.replace('.tif', '.pkl')
-    #     if Path(pkl_path).exists():
-    #         meta_dict = read_pickle(pkl_path)
-    #
-    #     if meta_dict:
-    #         set_meta_to_product(product, meta_dict)
-    # else:
-    #     meta_dict = make_meta_dict(product)
-
-    return product, selected_bands
+    return product
 
 def read_gpf_bands_as_dict(product, selected_bands:list[str]=None) -> Tuple[dict, list[str]]:
     result = {}

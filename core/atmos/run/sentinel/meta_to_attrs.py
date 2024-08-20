@@ -4,12 +4,22 @@ import dateutil.parser
 from core.util import rsr_convolute_dict, distance_se
 import core.atmos as atmos
 from core.atmos.shared import f0_get
-from core.atmos.meta import get_angles_from_meta, get_sensor_type, projection_from_granule_meta, get_gains_offsets_with_rsr, get_waves_mu
+from core.atmos.run.sentinel import get_sensor_type, projection_from_granule_meta, get_gains_offsets_with_rsr, get_waves_mu
 
-def l1r_meta_to_global_attrs(l1r_meta:dict) -> tuple[dict, dict]:
+def get_angles_from_meta(granule_meta:dict):
+    sza = granule_meta['SUN']['Mean_Zenith']
+    saa = granule_meta['SUN']['Mean_Azimuth']
+    vza = np.nanmean(granule_meta['VIEW']['Average_View_Zenith'])
+    vaa = np.nanmean(granule_meta['VIEW']['Average_View_Azimuth'])
+    raa = np.abs(saa - vaa)
+    while raa > 180:
+        raa = np.abs(360 - raa)
+
+    return sza, saa, vza, vaa, raa
+
+def l1r_meta_to_global_attrs(l1r_meta:dict, user_settings:dict) -> tuple[dict, dict]:
 
     assert l1r_meta['product_info']['PROCESSING_LEVEL'] == 'Level-1C', 'Input data is not Level-1C.'
-    user_settings = {k: atmos.settings['run'][k] for k in atmos.settings['run']}
 
     sensor = get_sensor_type(l1r_meta['product_info'])
 

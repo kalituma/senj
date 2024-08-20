@@ -10,13 +10,13 @@
 
 import os
 
-def safe_test(input_path:str) -> dict:
+def safe_test(safe_dir:str) -> dict:
 
-    files = os.listdir(input_path)
+    files = os.listdir(safe_dir)
     datafiles = {}
     for i, fname in enumerate(files):
         tmp = fname.split('.')
-        path = f'{input_path}/{fname}'
+        path = f'{safe_dir}/{fname}'
 
         ## scene metadata
         if (tmp[-1] == ('xml')) and ('MTD' in tmp[0]):
@@ -34,12 +34,12 @@ def safe_test(input_path:str) -> dict:
                 split = granule.split('_')
                 tile = split[1]
                 date = split[-1]
-                path = f'{input_path}/{fname}/{granule}/'
+                path = f'{safe_dir}/{fname}/{granule}/'
 
                 granule_files = os.listdir(path)
                 for j, grfname in enumerate(granule_files):
                     tmp = grfname.split('.')
-                    path = f'{input_path}/{fname}/{granule}/{grfname}'
+                    path = f'{safe_dir}/{fname}/{granule}/{grfname}'
 
                     ## scene metadata
                     if (tmp[-1] == ('xml')) and ('MTD' in tmp[0]):
@@ -48,14 +48,14 @@ def safe_test(input_path:str) -> dict:
                     ## band files
                     if (grfname == 'IMG_DATA'):
                         if granule[0:3] == 'L2A':  ## sen2cor
-                            res_dirs = os.listdir('{}/{}/{}/{}/'.format(input_path, fname, granule, grfname))
+                            res_dirs = os.listdir('{}/{}/{}/{}/'.format(safe_dir, fname, granule, grfname))
                             res_dirs.sort()
                             bands = []
                             for res_dir in res_dirs:
                                 if res_dir in ['R10m', 'R20m', 'R60m']:
-                                    bands += os.listdir('{}/{}/{}/{}/{}/'.format(input_path, fname, granule, grfname, res_dir))
+                                    bands += os.listdir('{}/{}/{}/{}/{}/'.format(safe_dir, fname, granule, grfname, res_dir))
                         else:
-                            bands = os.listdir('{}/{}/{}/{}/'.format(input_path, fname, granule, grfname))
+                            bands = os.listdir('{}/{}/{}/{}/'.format(safe_dir, fname, granule, grfname))
 
                         for band in bands:
                             if band[0] == '.': continue
@@ -71,9 +71,9 @@ def safe_test(input_path:str) -> dict:
                                 continue
                             if granule[0:3] == 'L2A':  ## sen2cor
                                 res_dir = 'R{}'.format(bres)
-                                path = '{}/{}/{}/{}/{}/{}'.format(input_path, fname, granule, grfname, res_dir, band)
+                                path = '{}/{}/{}/{}/{}/{}'.format(safe_dir, fname, granule, grfname, res_dir, band)
                             else:
-                                path = '{}/{}/{}/{}/{}'.format(input_path, fname, granule, grfname, band)
+                                path = '{}/{}/{}/{}/{}'.format(safe_dir, fname, granule, grfname, band)
 
                             band_name = 'B{}'.format(bid[1:3].lstrip('0'))
                             if band_name not in granule_data:
@@ -98,24 +98,24 @@ def safe_test(input_path:str) -> dict:
                     continue
                 tmp = annotation_file.split('.')
                 ext = tmp[-1]
-                path = f'{input_path}/{fname}/{annotation_file}'
+                path = f'{safe_dir}/{fname}/{annotation_file}'
                 datafiles['annotation'].append({"path":path, "fname":annotation_file})
 
     return datafiles
 
-def dim_test(input_path:str) -> dict:
-    dn = os.path.dirname(input_path)
-    bn = os.path.basename(input_path)
+def dim_test(dim_or_data_path:str) -> dict:
+    dn = os.path.dirname(dim_or_data_path)
+    bn = os.path.basename(dim_or_data_path)
     bn, ex = os.path.splitext(bn)
 
     datafiles = {}
 
     if ex == '.dim':
-        datafiles['dim'] = input_path
+        datafiles['dim'] = dim_or_data_path
         if os.path.exists(f'{dn}/{bn}.data'):
             datafiles['data'] = f'{dn}/{bn}.data'
     elif ex == '.data':
-        datafiles['data'] = input_path
+        datafiles['data'] = dim_or_data_path
         if os.path.exists(f'{dn}/{bn}.dim'):
             datafiles['dim'] = f'{dn}/{bn}.dim'
 

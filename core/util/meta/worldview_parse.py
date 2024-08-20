@@ -1,6 +1,6 @@
 from lxml import etree
 
-def metadata_parse(metafile):
+def worldview_metadata_parse(metafile):
     import os, sys, fnmatch, dateutil.parser
     from xml.dom import minidom
 
@@ -131,6 +131,9 @@ def metadata_parse(metafile):
     return(metadata)
 
 def parse_worldview(meta_path):
+    to_xpath = lambda x: f'//{x}'
+    from_curr = lambda x: f'.//{x}'
+
     metadata = {}
 
     ## get image information
@@ -147,7 +150,7 @@ def parse_worldview(meta_path):
 
     root_node = etree.parse(meta_path).getroot()
     for tag in metadata_tags:
-        nodes = root_node.xpath(f'//{tag}')
+        nodes = root_node.xpath(to_xpath(tag))
         if len(nodes) > 0:
             metadata[tag] = nodes[0].text
 
@@ -215,9 +218,9 @@ def parse_worldview(meta_path):
         # if band_tag == 'BAND_S1': band_index = 1 # reset counter for SWIR bands
         band_data = {'name': band_names[b], 'index': band_indices[b]}
         ## there are two tags in WV3 metadata
-        for t in root_node.xpath(f'//{band_tag}'):
+        for t in root_node.xpath(to_xpath(band_tag)):
             for tag in band_tags:
-                nodes = t.xpath(f'//{tag}')
+                nodes = t.findall(from_curr(tag))
                 if len(nodes) > 0:
                     band_data[tag] = float(nodes[0].text)
         if len(band_data) > 2:  ## keep band only if in metadata
@@ -237,10 +240,10 @@ def parse_worldview(meta_path):
                  "ULX", "ULY", "URX", "URY",
                  "LRX", "LRY", "LLX", "LLY"]
     tile_values = []
-    for t in root_node.xpath('//TILE'):
+    for t in root_node.xpath(to_xpath('TILE')):
         tile = {}
         for tag in tile_tags:
-            nodes = t.xpath(f'//{tag}')
+            nodes = t.findall(from_curr(tag))
             if len(nodes) > 0:
                 if tag == "FILENAME":
                     val = nodes[0].text

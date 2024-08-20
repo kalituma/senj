@@ -15,7 +15,7 @@
 import os
 import numpy as np
 from core import atmos
-from core.util import read_band, projection_geo
+from core.util import read_band, projection_geo, projection_read
 
 def copernicus_dem_lonlat(lon1, lat1, sea_level=0, source='copernicus30', nearest=False, dem_min = -500.0):
 
@@ -32,7 +32,7 @@ def copernicus_dem_lonlat(lon1, lat1, sea_level=0, source='copernicus30', neares
             continue
 
         cdm = read_band(dem_tile)
-        dct = atmos.shared.projection_read(dem_tile)
+        dct = projection_read(dem_tile)
         lon0, lat0 = projection_geo(dct)
 
         result = atmos.shared.reproject2(cdm, lon0, lat0, lon1, lat1, nearest=nearest)

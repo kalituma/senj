@@ -30,7 +30,7 @@ def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union
         else:
             new_meta = None
 
-        raster_obj = set_raw_metadict(raster_obj, raw=raw, meta_dict=new_meta,selected_bands=selected_bands)
+        raster_obj = set_raw_metadict(raster_obj, raw=raw, meta_dict=new_meta, selected_bands=selected_bands, product_type=raster_obj.product_type)
     else:
         raster_obj = convert_raster(raster_obj, out_module_type)
 

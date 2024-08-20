@@ -2,8 +2,8 @@
 from core.raster import RasterType
 
 MODULE_EXT_MAP = {
-    RasterType.GDAL : ['tif'],
-    RasterType.SNAP : ['dim', 'tif', 'safe']
+    RasterType.GDAL : ['tif', 'xml'],
+    RasterType.SNAP : ['dim', 'tif', 'safe', 'xml']
 }
 
 #io

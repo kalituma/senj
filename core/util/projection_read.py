@@ -7,7 +7,7 @@
 ##                2024-03-28 (QV) x/y range and pixel_size as lists
 
 from pyproj import Proj
-from osgeo import gdal,osr
+from osgeo import gdal, osr
 import os
 
 def projection_read(file):
@@ -28,7 +28,7 @@ def projection_read(file):
     ## find world file if present
     for ext in ['J2W', 'TFW', 'WLD', 'j2w', 'tfw', 'wld']:
         fbase, fext = os.path.splitext(file)
-        wfile = '{}.{}'.format(fbase, ext)
+        wfile = f'{fbase}.{ext}'
         if os.path.exists(wfile):
             break
         wfile = None
@@ -74,5 +74,5 @@ def projection_read(file):
            'xdim':dimx, 'ydim': dimy,
            'dimensions':(dimx, dimy),
            'pixel_size': pixel_size}
-    dct['projection'] = 'EPSG:{}'.format(dct['epsg'])
-    return(dct)
+    dct['projection'] = f'EPSG:{dct["epsg"]}'
+    return dct

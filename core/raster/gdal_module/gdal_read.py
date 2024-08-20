@@ -3,7 +3,7 @@ from typing import Tuple
 from pathlib import Path
 from osgeo import gdal
 
-from core.util import read_pickle, assert_bnames
+
 
 def read_tif(path):
 
@@ -40,21 +40,3 @@ def read_gdal_bands_as_dict(ds, band_names:list[str], selected_index:list[int]=N
 
     return arr_dict, selected_band_names
 
-def load_raster_gdal(path, selected_bands:list[int]=None):
-
-    ext = Path(path).suffix
-    ds = read_tif(path)
-
-    band_range = list(range(1, ds.RasterCount + 1))
-
-    if selected_bands:
-        assert_bnames(selected_bands, band_range, f'selected bands {selected_bands} is not found in {band_range}')
-
-    # meta_path = path.replace(ext, '.pkl')
-    # if Path(meta_path).exists():
-    #     meta_dict = read_pickle(meta_path)
-    # else:
-    #     print(f'No meta file is found for {path}')
-    #     meta_dict = None
-
-    return ds, selected_bands

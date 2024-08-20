@@ -4,13 +4,50 @@ from esa_snappy import Product
 from osgeo.gdal import Dataset
 from core.util import ProductType, read_pickle, parse_meta_xml
 
-from core.raster.gpf_module import make_meta_dict
+from core.raster import RasterType
+from core.raster.gdal_module import get_image_spec_gdal, get_geo_spec_gdal
+from core.raster.gpf_module import make_meta_dict, get_image_spec_gpf, get_geo_spec_gpf
 
-def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, path:str) -> Union[dict, None]:
+def update_meta_bounds(meta_dict:dict, raw:Union[Dataset, Product], module_type:RasterType) -> dict:
+    tmp_tile_info = meta_dict['TILE_INFO'][0].copy()
+
+    if module_type == RasterType.GDAL:
+        image_spec = get_image_spec_gdal(raw)
+        geo_spec = get_geo_spec_gdal(raw)
+    else:
+        image_spec = get_image_spec_gpf(raw)
+        geo_spec = get_geo_spec_gpf(raw)
+
+    tmp_tile_info['ULCOLOFFSET'] = image_spec['ul_col']
+    tmp_tile_info['ULROWOFFSET'] = image_spec['ul_row']
+    tmp_tile_info['URCOLOFFSET'] = image_spec['ur_col']
+    tmp_tile_info['URROWOFFSET'] = image_spec['ur_row']
+
+    tmp_tile_info['LRCOLOFFSET'] = image_spec['lr_col']
+    tmp_tile_info['LRROWOFFSET'] = image_spec['lr_row']
+    tmp_tile_info['LLCOLOFFSET'] = image_spec['ll_col']
+    tmp_tile_info['LLROWOFFSET'] = image_spec['ll_row']
+
+    tmp_tile_info['ULX'] = tmp_tile_info['ULLON'] = geo_spec['ul_x']
+    tmp_tile_info['ULY'] = tmp_tile_info['ULLAT'] = geo_spec['ul_y']
+    tmp_tile_info['URX'] = tmp_tile_info['URLON'] = geo_spec['ur_x']
+    tmp_tile_info['URY'] = tmp_tile_info['URLAT'] = geo_spec['ur_y']
+
+    tmp_tile_info['LLX'] = tmp_tile_info['LLLON'] = geo_spec['ll_x']
+    tmp_tile_info['LLY'] = tmp_tile_info['LLLAT'] = geo_spec['ll_y']
+    tmp_tile_info['LRX'] = tmp_tile_info['LRLON'] = geo_spec['lr_x']
+    tmp_tile_info['LRY'] = tmp_tile_info['LRLAT'] = geo_spec['lr_y']
+    tmp_tile_info['FILENAME'] = ''
+
+    meta_dict['TILE_INFO'] = [tmp_tile_info]
+
+    return meta_dict
+
+def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, module_type:RasterType, path:str, tile_merged:bool) -> Union[dict, None]:
 
     meta_dict = None
 
-    ext = Path(path).suffix[1:]
+    ext = Path(path).suffix
     meta_path = path.replace(ext, '.pkl')
 
     # load if exists
@@ -25,7 +62,15 @@ def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, path
 
     # parse from xml
     if product_type != ProductType.UNKNOWN:
-        meta_dict = parse_meta_xml(path, product_type)
+        tif_file_dim = None
+        if raw is not None:
+            if isinstance(raw, Dataset):
+                tif_file_dim = [raw.RasterYSize, raw.RasterXSize]
+        meta_dict = parse_meta_xml(path, product_type, tif_file_dim)
+
+        if tile_merged and product_type == ProductType.WV:
+            meta_dict = update_meta_bounds(meta_dict, raw, module_type)
+
         return meta_dict
 
     return meta_dict

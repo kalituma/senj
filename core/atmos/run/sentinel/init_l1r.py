@@ -2,14 +2,12 @@ from core.util import tiles_interp, grid_extend, projection_geo
 from core.raster.gpf_module import get_src_param, warp_to
 import numpy as np
 
-def get_grid_width_height(grid_dict:dict, selected_resolution:str) -> tuple[int, int]:
-    return grid_dict['GRIDS'][f'{selected_resolution}']['NCOLS'], grid_dict['GRIDS'][f'{selected_resolution}']['NROWS']
 
-def build_angles(det_res:int, det_band:np.ndarray, granule_meta:dict, geometry_type:str, warp_option:tuple, index_to_band:list, proj_dict:dict) -> dict:
+def init_l1r(det_res:int, det_band:np.ndarray, granule_meta:dict, geometry_type:str, warp_option:tuple, index_to_band:list, proj_dict:dict) -> dict:
 
     out = {}
 
-    width, height = get_grid_width_height(granule_meta, str(det_res))
+    width, height = granule_meta['GRIDS'][f'{det_res}']['NCOLS'], granule_meta['GRIDS'][f'{det_res}']['NROWS']
 
     xnew = np.linspace(0, granule_meta['VIEW']['Average_View_Zenith'].shape[1] - 1, int(width))
     ynew = np.linspace(0, granule_meta['VIEW']['Average_View_Zenith'].shape[0] - 1, int(height))
@@ -104,13 +102,3 @@ def build_angles(det_res:int, det_band:np.ndarray, granule_meta:dict, geometry_t
 
     return out
 
-def get_angles_from_meta(granule_meta:dict):
-    sza = granule_meta['SUN']['Mean_Zenith']
-    saa = granule_meta['SUN']['Mean_Azimuth']
-    vza = np.nanmean(granule_meta['VIEW']['Average_View_Zenith'])
-    vaa = np.nanmean(granule_meta['VIEW']['Average_View_Azimuth'])
-    raa = np.abs(saa - vaa)
-    while raa > 180:
-        raa = np.abs(360 - raa)
-
-    return sza, saa, vza, vaa, raa

@@ -3,8 +3,8 @@ import scipy.ndimage
 
 from core.raster.gpf_module import get_src_param, warp_to
 
-def preprocess_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dict, warp_option_for_angle:tuple,
-                        percentiles_compute:bool, percentiles:tuple):
+def get_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dict, warp_option_for_angle:tuple,
+                 percentiles_compute:bool, percentiles:tuple):
 
     nodata = int(l1r_meta['product_info']['NODATA'])
     quant = float(l1r_meta['product_info']['QUANTIFICATION_VALUE'])

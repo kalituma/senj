@@ -33,7 +33,7 @@ def check_module_type(*allowed_types):
     return decorator
 
 
-def check_product_type(*allowed_types):
+def op_product_type(*allowed_types):
     def decorator(func:Callable):
         @wraps(func)
         def func_wrapper(self, raster:"Raster", *args, **kwargs):

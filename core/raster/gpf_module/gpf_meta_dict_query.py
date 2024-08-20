@@ -94,6 +94,8 @@ def build_view_angles_meta(meta_dict_query):
 
 def find_grids_and_angle_meta(meta_dict:dict) -> dict:
 
+    # called metadata_granule
+
     find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
 
     granule_meta = {}

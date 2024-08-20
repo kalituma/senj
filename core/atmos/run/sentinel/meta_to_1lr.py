@@ -11,7 +11,6 @@ def meta_dict_to_l1r_meta(raster: "Raster", selected_band:list[str]=None) -> dic
     meta_dict = raster.meta_dict
 
     granule_info = get_granule_info(meta_dict)
-
     granule_meta = find_grids_and_angle_meta(meta_dict) # Sun, View
 
     granule_meta['granule_info'] = granule_info

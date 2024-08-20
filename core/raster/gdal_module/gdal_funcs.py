@@ -70,3 +70,53 @@ def get_band_grid_size_gdal(ds, band_name, selected_index=None):
         size_meta[band_name[b_idx]] = band_size
 
     return size_meta
+
+def get_image_spec_gdal(ds):
+    width = ds.RasterXSize
+    height = ds.RasterYSize
+
+    ul_col = float(0.0)
+    ul_row = float(0.0)
+    ur_col = float(width - 1)
+    ur_row = float(0.0)
+    lr_col = ur_col
+    lr_row = float(height - 1)
+    ll_col = float(0.0)
+    ll_row = lr_row
+
+    return {
+        'ul_col': ul_col,
+        'ul_row': ul_row,
+        'ur_col': ur_col,
+        'ur_row': ur_row,
+        'lr_col': lr_col,
+        'lr_row': lr_row,
+        'll_col': ll_col,
+        'll_row': ll_row
+    }
+
+def get_geo_spec_gdal(ds):
+    gt = ds.GetGeoTransform()
+    x_res = gt[1]
+    y_res = gt[5]
+
+    ul_x = gt[0]
+    ul_y = gt[3]
+    ur_x = gt[0] + x_res * ds.RasterXSize
+    ur_y = ul_y
+
+    ll_x = ul_x
+    ll_y = gt[3] + y_res * ds.RasterYSize
+    lr_x = ur_x
+    lr_y = ll_y
+
+    return {
+        'ul_x': ul_x,
+        'ul_y': ul_y,
+        'ur_x': ur_x,
+        'ur_y': ur_y,
+        'll_x': ll_x,
+        'll_y': ll_y,
+        'lr_x': lr_x,
+        'lr_y': lr_y
+    }

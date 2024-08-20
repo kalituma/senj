@@ -1,11 +1,38 @@
 import numpy as np
 from esa_snappy import Product, jpy, PixelPos, Band, CrsGeoCoding
 
+def find_epsg_from_product(product:Product) -> int:
+    CRS = jpy.get_type('org.geotools.referencing.CRS')
+    return CRS.lookupEpsgCode(Product.findModelCRS(product.getSceneGeoCoding()), True)
+
 def find_proj_from_band(band:Band) -> str:
 
     band_geocoding = band.getGeoCoding()
     wkt = Product.findModelCRS(band_geocoding).toWKT()
     return wkt
+
+def find_boundary_from_product(product:Product) -> dict:
+
+    DIR_POS = jpy.get_type('org.geotools.geometry.DirectPosition2D')
+    b_width, b_height = product.getSceneRasterWidth(), product.getSceneRasterHeight()
+    affine = product.getSceneGeoCoding().getImageToMapTransform()
+
+    min_x, max_y = list(affine.transform(DIR_POS(PixelPos(0, 0)), None).getCoordinate())
+    max_x, min_y = list(affine.transform(DIR_POS(PixelPos(product.getSceneRasterWidth(), product.getSceneRasterHeight())), None).getCoordinate())
+    # max_x, min_y = list(affine.transform(DIR_POS(PixelPos(product.getSceneRasterWidth()-0.5, product.getSceneRasterHeight()-0.5)), None).getCoordinate())
+
+    x_res = (max_x - min_x) / b_width
+    y_res = -(max_y - min_y) / b_height
+
+    return {
+        'ul_x': min_x,
+        'ul_y': max_y,
+        'lr_x': max_x,
+        'lr_y': min_y,
+        'res_x': x_res,
+        'res_y': y_res
+    }
+
 
 def find_gt_from_band(band:Band) -> list:
 

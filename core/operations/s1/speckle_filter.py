@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, SPECKLE_FILTER_OP
-from core.util import check_product_type, check_module_type, ProductType
+from core.util import op_product_type, check_module_type, ProductType
 from core.raster import Raster, RasterType
 from core.raster.gpf_module import LEE_SIGMA, SIGMA_90, SIZE_3x3, SIZE_7x7, speckle_filter
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ class SpeckleFilter(Op):
         }
 
     @check_module_type(RasterType.SNAP)
-    @check_product_type(ProductType.S1)
+    @op_product_type(ProductType.S1)
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
         if not self.speckle_filter_params['sourceBandNames']:
             self.speckle_filter_params['sourceBandNames'] = raster.get_band_names()

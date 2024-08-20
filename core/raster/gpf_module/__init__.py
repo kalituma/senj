@@ -69,9 +69,10 @@ class ORBIT_TYPE(Enum):
 from .gpf_meta_from_raw import *
 from .gpf_const import *
 from .gpf_op_params import *
-from .check_size import *
 from .meta_func import *
 from .product_to_ds import *
+from .check_size import *
+from .gpf_mosaic import *
 
 from .gpf_meta import *
 from .gpf_meta_dict_query import *
@@ -84,3 +85,4 @@ from .gpf_write import *
 from .gpf_s1_preprocess import *
 from .gpf_dim import *
 from .gpf_merge import *
+from .gpf_load_raster import *
