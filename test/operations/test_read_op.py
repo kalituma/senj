@@ -202,3 +202,6 @@ class TestReadOp(unittest.TestCase):
         gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, band_names=out_raster.get_band_names())
         gpf_bands, gpf_band_names = read_gpf_bands_as_dict(wv_snap_raster.raw)
         self.assertEqual(np.sum(gdal_bands['BAND_B']['value'] - gpf_bands['BAND_B']['value']), 0)
+        self.assertEqual(np.sum(gdal_bands['BAND_G']['value'] - gpf_bands['BAND_G']['value']), 0)
+        self.assertEqual(np.sum(gdal_bands['BAND_R']['value'] - gpf_bands['BAND_R']['value']), 0)
+        self.assertEqual(np.sum(gdal_bands['BAND_N']['value'] - gpf_bands['BAND_N']['value']), 0)
