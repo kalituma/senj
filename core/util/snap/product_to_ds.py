@@ -5,6 +5,11 @@ def find_epsg_from_product(product:Product) -> int:
     CRS = jpy.get_type('org.geotools.referencing.CRS')
     return CRS.lookupEpsgCode(Product.findModelCRS(product.getSceneGeoCoding()), True)
 
+def find_proj_from_product(product:Product) -> str:
+    product_geocoding = product.getSceneGeoCoding()
+    wkt = Product.findModelCRS(product_geocoding).toWKT()
+    return wkt
+
 def find_proj_from_band(band:Band) -> str:
 
     band_geocoding = band.getGeoCoding()
@@ -33,6 +38,19 @@ def find_boundary_from_product(product:Product) -> dict:
         'res_y': y_res
     }
 
+def find_gt_from_product(product:Product) -> list:
+
+        DIR_POS = jpy.get_type('org.geotools.geometry.DirectPosition2D')
+        b_width, b_height = product.getSceneRasterWidth(), product.getSceneRasterHeight()
+
+        affine = product.getSceneGeoCoding().getImageToMapTransform()
+        min_x, max_y = list(affine.transform(DIR_POS(PixelPos(0, 0)), None).getCoordinate())
+        max_x, min_y = list(affine.transform(DIR_POS(PixelPos(b_width, b_height)), None).getCoordinate())
+        x_res = (max_x - min_x) / b_width
+        y_res = -(max_y - min_y) / b_height
+        b_geotransform = [min_x, x_res, 0, max_y, 0, y_res]
+
+        return b_geotransform
 
 def find_gt_from_band(band:Band) -> list:
 

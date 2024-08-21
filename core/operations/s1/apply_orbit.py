@@ -6,7 +6,7 @@ from core.operations import Op, APPLYORBIT_OP
 from core.raster import Raster, RasterType
 
 
-from core.raster.gpf_module import apply_orbit_func, make_meta_dict, ORBIT_TYPE
+from core.util.snap import apply_orbit_func, make_meta_dict, ORBIT_TYPE
 
 if TYPE_CHECKING:
     from core.logic.context import Context

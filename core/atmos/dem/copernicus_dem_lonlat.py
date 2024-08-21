@@ -15,7 +15,8 @@
 import os
 import numpy as np
 from core import atmos
-from core.util import read_band, projection_geo, projection_read
+from core.util import read_band, projection_geo
+from core.util.gdal import projection_read
 
 def copernicus_dem_lonlat(lon1, lat1, sea_level=0, source='copernicus30', nearest=False, dem_min = -500.0):
 

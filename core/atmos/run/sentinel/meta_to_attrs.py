@@ -1,10 +1,11 @@
 import numpy as np
 import dateutil.parser
 
-from core.util import rsr_convolute_dict, distance_se
+from core.util import distance_se
 import core.atmos as atmos
-from core.atmos.shared import f0_get
-from core.atmos.run.sentinel import get_sensor_type, projection_from_granule_meta, get_gains_offsets_with_rsr, get_waves_mu
+from core.atmos.shared import get_waves_mu_and_f0, load_rsr, get_gains, get_offsets
+from core.atmos.run.sentinel import get_sensor_type, projection_from_granule_meta
+
 
 def get_angles_from_meta(granule_meta:dict):
     sza = granule_meta['SUN']['Mean_Zenith']
@@ -33,15 +34,11 @@ def l1r_meta_to_global_attrs(l1r_meta:dict, user_settings:dict) -> tuple[dict, d
     proj_dict = projection_from_granule_meta(l1r_meta['granule_meta'], s2_target_res=user_settings['s2_target_res'])
 
     sza, saa, vza, vaa, raa = get_angles_from_meta(l1r_meta['granule_meta'])
+    rsr, rsr_bands = load_rsr(sensor)
+    gains_dict = get_gains(user_settings['gains'], user_settings['gains_toa'], rsr_bands)
+    offsets_dict = get_offsets(user_settings['offsets'], user_settings['offsets_toa'], rsr_bands)
 
-    rsr, rsr_bands, gains_dict, offsets_dict = get_gains_offsets_with_rsr(
-        sensor=sensor, gains=user_settings['gains'], gains_toa=user_settings['gains_toa'],
-        offsets=user_settings['offsets'], offsets_toa=user_settings['offsets_toa'])
-
-    waves, w_mu, w_names = get_waves_mu(rsr)
-
-    f0 = f0_get(f0_dataset=user_settings['solar_irradiance_reference'])
-    f0_b = rsr_convolute_dict(wave_data=np.asarray(f0['wave']) / 1000, data=np.asarray(f0['data']) * 10, rsr=rsr)
+    waves, w_mu, w_names, f0, f0_b = get_waves_mu_and_f0(rsr, user_settings['solar_irradiance_reference'])
 
     global_attrs = {
         'sensor': sensor, 'isodate': isodate, 'global_dims': proj_dict['dimensions'],

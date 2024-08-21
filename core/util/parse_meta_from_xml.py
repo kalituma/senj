@@ -1,5 +1,3 @@
-from typing import Union
-
 from core.util import ProductType
 from core.util.meta import parse_worldview, parse_planet
 from core.util.identify import planet_test, worldview_test

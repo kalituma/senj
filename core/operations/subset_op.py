@@ -3,8 +3,8 @@ from core.operations import Op
 from core.operations import OPERATIONS, SUBSET_OP
 from core.raster import Raster, RasterType
 from core.util import region_to_wkt
-from core.raster.gdal_module import make_transform, create_geom
-from core.raster.gpf_module import subset_gpf
+from core.util.gdal import make_transform, create_geom
+from core.util.snap import subset_gpf
 
 if TYPE_CHECKING:
     from core.logic import Context

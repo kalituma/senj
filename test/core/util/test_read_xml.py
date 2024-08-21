@@ -27,13 +27,13 @@ class TestAtmosSubFuncs(unittest.TestCase):
         self.ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
         self.ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
 
-    def test_read_xml(self):
+    def test_read_xml_using_etree(self):
         meta_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/senj/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE/annotation/s1b-iw1-slc-vh-20190807t213153-20190807t213218-017485-020e22-001.xml'
 
         root = etree.parse(meta_path).getroot()
         self.assertEqual(root.xpath('//missionId/text()')[0], 'S1B')
 
-    def test_identify(self):
+    def test_identify_product_all_format(self):
 
         with self.subTest(msg='SAFE test'):
             type, meta_path = identify_product(self.s1_safe_grdh_path)
@@ -70,7 +70,7 @@ class TestAtmosSubFuncs(unittest.TestCase):
             self.assertEqual(meta_path, ps_meta_path)
 
 
-    def test_modified_parse_func(self):
+    def test_making_meta_related_files_and_parse_xml(self):
         from core.util.meta import parse_planet, planet_metadata_parse
         from core.util.meta import parse_worldview, worldview_metadata_parse
         from core.util.identify import planet_test, worldview_test

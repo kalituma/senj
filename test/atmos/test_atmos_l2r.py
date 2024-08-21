@@ -50,3 +50,14 @@ class TestAtmosL2R(unittest.TestCase):
         atmos.settings['user'] = set_l2w_and_polygon(atmos.settings['user'])
 
         l2r = apply_l2r(l1r, global_attrs)
+
+    def test_l2r_wv(self):
+        # ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
+        self.atmos_user_conf = os.path.join(self.project_path, 'config', 'atmos', 'defaults', 'WorldView2.txt')
+        atmos.settings['user'] = parse(None, self.atmos_user_conf, merge=False)
+        atmos.settings['user'] = set_l2w_and_polygon(atmos.settings['user'])
+        l1r_path = os.path.join(self.l1r_dir, 'l1r_out.wv.pkl')
+        l1r = read_pickle(l1r_path)
+        global_attrs_path = os.path.join(self.l1r_dir, 'global_attrs.wv.pkl')
+        global_attrs = read_pickle(global_attrs_path)
+        l2r = apply_l2r(l1r, global_attrs)

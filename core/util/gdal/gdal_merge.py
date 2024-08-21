@@ -4,8 +4,8 @@ from typing import Union, TYPE_CHECKING
 from osgeo_utils.gdal_merge import names_to_fileinfos
 from osgeo import gdal
 
-from core.raster.gdal_module import read_gdal_bands, create_ds_with_arr
 from core.util import assert_ds_equal
+from core.util.gdal import read_gdal_bands, create_ds_with_arr
 
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset

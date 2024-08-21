@@ -5,7 +5,7 @@ from esa_snappy import GPF, Product, ProductData
 
 from core.util import assert_bnames
 from core.util.errors import ContainedBandError
-from core.raster.gpf_module import build_read_params
+from core.util.snap import build_read_params
 
 def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=None, bname_word_included:bool=False):
     selected = []

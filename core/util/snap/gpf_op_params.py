@@ -1,6 +1,6 @@
 from esa_snappy import HashMap, jpy, Rectangle
 
-from core.raster.gpf_module import get_default_bands, get_default_masks
+from core.util.snap import get_default_bands, get_default_masks
 
 def _build_params(params: HashMap=None, **kwargs):
     if params is None:

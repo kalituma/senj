@@ -1,4 +1,4 @@
-from core.raster.gpf_module import create_product_data
+from core.util.snap import create_product_data
 
 def copy_cached_to_raw_gpf(product, band_name, band_arr):
 

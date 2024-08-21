@@ -1,82 +1,62 @@
+import numpy as np
 
-def get_l1r_band(bands):
+def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_b, waves_names, waves_mu,
+                 percentiles_compute, percentiles,
+                 atmospherically_corrected):
+
+    out = {}
     ## run through bands
-    for b, band in enumerate(band_names):
+    for band_name, band in bands.items():
+        band_slot = band['slot']
+        d = band['value'].copy()
+        cf = float(band_info[band_name]['ABSCALFACTOR']) / float(band_info[band_name]['EFFECTIVEBANDWIDTH'])
 
-        ## get tile offset
-        offset = [int(tile_info['ULCOLOFFSET']), int(tile_info['ULROWOFFSET'])]
+        # if cf <= 0:
+        #     print('Warning DN scaling factor is <0, this will give bad TOA radiances/reflectances.')
+        #     if 'RADIOMETRICENHANCEMENT' in meta:
+        #         print('Data has been enhanced by the provider: {}'.format(meta['RADIOMETRICENHANCEMENT']))
 
+        ## track mask
+        if d.dtype == np.dtype('uint8'):
+            nodata = d == np.uint8(0)
+        elif d.dtype == np.dtype('uint16'):
+            nodata = d == np.uint16(0)
+        elif d.dtype == np.dtype('float32'):
+            nodata = d == np.float32(0)
 
-        if 'SWIR' not in band:
-            bt = [bt for bt in meta_dict['BAND_INFO'] if meta_dict['BAND_INFO'][bt]['name'] == band][0]
-            d = ac.shared.read_band(file, idx=meta['BAND_INFO'][bt]['index'], sub=sub, warp_to=warp_to)
-            cf = float(meta['BAND_INFO'][bt]['ABSCALFACTOR']) / float(
-                meta['BAND_INFO'][bt]['EFFECTIVEBANDWIDTH'])
-        else:
-            if swir_file is None:
-                swir_file = '{}'.format(file)
-                swir_meta = meta.copy()
-            bt = [bt for bt in swir_meta['BAND_INFO'] if swir_meta['BAND_INFO'][bt]['name'] == band][0]
-            d = ac.shared.read_band(swir_file, idx=swir_meta['BAND_INFO'][bt]['index'], sub=sub,
-                                    warp_to=warp_to)
-            cf = float(swir_meta['BAND_INFO'][bt]['ABSCALFACTOR']) / float(
-                swir_meta['BAND_INFO'][bt]['EFFECTIVEBANDWIDTH'])
+        ## convert to float and scale to TOA reflectance
+        d = d.astype(np.float32) * cf
+        if gains != None and gains_parameter == 'radiance':
+            # print('Applying gain {} and offset {} to TOA radiance for band {}'.format(gains[band]['gain'],gains[band]['offset'],band))
+            d = gains[band_slot]['gain'] * d + gains[band_slot]['offset']
 
-            if cf <= 0:
-                print('Warning DN scaling factor is <0, this will give bad TOA radiances/reflectances.')
-                if 'RADIOMETRICENHANCEMENT' in meta:
-                    print('Data has been enhanced by the provider: {}'.format(meta['RADIOMETRICENHANCEMENT']))
+        d *= (np.pi * se_distance ** 2) / (f0_b[band_slot] / 10. * mus)
 
-            ## track mask
-            if d.dtype == np.dtype('uint8'):
-                nodata = d == np.uint8(0)
-            elif d.dtype == np.dtype('uint16'):
-                nodata = d == np.uint16(0)
+        if gains != None and gains_parameter == 'reflectance':
+            # print('Applying gain {} and offset {} to TOA reflectance for band {}'.format(gains[band]['gain'],gains[band]['offset'], band))
+            d = gains[band_slot]['gain'] * d + gains[band_slot]['offset']
 
-            ## convert to float and scale to TOA reflectance
-            d = d.astype(np.float32) * cf
-            if (gains != None) & (setu['gains_parameter'] == 'radiance'):
-                print('Applying gain {} and offset {} to TOA radiance for band {}'.format(gains[band]['gain'],
-                                                                                          gains[band]['offset'],
-                                                                                          band))
-                d = gains[band]['gain'] * d + gains[band]['offset']
-            d *= (np.pi * gatts['se_distance'] ** 2) / (f0_b[band] / 10. * gatts['mus'])
-            if (gains != None) & (setu['gains_parameter'] == 'reflectance'):
-                print(
-                    'Applying gain {} and offset {} to TOA reflectance for band {}'.format(gains[band]['gain'],
-                                                                                           gains[band][
-                                                                                               'offset'], band))
-                d = gains[band]['gain'] * d + gains[band]['offset']
-
-            ## apply mask
-            d[nodata] = np.nan
-
-            ## make new data full array
-            if ti == 0: data_full = np.zeros(global_dims) + np.nan
-
-            ## add in data
-            data_full[offset[1]:offset[1] + d.shape[0], offset[0]:offset[0] + d.shape[1]] = d
-            d = None
+        ## apply mask
+        d[nodata] = np.nan
 
         ## set up dataset attributes
-        ds = 'rhot_{}'.format(waves_names[band])
-        if atmospherically_corrected: ds = ds.replace('rhot_', 'rhos_acomp_')
+        ds = f'rhot_{waves_names[band_slot]}'
+        if atmospherically_corrected:
+            ds = ds.replace('rhot_', 'rhos_acomp_')
 
-        ds_att = {'wavelength': waves_mu[band] * 1000, 'band_name': band, 'f0': f0_b[band] / 10.}
+        l1r_band_attr = {'wavelength': waves_mu[band_slot] * 1000, 'band_slot': band_slot, 'f0': f0_b[band_slot] / 10.,
+                         'parameter' : ds }
         if gains != None:
-            ds_att['gain'] = gains[band]['gain']
-            ds_att['offset'] = gains[band]['offset']
-            ds_att['gains_parameter'] = setu['gains_parameter']
+            l1r_band_attr['gain'] = gains[band_slot]['gain']
+            l1r_band_attr['offset'] = gains[band_slot]['offset']
+            l1r_band_attr['gains_parameter'] = gains_parameter
         if percentiles_compute:
-            ds_att['percentiles'] = percentiles
-            ds_att['percentiles_data'] = np.nanpercentile(data_full, percentiles)
+            l1r_band_attr['percentiles'] = percentiles
+            l1r_band_attr['percentiles_data'] = np.nanpercentile(d, percentiles)
 
-        ## write to netcdf file
-        if verbosity > 1: print(
-            '{} - Converting bands: Writing {} ({})'.format(datetime.datetime.now().isoformat()[0:19], ds,
-                                                            data_full.shape))
-        gemo.write(ds, data_full, ds_att=ds_att)
-        if verbosity > 1: print(
-            '{} - Converting bands: Wrote {} ({})'.format(datetime.datetime.now().isoformat()[0:19], ds,
-                                                          data_full.shape))
-        data_full = None
+        out[band_slot] = {
+            'data': d,
+            'att': l1r_band_attr
+        }
+
+    return out

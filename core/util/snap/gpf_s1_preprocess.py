@@ -1,5 +1,5 @@
 from esa_snappy import GPF, Product
-from core.raster.gpf_module import build_apply_orbit_params, build_calib_params, build_terrain_correction_params, \
+from core.util.snap import build_apply_orbit_params, build_calib_params, build_terrain_correction_params, \
     build_thermal_noise_removal_params, build_topsar_deburst_params, build_speckle_filter_params
 
 def apply_orbit_func(product:Product, params:dict):

@@ -10,21 +10,7 @@ from pyproj import Proj
 from osgeo import gdal, osr
 import os
 
-def projection_read(file):
-
-    ## open file
-    ds = gdal.Open(file)
-    transform = ds.GetGeoTransform()
-    projection = ds.GetProjection()
-    dimx, dimy = ds.RasterXSize, ds.RasterYSize
-    ds = None
-
-    ## get projection info
-    src = osr.SpatialReference()
-    src.ImportFromWkt(projection)
-    Wkt = src.ExportToWkt()
-    p = Proj(Wkt)
-
+def _find_world_transform(file):
     ## find world file if present
     for ext in ['J2W', 'TFW', 'WLD', 'j2w', 'tfw', 'wld']:
         fbase, fext = os.path.splitext(file)
@@ -32,6 +18,7 @@ def projection_read(file):
         if os.path.exists(wfile):
             break
         wfile = None
+
     ## read world file
     if wfile is not None:
         wtransform = []
@@ -43,6 +30,21 @@ def projection_read(file):
             wtransform = None
     else:
         wtransform = None
+
+    return wtransform
+
+def projection_tif_gdal(ds, wtransform = None):
+
+    transform = ds.GetGeoTransform()
+    projection = ds.GetProjection()
+    dimx, dimy = ds.RasterXSize, ds.RasterYSize
+    ds = None
+
+    ## get projection info
+    src = osr.SpatialReference()
+    src.ImportFromWkt(projection)
+    Wkt = src.ExportToWkt()
+    p = Proj(Wkt)
 
     if wtransform is not None:
         ## world transform elements:
@@ -64,8 +66,8 @@ def projection_read(file):
         dy = transform[5]
 
     pixel_size = [dx, dy]
-    xrange = [x0,x0+dimx*dx]
-    yrange = [y0,y0+dimy*dy]
+    xrange = [x0, x0 + dimx * dx]
+    yrange = [y0, y0 + dimy * dy]
 
     ## make acolite generic dict
     dct = {'p': p, 'epsg': p.crs.to_epsg(),
@@ -75,4 +77,11 @@ def projection_read(file):
            'dimensions':(dimx, dimy),
            'pixel_size': pixel_size}
     dct['projection'] = f'EPSG:{dct["epsg"]}'
+
     return dct
+
+def projection_read(file:str):
+    ## open file
+    ds = gdal.Open(file)
+    wtransform = _find_world_transform(file)
+    return projection_tif_gdal(ds, wtransform)

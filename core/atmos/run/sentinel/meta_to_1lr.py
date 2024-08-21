@@ -1,7 +1,7 @@
 
 from core.raster import Raster
 
-from core.raster.gpf_module import find_grids_and_angle_meta, get_product_info_meta, get_band_info_meta, get_granule_info, get_src_param, warp_to
+from core.util.snap import find_grids_and_angle_meta, get_product_info_meta, get_band_info_meta, get_granule_info
 from core.raster.funcs import get_band_grid_size
 
 def meta_dict_to_l1r_meta(raster: "Raster", selected_band:list[str]=None) -> dict:

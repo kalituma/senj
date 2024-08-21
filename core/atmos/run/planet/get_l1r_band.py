@@ -1,61 +1,66 @@
+import numpy as np
+import json
 
-def get_l1r_band(bands:dict, rsr_bands:list):
-    ## convert bands TOA
-    for b in rsr_bands:
-        if b in ['PAN']:
+def get_l1r_band(bands:dict, band_indices:dict, tif_meta:dict, f0_dict:dict, sensor:str,
+                 se_distance:float, mus:float, waves_names:dict, waves_mu:dict, value_conversion:dict,
+                 gains:bool, gains_dict:dict, percentiles_compute:bool, percentiles:list,
+                 from_radiance=False):
+    out = {}
+    for band_name, band in bands.items():
+        band_slot = band['slot']
+        d = band['value'].copy()
+        idx = int(band_indices[f'{band_slot}-band_idx'])
+        if band_slot in ['PAN']:
             continue
-        idx = int(meta_dict[f'{b}-band_idx'])
 
-        ## read data
-        md, data = ac.shared.read_band(image_file, idx=idx, warp_to=warp_to, gdal_meta=True)
-        nodata = data == np.uint16(0)
+        nodata = d == np.uint16(0)
 
-        if 'Skysat' in meta_dict['sensor']:
+        if 'Skysat' in sensor:
             ## get reflectance scaling from tiff tags
             try:
-                prop = json.loads(md['TIFFTAG_IMAGEDESCRIPTION'])['properties']
+                prop = json.loads(tif_meta['TIFFTAG_IMAGEDESCRIPTION'])['properties']
             except:
                 prop = {}
 
             if 'reflectance_coefficients' in prop:
                 ## convert to toa radiance & mask
                 bi = idx - 1
-                data = data.astype(float) * prop['reflectance_coefficients'][bi]
-                data[nodata] = np.nan
+                d = d.astype(float) * prop['reflectance_coefficients'][bi]
+                d[nodata] = np.nan
             else:
                 # print('Using fixed 0.01 factor to convert Skysat DN to TOA radiance')
                 ## convert to toa radiance & mask
-                data = data.astype(float) * 0.01
+                d = d.astype(float) * 0.01
 
                 ## convert to toa reflectance
-                f0 = global_attrs[f'{b}_f0'] / 10
-                data *= (np.pi * global_attrs['se_distance'] ** 2) / (f0 * global_attrs['mus'])
+                f0 = f0_dict[band_slot] / 10
+                d *= (np.pi * se_distance ** 2) / (f0 * mus)
         else:
             ## convert from radiance
-            if meta_dict['sensor'] == 'RapidEye' or from_radiance:
-                data = data.astype(float) * float(meta_dict[f'{b}-{"to_radiance"}'])
-                f0 = global_attrs[f'{b}_f0'] / 10
-                data *= (np.pi * global_attrs['se_distance'] ** 2) / (f0 * global_attrs['mus'])
+            if sensor == 'RapidEye' or from_radiance:
+                d = d.astype(float) * float(value_conversion[f'{band_slot}-{"to_radiance"}'])
+                f0 = f0_dict[band_slot] / 10
+                d *= (np.pi * se_distance ** 2) / (f0 * mus)
             else:
-                data = data.astype(float) * float(meta_dict[f'{b}-{"to_reflectance"}'])
+                d = d.astype(float) * float(value_conversion[f'{band_slot}-{"to_reflectance"}'])
 
-        data[nodata] = np.nan
+        d[nodata] = np.nan
 
-        band_name = 'rhot_{}'.format(waves_names[b])
-        band_att = {'wavelength': waves_mu[b] * 1000}
+        ds = f'rhot_{waves_names[band_slot]}'
+        l1r_band_attr = {'wavelength': waves_mu[band_slot] * 1000, 'band_slot': band_slot, 'parameter': ds}
 
-        if gains & (gains_dict is not None):
-            band_att['toa_gain'] = gains_dict[b]
-            data *= band_att['toa_gain']
+        if gains and gains_dict is not None:
+            l1r_band_attr['toa_gain'] = gains_dict[band_slot]
+            d *= l1r_band_attr['toa_gain']
             # if verbosity > 1: print('Converting bands: Applied TOA gain {} to {}'.format(ds_att['toa_gain'], ds))
 
         if percentiles_compute:
-            band_att['percentiles'] = percentiles
-            band_att['percentiles_data'] = np.nanpercentile(data, percentiles)
+            l1r_band_attr['percentiles'] = percentiles
+            l1r_band_attr['percentiles_data'] = np.nanpercentile(d, percentiles)
 
-        ## write to netcdf file
-        # bands[band_name] = {
-        #     data, ds_att=ds_att, replace_nan=True
-        # }
+        out[band_slot] = {
+            'data': d,
+            'att': l1r_band_attr
+        }
 
-        # if verbosity > 1: print('Converting bands: Wrote {} ({})'.format(ds, data.shape))
+    return out

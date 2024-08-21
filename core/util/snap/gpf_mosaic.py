@@ -1,8 +1,8 @@
 import numpy as np
-from esa_snappy import GPF, Product, jpy
+from esa_snappy import GPF, Product, jpy, Band, ProductData, ProductUtils
 
 from core.util import assert_bnames
-from core.raster.gpf_module import build_mosaic_params, find_epsg_from_product, find_boundary_from_product
+from core.util.snap import build_mosaic_params, find_epsg_from_product, find_boundary_from_product
 
 def check_mosaic_assert(src_products):
     target_bnames = list(src_products[0].getBandNames())
@@ -30,7 +30,7 @@ def merge_spec(geo_specs:list):
                     result_spec[key] = max(result_spec[key], value)
     return result_spec
 
-def remove_count_bands(src_product:Product) -> Product:
+def delete_count_bands(src_product:Product) -> Product:
     bands = list(src_product.getBands())
     for band in bands:
         if 'count' in band.getName().lower():
@@ -53,6 +53,6 @@ def mosaic_gpf(src_products:list[Product], band_label_names:list[str] = None) ->
 
     params = build_mosaic_params(variables=band_names, crs=f'epsg:{scene_epsg}', geo_spec=geo_spec, combine='AND')
     product = GPF.createProduct('Mosaic', params, src_products)
-    product = remove_count_bands(product)
+    product = delete_count_bands(product)
 
     return product

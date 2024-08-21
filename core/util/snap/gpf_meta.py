@@ -9,8 +9,8 @@ from esa_snappy import jpy
 from esa_snappy import Product
 
 from core.util import tiles_interp, grid_extend, distance_se, projection_geo
-from core.raster.gdal_module import warp_to
-from core.raster.gpf_module.meta_func import get_metadata_recursive, get_metadata_value, grid_geom, build_meta_dict, set_meta_recursive
+from core.util.gdal import warp_to
+from core.util.snap.meta_func import get_metadata_recursive, get_metadata_value, grid_geom, build_meta_dict, set_meta_recursive
 
 def get_polarization(meta_dict:dict) -> Union[list[str], None]:
     pols = list(set(found.value for found in parse('$..*[polarization]').find(meta_dict)))
@@ -121,16 +121,7 @@ def make_gattr(product:Product):
 
 
 
-def get_src_param(meta, geom_res, prefix=""):
-    src_params = {}
-    src_params['ydim'] = meta[f'{prefix}GRIDS'][f'{geom_res}']['NROWS']
-    src_params['xdim'] = meta[f'{prefix}GRIDS'][f'{geom_res}']['NCOLS']
-    src_params['ul_x'] = meta[f'{prefix}GRIDS'][f'{geom_res}']['ULX']
-    src_params['ul_y'] = meta[f'{prefix}GRIDS'][f'{geom_res}']['ULY']
-    src_params['epsg'] = int(meta['HORIZONTAL_CS_CODE'].split(':')[1])
-    src_params['pixel_size'] = meta[f'{prefix}GRIDS'][f'{geom_res}']['RESOLUTION']
 
-    return src_params
 
 def copy_dct_to_atts(dct, atts, prefix=''):
     atts[f'{prefix}scene_xrange'] = dct['xrange']

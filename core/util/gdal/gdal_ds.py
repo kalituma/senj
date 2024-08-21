@@ -1,7 +1,7 @@
 import numpy as np
 from osgeo import gdal
 
-from core.raster.gdal_module import GDAL_DTYPE_MAP, read_gdal_bands
+from core.util.gdal import GDAL_DTYPE_MAP, read_gdal_bands
 
 def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str, transform:tuple, metadata=None,
               out_path='', is_bigtiff=False, compress=False):

@@ -3,8 +3,6 @@ from typing import Tuple
 from pathlib import Path
 from osgeo import gdal
 
-
-
 def read_tif(path):
 
     ext = Path(path).suffix.lower()

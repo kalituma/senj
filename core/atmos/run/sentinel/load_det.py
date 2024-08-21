@@ -2,12 +2,15 @@ from typing import Union, TYPE_CHECKING
 import numpy as np
 
 from core.util import is_contained
+from core.raster import RasterType
 from core.raster.funcs import read_band_from_raw
+from core.util.snap import build_grid_meta_from_gpf
+from core.util.gdal import build_grid_meta_from_gdal
 
 if TYPE_CHECKING:
     from core.raster import Raster
 
-def read_det(target_raster: "Raster", det_bands:list[str], size_per_band:dict, det_res:list[int]) -> tuple[dict, list[str]]:
+def load_det(target_raster: "Raster", det_bands:list[str], size_per_band:dict, det_res:list[int]) -> tuple[dict, list[str]]:
 
     det_res_map = {}
 
@@ -32,13 +35,14 @@ def read_det(target_raster: "Raster", det_bands:list[str], size_per_band:dict, d
 
     return det_dict, list(det_res_map.values())
 
-def read_bands(target_raster:"Raster", target_band_names:list[str], target_band_slot:list[str]) -> "Raster":
-
-    assert len(target_band_names) == len(target_band_slot), 'Length of target_band_names and target_band_slot should be the same.'
-
-    target_raster = read_band_from_raw(target_raster, target_band_names)
-
-    for bname, bslot in zip(target_band_names, target_band_slot):
-        target_raster[bname]['slot'] = bslot
-
-    return target_raster
+def build_det_grid(raster:"Raster", det_names):
+    grids = {}
+    for det_name in det_names:
+        if raster.module_type == RasterType.SNAP:
+            grid_dict = build_grid_meta_from_gpf(raster.raw, det_name)
+        elif raster.module_type == RasterType.GDAL:
+            grid_dict = build_grid_meta_from_gdal(raster.raw)
+        else:
+            raise NotImplementedError(f'{raster.module_type} is not implemented')
+        grids[f'{int(grid_dict["RESOLUTION"])}'] = grid_dict
+    return grids

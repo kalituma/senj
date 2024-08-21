@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from core.raster.gpf_module import find_boundary_from_product
+from core.util.snap import find_boundary_from_product
 
 if TYPE_CHECKING:
     from core.raster import Raster

@@ -3,7 +3,6 @@ import numpy as np
 from pathlib import Path
 from enum import Enum, auto
 
-
 class PathType(Enum):
     FILE = auto()
     DIR = auto()

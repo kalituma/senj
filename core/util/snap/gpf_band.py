@@ -4,7 +4,7 @@ from esa_snappy import jpy, Product, Band, ProductUtils, ProductData, PixelPos
 
 from core.util import assert_bnames
 from core.util.errors import ContainedBandError
-from core.raster.gpf_module import create_product_data
+from core.util.snap import create_product_data
 
 def rename_bands(product:Product, band_names:list) -> Product:
     assert len(band_names) == len(product.getBandNames()), 'The number of band names should be the same as the source product'

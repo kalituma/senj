@@ -4,7 +4,7 @@ import unittest
 from core.config import expand_var
 from core.operations import Read, Write
 from core.operations.s1 import Calibrate
-from core.raster.gpf_module import read_gpf_bands_as_dict
+from core.util.snap import read_gpf_bands_as_dict
 
 from core.logic.context import Context
 

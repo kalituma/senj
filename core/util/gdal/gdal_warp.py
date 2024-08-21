@@ -2,7 +2,8 @@ from typing import Union
 from osgeo import gdal
 from osgeo.gdal import WarpOptions, Dataset
 
-from core.raster.gdal_module import epsg_to_wkt, RESAMPLING_METHODS
+from core.util import epsg_to_wkt
+from core.util.gdal import RESAMPLING_METHODS
 
 def warp_gdal(ds:Dataset, warp_options: WarpOptions) -> Dataset:
     output_ds = gdal.Warp('', ds, options=warp_options)

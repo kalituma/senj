@@ -2,8 +2,8 @@ import os
 import unittest
 
 from core.config import expand_var
-from core.raster.gpf_module import read_gpf_bands_as_dict
-from core.raster.gdal_module import read_gdal_bands_as_dict
+from core.util.snap import read_gpf_bands_as_dict
+from core.util.gdal import read_gdal_bands_as_dict
 from core.util import ProductType, compare_nested_dicts_with_arrays
 from core.util.errors import ContainedBandError, ModuleError, ExtensionNotSupportedError
 from core.operations import Read, Write
@@ -164,9 +164,6 @@ class TestReadOp(unittest.TestCase):
             self.assertEqual(ge_raster.product_type, ProductType.WV)
 
 
-
-
-
         with self.subTest('read ps tif'):
             ps_raster = Read(module='gdal')(ps_path, context)
             self.assertEqual(ps_raster.product_type, ProductType.PS)
@@ -175,9 +172,8 @@ class TestReadOp(unittest.TestCase):
         context = Context()
         wv_path = '/home/airs_khw/mount/expand/data/etri/1.WV-2_20190404_강릉/014493935010_01_P001_MUL/19APR04021253-M2AS_R1C1-014493935010_01_P001.TIF'
         wv_meta_path = '/home/airs_khw/mount/expand/data/etri/1.WV-2_20190404_강릉/014493935010_01_P001_MUL/19APR04021253-M2AS-014493935010_01_P001.XML'
-        ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
 
-        with self.subTest('read wv tif'):
+        with self.subTest('read wv tif starting with gdal and then snap'):
             wv_raster = Read(module='gdal')(wv_path, context)
             self.assertEqual(wv_raster.product_type, ProductType.WV)
             out_path = '/home/airs_khw/mount/expand/data/etri/target/wv_mosaic/wv_mosaic_gdal.tif'
@@ -187,21 +183,107 @@ class TestReadOp(unittest.TestCase):
             gdal_bands, gdal_band_names = read_gdal_bands_as_dict(wv_raster.raw, band_names=wv_raster.get_band_names())
             gpf_bands, gpf_band_names = read_gpf_bands_as_dict(out_raster.raw)
             self.assertTrue(compare_nested_dicts_with_arrays(gdal_bands, gpf_bands))
+            self.assertEqual(gdal_band_names, gpf_band_names)
+            self.assertEqual(wv_raster.path, wv_meta_path)
 
-    def test_world_view_auto_merge_snap(self):
-        import numpy as np
+        with self.subTest('read wv tif starting with snap and then gdal'):
+            import numpy as np
+            context = Context()
+
+            wv_snap_raster = Read(module='snap')(wv_path, context)
+            self.assertEqual(wv_snap_raster.product_type, ProductType.WV)
+            out_path = '/home/airs_khw/mount/expand/data/etri/target/wv_mosaic/wv_mosaic_snap.tif'
+            out_path = Write(module='snap', path=out_path)(wv_snap_raster, context)
+            out_raster = Read(module='gdal')(out_path, context)
+
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, band_names=out_raster.get_band_names())
+            gpf_bands, gpf_band_names = read_gpf_bands_as_dict(wv_snap_raster.raw)
+            self.assertEqual(np.sum(gdal_bands['BAND_B']['value'] - gpf_bands['BAND_B']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['BAND_G']['value'] - gpf_bands['BAND_G']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['BAND_R']['value'] - gpf_bands['BAND_R']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['BAND_N']['value'] - gpf_bands['BAND_N']['value']), 0)
+            self.assertEqual(gdal_band_names, gpf_band_names)
+            self.assertEqual(wv_raster.path, wv_meta_path)
+
+    def test_world_view_using_ge(self):
         context = Context()
-        wv_path = '/home/airs_khw/mount/expand/data/etri/1.WV-2_20190404_강릉/014493935010_01_P001_MUL/19APR04021253-M2AS_R1C1-014493935010_01_P001.TIF'
+        ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
+        ge_meta_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS-014493907010_01_P001.XML'
 
-        wv_snap_raster = Read(module='snap')(wv_path, context)
-        self.assertEqual(wv_snap_raster.product_type, ProductType.WV)
-        out_path = '/home/airs_khw/mount/expand/data/etri/target/wv_mosaic/wv_mosaic_snap.tif'
-        out_path = Write(module='snap', path=out_path)(wv_snap_raster, context)
-        out_raster = Read(module='gdal')(out_path, context)
+        with self.subTest('read ge tif starting with gdal and then snap'):
+            ge_raster = Read(module='gdal')(ge_path, context)
+            self.assertEqual(ge_raster.product_type, ProductType.WV)
+            out_path = '/home/airs_khw/mount/expand/data/etri/target/ge_mosaic/ge_mosaic_gdal.tif'
+            out_path = Write(module='gdal', path=out_path)(ge_raster, context)
+            out_raster = Read(module='snap')(out_path, context)
 
-        gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, band_names=out_raster.get_band_names())
-        gpf_bands, gpf_band_names = read_gpf_bands_as_dict(wv_snap_raster.raw)
-        self.assertEqual(np.sum(gdal_bands['BAND_B']['value'] - gpf_bands['BAND_B']['value']), 0)
-        self.assertEqual(np.sum(gdal_bands['BAND_G']['value'] - gpf_bands['BAND_G']['value']), 0)
-        self.assertEqual(np.sum(gdal_bands['BAND_R']['value'] - gpf_bands['BAND_R']['value']), 0)
-        self.assertEqual(np.sum(gdal_bands['BAND_N']['value'] - gpf_bands['BAND_N']['value']), 0)
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(ge_raster.raw, band_names=ge_raster.get_band_names())
+            gpf_bands, gpf_band_names = read_gpf_bands_as_dict(out_raster.raw)
+            self.assertTrue(compare_nested_dicts_with_arrays(gdal_bands, gpf_bands))
+            self.assertEqual(gdal_band_names, gpf_band_names)
+            self.assertEqual(ge_raster.path, ge_meta_path)
+
+        with self.subTest('read ge tif starting with snap and then gdal'):
+            import numpy as np
+            ge_snap_raster = Read(module='snap')(ge_path, context)
+            self.assertEqual(ge_snap_raster.product_type, ProductType.WV)
+            out_path = '/home/airs_khw/mount/expand/data/etri/target/ge_mosaic/ge_mosaic_snap.tif'
+            out_path = Write(module='snap', path=out_path)(ge_snap_raster, context)
+            out_raster = Read(module='gdal')(out_path, context)
+
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, band_names=out_raster.get_band_names())
+            gpf_bands, gpf_band_names = read_gpf_bands_as_dict(ge_snap_raster.raw)
+            self.assertEqual(np.sum(gdal_bands['BAND_B']['value'] - gpf_bands['BAND_B']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['BAND_G']['value'] - gpf_bands['BAND_G']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['BAND_R']['value'] - gpf_bands['BAND_R']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['BAND_N']['value'] - gpf_bands['BAND_N']['value']), 0)
+            self.assertEqual(gdal_band_names, gpf_band_names)
+            self.assertEqual(ge_snap_raster.path, ge_meta_path)
+
+    def test_planet(self):
+        ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
+        ps_meta_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_metadata_clip.xml'
+        context = Context()
+
+        with self.subTest('read planet tif'):
+            import numpy as np
+
+            ps_raster = Read(module='gdal')(ps_path, context)
+            self.assertEqual(ps_raster.product_type, ProductType.PS)
+            ps_raster_snap = Read(module='snap')(ps_path, context)
+            self.assertEqual(ps_raster_snap.product_type, ProductType.PS)
+            self.assertEqual(ps_raster.meta_dict, ps_raster_snap.meta_dict)
+
+            ps_meta_raster_snap = Read(module='snap')(ps_meta_path, context)
+            ps_meta_raster_gdal = Read(module='gdal')(ps_meta_path, context)
+
+            self.assertEqual(ps_raster.meta_dict, ps_meta_raster_snap.meta_dict)
+            self.assertEqual(ps_raster_snap.meta_dict, ps_meta_raster_snap.meta_dict)
+            self.assertEqual(ps_meta_raster_gdal.meta_dict, ps_meta_raster_snap.meta_dict)
+
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(ps_raster.raw, band_names=ps_raster.get_band_names())
+            gdal_out_bands, gdal_out_band_names = read_gdal_bands_as_dict(ps_meta_raster_gdal.raw, band_names=ps_meta_raster_gdal.get_band_names())
+            gpf_bands, gpf_band_names = read_gpf_bands_as_dict(ps_meta_raster_snap.raw)
+
+            self.assertEqual(np.sum(gdal_bands['band_1']['value'] - gpf_bands['band_1']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['band_2']['value'] - gpf_bands['band_2']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['band_3']['value'] - gpf_bands['band_3']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['band_4']['value'] - gpf_bands['band_4']['value']), 0)
+
+            self.assertEqual(np.sum(gdal_bands['band_1']['value'] - gdal_out_bands['band_1']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['band_2']['value'] - gdal_out_bands['band_2']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['band_3']['value'] - gdal_out_bands['band_3']['value']), 0)
+            self.assertEqual(np.sum(gdal_bands['band_4']['value'] - gdal_out_bands['band_4']['value']), 0)
+
+            self.assertEqual(gdal_band_names, gpf_band_names)
+            self.assertEqual(gdal_band_names, gdal_out_band_names)
+
+    def test_read_tif_meta(self):
+
+        ps_file = '/home/airs_khw/mount/expand/data/etri/9.PlanetScope_20190405_고성/20190405_Radiance/files/20190404_005838_104b_3B_AnalyticMS_clip.tif'
+
+        ctx = Context()
+        gdal_raster = Read(module='gdal')(ps_file, ctx)
+        snap_raster = Read(module='snap')(ps_file, ctx)
+        print()
+

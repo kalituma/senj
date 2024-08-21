@@ -1,4 +1,3 @@
-
 from osgeo import gdal
 
 def read_gdal(gtiff_path):

@@ -4,7 +4,7 @@ import unittest
 
 from core.config import expand_var
 from core.raster import read_gpf_bands_as_dict
-from core.raster.gpf_module import DemType, InterpolType
+from core.util.snap import DemType, InterpolType
 from core.operations import Read, Write
 from core.operations.s1 import Calibrate, TerrainCorrection
 from osgeo import gdal, osr, ogr

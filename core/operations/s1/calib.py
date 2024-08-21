@@ -5,7 +5,7 @@ from core.util import assert_bnames, ProductType
 from core.raster import RasterType
 from core.util import op_product_type, check_module_type
 from core.raster import Raster
-from core.raster.gpf_module import calibrate, get_polarization
+from core.util.snap import calibrate, get_polarization
 
 if TYPE_CHECKING:
     from core.logic import Context

@@ -1,13 +1,13 @@
 from core.util import tiles_interp, grid_extend, projection_geo
-from core.raster.gpf_module import get_src_param, warp_to
+from core.util.snap import warp_to
 import numpy as np
 
-
-def init_l1r(det_res:int, det_band:np.ndarray, granule_meta:dict, geometry_type:str, warp_option:tuple, index_to_band:list, proj_dict:dict) -> dict:
+def init_l1r(width:int, height:int, geo_info:dict,
+             det_band:np.ndarray,
+             granule_meta:dict, geometry_type:str, warp_option:tuple,
+             index_to_band:list, proj_dict:dict) -> dict:
 
     out = {}
-
-    width, height = granule_meta['GRIDS'][f'{det_res}']['NCOLS'], granule_meta['GRIDS'][f'{det_res}']['NROWS']
 
     xnew = np.linspace(0, granule_meta['VIEW']['Average_View_Zenith'].shape[1] - 1, int(width))
     ynew = np.linspace(0, granule_meta['VIEW']['Average_View_Zenith'].shape[0] - 1, int(height))
@@ -70,13 +70,11 @@ def init_l1r(det_res:int, det_band:np.ndarray, granule_meta:dict, geometry_type:
                 vaa[det_mask] = tiles_interp(ave_vaa, xnew + 1, ynew + 1, smooth=False, fill_nan=True,
                                              target_mask=det_mask, target_mask_full=False, method='linear')
 
-    src_params = get_src_param(granule_meta, det_res)
-
     # resample to new geometry
-    sza = warp_to(src_params, sza, warp_to=warp_option)
-    saa = warp_to(src_params, saa, warp_to=warp_option)
-    vza = warp_to(src_params, vza, warp_to=warp_option)
-    vaa = warp_to(src_params, vaa, warp_to=warp_option)
+    sza = warp_to(geo_info, sza, warp_to=warp_option)
+    saa = warp_to(geo_info, saa, warp_to=warp_option)
+    vza = warp_to(geo_info, vza, warp_to=warp_option)
+    vaa = warp_to(geo_info, vaa, warp_to=warp_option)
     mask = (vaa == 0) * (vza == 0) * (saa == 0) * (sza == 0)
 
     # out['det_band'] = det_band

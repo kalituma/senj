@@ -2,8 +2,8 @@ from typing import Union
 
 from core.raster import Raster, RasterType
 from core.util import assert_bnames
-from core.raster.gpf_module import merge as merge_gpf
-from core.raster.gdal_module import merge as merge_gdal
+from core.util.snap import merge as merge_gpf
+from core.util.gdal import merge as merge_gdal
 
 def merge_raster_func(rasters:list[Raster], co_bands:Union[list[list[Union[str, int]]], None]=None):
 

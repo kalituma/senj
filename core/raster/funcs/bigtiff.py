@@ -1,6 +1,6 @@
 from core.raster import RasterType
-from core.raster.gdal_module import is_bigtiff_gdal
-from core.raster.gpf_module import is_bigtiff_gpf
+from core.util.gdal import is_bigtiff_gdal
+from core.util.snap import is_bigtiff_gpf
 
 def is_bigtiff(raster_obj):
     if raster_obj.module_type == RasterType.SNAP:

@@ -3,7 +3,7 @@ from core import OPERATIONS
 from core.operations import Op, TOPSAR_DEBURST_OP
 from core.util import assert_bnames, op_product_type, check_module_type, ProductType
 from core.raster import Raster, RasterType
-from core.raster.gpf_module import get_polarization, topsar_deburst
+from core.util.snap import get_polarization, topsar_deburst
 
 if TYPE_CHECKING:
     from core.logic import Context

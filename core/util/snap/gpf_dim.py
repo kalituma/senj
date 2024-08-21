@@ -1,5 +1,5 @@
 from esa_snappy import GPF, Product
-from core.raster.gpf_module import build_subset_params
+from core.util.snap import build_subset_params
 
 def subset_gpf(product:Product, params:dict):
 

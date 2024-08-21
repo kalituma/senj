@@ -19,11 +19,11 @@ from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickl
 
 from core.raster.funcs import read_band_from_raw, get_band_grid_size
 
-from core.raster.gpf_module import find_grids_and_angle_meta, read_grid_angle_meta_from_product, \
+from core.util.snap import find_grids_and_angle_meta, read_grid_angle_meta_from_product, \
     get_product_info_meta, get_reflectance_meta_from_product, get_band_info_meta, get_band_info_meta_from_product, build_grid_meta, \
     build_grid_meta_from_gpf
 
-from core.raster.gdal_module import build_grid_meta_from_gdal
+from core.util.gdal import build_grid_meta_from_gdal
 
 from core.logic.context import Context
 from core.operations import Read

@@ -1,7 +1,7 @@
 from pathlib import Path
 from core.raster import Raster, RasterType
-from core.raster.gpf_module import write_gpf, write_metadata, is_bigtiff_gpf
-from core.raster.gdal_module import copy_ds, is_bigtiff_gdal
+from core.util.snap import write_gpf, write_metadata, is_bigtiff_gpf
+from core.util.gdal import copy_ds, is_bigtiff_gdal
 from core.raster.funcs import wrap_up_raster, update_cached_to_raw
 
 def write_raster(raster:Raster, out_path:str, out_module:"RasterType"):

@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
 
-from core.util import assert_bnames, parse_meta_xml
-from core.raster.gdal_module import read_tif, mosaic_tiles
-from core.raster import ProductType
+from core.util import ProductType, assert_bnames, parse_meta_xml
+from core.util.identify import planet_test
+from core.util.gdal import read_tif, mosaic_tiles
 
 def load_raster_gdal(path, product_type: ProductType, selected_bands: list[int] = None):
     in_path = path
@@ -18,6 +18,14 @@ def load_raster_gdal(path, product_type: ProductType, selected_bands: list[int] 
             assert all([os.path.exists(tile_path) for tile_path in tile_paths]), f'All tile paths should be exist in {tile_paths}'
             ds = mosaic_tiles(tile_paths)
             tile_mosaic = True
+        elif product_type == ProductType.PS:
+            meta_path = in_path
+            file_spec = planet_test(meta_path)
+            assert 'analytic' in file_spec, 'analytic band is not found in the input file'
+            ds = read_tif(file_spec['analytic']['path'])
+        else:
+            raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')
+
     else:
         ds = read_tif(in_path)
 

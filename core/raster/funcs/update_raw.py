@@ -1,7 +1,7 @@
 from core.util import assert_bnames
 from core.raster import Raster, RasterType
-from core.raster.gdal_module import read_gdal_bands_as_dict, create_ds_with_dict
-from core.raster.gpf_module import copy_cached_to_raw_gpf, read_gpf_bands_as_dict
+from core.util.gdal import read_gdal_bands_as_dict, create_ds_with_dict
+from core.util.snap import copy_cached_to_raw_gpf, read_gpf_bands_as_dict
 
 def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
     # cache to raw

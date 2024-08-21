@@ -4,7 +4,7 @@ from core import OPERATIONS
 from core.operations import Op, TERR_CORR_OP
 from core.util import op_product_type, check_module_type, assert_bnames, ProductType
 from core.raster import Raster, RasterType
-from core.raster.gpf_module import DemType, InterpolType, terrain_correction_func
+from core.util.snap import DemType, InterpolType, terrain_correction_func
 
 if TYPE_CHECKING:
     from core.logic.context import Context

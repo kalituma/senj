@@ -4,7 +4,8 @@ from pathlib import Path
 from esa_snappy import Product
 
 from core.util import parse_meta_xml, read_pickle
-from core.raster.gpf_module import read_gpf, get_selected_bands_names, mosaic_gpf, rename_bands
+from core.util.identify import planet_test
+from core.util.snap import read_gpf, get_selected_bands_names, mosaic_gpf, rename_bands
 from core.raster import ProductType
 
 def load_raster_gpf(in_path, product_type:ProductType, selected_bands:list[str]=None, bname_word_included=False) -> Tuple[Product, list[str], bool]:
@@ -15,9 +16,9 @@ def load_raster_gpf(in_path, product_type:ProductType, selected_bands:list[str]=
     band_names = []
     band_rename = False
     if ext == '.xml':
-        tmp_meta = parse_meta_xml(in_path, product_type)
         base_path = Path(in_path).parent
         if product_type == ProductType.WV:
+            tmp_meta = parse_meta_xml(in_path, product_type)
 
             band_idx = [item['index'] for key, item in tmp_meta['BAND_INFO'].items()]
             band_names = [key for key, item in tmp_meta['BAND_INFO'].items()]
@@ -30,7 +31,14 @@ def load_raster_gpf(in_path, product_type:ProductType, selected_bands:list[str]=
             product = mosaic_gpf(ds_list)
             tile_merged = True
         else:
-            raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')
+            if product_type == ProductType.PS:
+                meta_path = in_path
+                file_spec = planet_test(meta_path)
+                assert 'analytic' in file_spec, 'analytic band is not found in the input file'
+                product = read_gpf(file_spec['analytic']['path'])
+            else:
+                raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')
+
     elif ext == '.tif':
         meta_path = in_path.replace('.tif', '.pkl')
         if os.path.exists(meta_path):
@@ -40,7 +48,6 @@ def load_raster_gpf(in_path, product_type:ProductType, selected_bands:list[str]=
                 band_names = list(tmp_meta['index_to_band'].values())
                 band_names = [x for _, x in sorted(zip(band_idx, band_names))]
                 band_rename = True
-
         product = read_gpf(in_path)
     else:
         product = read_gpf(in_path)
