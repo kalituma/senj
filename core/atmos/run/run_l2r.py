@@ -31,11 +31,11 @@ def apply_l2r(l1r:dict, global_attrs:dict):
 
     band_table = l1r['bands'].copy()
 
-    rhot_names = [band_table[key]['att']['rhot_ds'] for key in band_table]
+    rhot_names = [band_table[key]['att']['parameter'] for key in band_table]
     rhot_bands = {
         rhot_name: band_table[key]['data'] for key, rhot_name in zip(band_table.keys(), rhot_names)
     }
-    l1r_band_list = list(l1r.keys())[:-1] + rhot_names
+    l1r_band_list = [key for key in l1r.keys() if key != 'bands'] + rhot_names
 
     if user_settings['blackfill_skip']:
         if check_blackfill_skip(band_table, user_settings):
@@ -138,24 +138,25 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     ttot_all = {}
     gk = ''
     if ac_opt == 'dsf':
-        aot_lut, aot_sel, aot_sel_par, aot_stack, aot_sel_bands, gk = apply_dsf(band_table=band_table, var_mem=var_mem, lut_table=lut_table, rsrd=rsrd, lut_mod_names=lut_mod_names, l1r_band_list=l1r_band_list,
+        aot_lut, aot_sel, aot_stack, aot_sel_par, aot_sel_bands, gk = apply_dsf(band_table=band_table, var_mem=var_mem, lut_table=lut_table, rsrd=rsrd, lut_mod_names=lut_mod_names, l1r_band_list=l1r_band_list,
                                                                                 ro_type=ro_type, user_settings=user_settings, use_rev_lut=use_rev_lut, rev_lut_table=rev_lut_table,
                                                                                 tiles=tiles, segment_data=segment_data, is_hyper=is_hyper)
 
-        corr_func = partial(dsf_correction, aot_sel=aot_sel, aot_lut=aot_lut, rsrd=rsrd, lut_mod_names=lut_mod_names, lut_table=lut_table, var_mem=var_mem, segment_data=segment_data, ttot_all=ttot_all,
-                            use_revlut=use_rev_lut, gk=gk, ro_type=ro_type, is_hyper=is_hyper)
+        corr_func = partial(dsf_correction, aot_sel=aot_sel, aot_lut=aot_lut, rsrd=rsrd, lut_mod_names=lut_mod_names, lut_table=lut_table,
+                            var_mem=var_mem, segment_data=segment_data, ttot_all=ttot_all, use_revlut=use_rev_lut, gk=gk, ro_type=ro_type, is_hyper=is_hyper)
     ## exponential
     elif ac_opt == 'exp':
         rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam, global_attrs = \
-            apply_ac_exp(band_table=band_table, l1r_band_list=l1r_band_list, var_mem=var_mem, rsrd=rsrd, lut_mod_names=lut_mod_names, lut_table=lut_table, ro_type=ro_type,
-                         user_settings=user_settings, global_attrs=global_attrs)
+            apply_ac_exp(band_table=band_table, l1r_band_list=l1r_band_list, var_mem=var_mem, rsrd=rsrd, lut_mod_names=lut_mod_names, lut_table=lut_table,
+                         ro_type=ro_type,user_settings=user_settings, global_attrs=global_attrs)
 
-        corr_func = partial(exp_correction, lut_table=lut_table, ro_type=ro_type, rhoam=rhoam, xi=xi, exp_lut=exp_lut, short_wv=short_wv, long_wv=long_wv, epsilon=epsilon, mask=mask,
-                            fixed_epsilon=fixed_epsilon, fixed_rhoam=fixed_rhoam)
+        corr_func = partial(exp_correction, lut_table=lut_table, ro_type=ro_type, rhoam=rhoam, xi=xi, exp_lut=exp_lut, short_wv=short_wv,
+                            long_wv=long_wv, epsilon=epsilon, mask=mask, fixed_epsilon=fixed_epsilon, fixed_rhoam=fixed_rhoam)
     else:
         raise ValueError(f'Unknown atmospheric correction method {ac_opt}')
 
     ## set up interpolator for tiled processing
+    xnew, ynew = None, None
     if ac_opt == 'dsf':
         if user_settings['dsf_aot_estimate'] == 'tiled':
             xnew = np.linspace(0, tiles[-1][1], global_attrs['data_dimensions'][1], dtype=np.float32)
@@ -218,16 +219,18 @@ def apply_l2r(l1r:dict, global_attrs:dict):
                                                                        l2r=l2r, l2r_band_list=l2r_band_list, user_settings=user_settings)
 
     # print('use_revlut', use_revlut)
-    l2r, l2r_band_list, rhos_to_band_name, gk_vza, gk_raa = correct_surface_reflectance(xnew=xnew, ynew=ynew, band_table=band_table, var_mem=var_mem, l1r_band_list=l1r_band_list, gk=gk,
-                                                                        lut_table=lut_table, rho_cirrus=rho_cirrus, ro_type=ro_type, use_revlut=use_rev_lut, segment_data=segment_data,
-                                                                        is_hyper=is_hyper, ac_opt=ac_opt, luts=lut_mod_names, rsrd=rsrd, corr_func=corr_func, global_attrs=global_attrs, user_settings=user_settings,
-                                                                        l2r=l2r, l2r_band_list=l2r_band_list, rhos_to_band_name=rhos_to_band_name)
+    l2r, l2r_band_list, rhos_to_band_name, gk_vza, gk_raa =\
+        correct_surface_reflectance(xnew=xnew, ynew=ynew, band_table=band_table, var_mem=var_mem,
+                                    l1r_band_list=l1r_band_list, gk=gk, lut_table=lut_table, rho_cirrus=rho_cirrus,
+                                    ro_type=ro_type, use_revlut=use_rev_lut, segment_data=segment_data,
+                                    is_hyper=is_hyper, ac_opt=ac_opt, luts=lut_mod_names, rsrd=rsrd, corr_func=corr_func,
+                                    global_attrs=global_attrs, user_settings=user_settings, l2r=l2r, l2r_band_list=l2r_band_list, rhos_to_band_name=rhos_to_band_name)
     if ac_opt == 'dsf':
         if user_settings['dsf_residual_glint_correction']:
             ## glint correction
             if user_settings['dsf_residual_glint_correction_method'] == 'default':
-                l2r = correct_glint(l1r, rsrd=rsrd, xnew=xnew, ynew=ynew, segment_data=segment_data, ttot_all=ttot_all, l2r=l2r, l2r_band_list=l2r_band_list, rhos_to_band_name=rhos_to_band_name,
-                                   user_settings=user_settings, global_attrs=global_attrs)
+                l2r = correct_glint(l1r, rsrd=rsrd, xnew=xnew, ynew=ynew, segment_data=segment_data, ttot_all=ttot_all, l2r=l2r, l2r_band_list=l2r_band_list,
+                                    rhos_to_band_name=rhos_to_band_name, user_settings=user_settings, global_attrs=global_attrs)
 
             ## alternative glint correction
             if user_settings['dsf_residual_glint_correction_method'] == 'alternative' and (user_settings['dsf_aot_estimate'] in ['fixed', 'segmented']):
@@ -236,4 +239,4 @@ def apply_l2r(l1r:dict, global_attrs:dict):
                                         user_settings=user_settings, global_attrs=global_attrs)
 
 
-    return l2r
+    return l2r, global_attrs

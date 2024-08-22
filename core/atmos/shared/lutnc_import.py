@@ -28,7 +28,7 @@ def lutnc_import(lutnc):
             ## sensor specific lut with multiple luts (per band)
             lut = {}
             for dataset in datasets:
-                lut[dataset] = nc.variables[dataset][:]
+                lut[dataset.lower()] = nc.variables[dataset][:]
         nc.close()
     except:
         print(sys.exc_info()[0])

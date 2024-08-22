@@ -5,16 +5,16 @@ from datetime import datetime
 from jsonpath_ng.ext import parse as parse_ng
 
 import core.atmos as atmos
-from core.config import expand_var
+from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickle, wkt_to_epsg
 
-from core.atmos.run import l1r_meta_to_global_attrs, meta_dict_to_l1r_meta, apply_atmos
-from core.atmos.run.l1r import process_l1r_band
-from core.atmos.meta import build_angles
+from core.config import expand_var
+from core.atmos.run import apply_atmos, write_map
+# from core.atmos.run import l1r_meta_to_global_attrs, meta_dict_to_l1r_meta, apply_atmos
+# from core.atmos.run.l1r import process_l1r_band
+# from core.atmos.meta import build_angles
 
 from core.atmos.setting import parse
 from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run, set_earthdata_login_to_env
-
-from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickle, wkt_to_epsg
 
 
 from core.raster.funcs import read_band_from_raw, get_band_grid_size
@@ -33,7 +33,6 @@ class TestAtmosSubFuncs(unittest.TestCase):
         self.project_path = expand_var('$PROJECT_PATH')
         self.test_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
         self.target_path = os.path.join(self.project_path, 'data', 'test', 'target')
-
 
         input_dir = os.path.join(self.project_path, 'data', 'test', 'target', 's2', 'split_safe')
 
@@ -248,22 +247,44 @@ class TestAtmosSubFuncs(unittest.TestCase):
         grid_from_raw = build_grid_meta_from_gpf(dim_raster.raw, 'B_detector_footprint_B1')
         self.assertNotEquals(grid_from_meta['60'], grid_from_raw)
 
+    def test_write_map_l1r(self):
+        project_path = expand_var('$PROJECT_PATH')
+        target_path = os.path.join(project_path, 'data', 'test', 'target')
+        l1r_dir = os.path.join(target_path, 's2', 'l1r_out')
 
-    def test_save_dim_l1r(self):
-        dim_raster = Read(module='snap')(self.s2_dim_path, Context())
+        with self.subTest(msg='test to write sentinel2-L1R rgb map'):
 
-        with self.subTest(msg='test L1R'):
-            target_bands = ['B1','B2','B3','B4','B5','B6','B7','B8','B8A', 'B9', 'B10', 'B11', 'B12']
-            det_bands = 'B_detector_*'
-            target_slots = target_bands
-            l1r, global_attrs = apply_atmos(dim_raster,
-                                            dim_raster.product_type,
-                                            target_band_names=target_bands,
-                                            target_band_slot=target_slots,
-                                            det_bands=det_bands)
+            l1r_path = os.path.join(l1r_dir, 'l1r_out.full.dim.pkl')
+            l1r = read_pickle(l1r_path)
+            global_attrs_path = os.path.join(l1r_dir, 'global_attrs.full.dim.pkl')
+            global_attrs = read_pickle(global_attrs_path)
 
-            write_pickle(l1r, os.path.join(self.target_path, 's2', 'l1r_out', 'l1r_out.full.dim.pkl'))
-            write_pickle(global_attrs, os.path.join(self.target_path, 's2', 'l1r_out', 'global_attrs.full.dim.pkl'))
+            map_settings = {'rgb_rhot': True, 'rgb_rhorc': False, 'rgb_rhos': False, 'rgb_rhow': False}
+            map_settings = atmos.setting.parse(None, settings=map_settings, merge=False)
+
+            write_map(l1r, out_settings=map_settings, out_file_stem='l1r_out_sentinel2', out_dir=l1r_dir, global_attrs=global_attrs)
 
 
+        with self.subTest(msg='test to write wv-L1R rgb map'):
 
+            l1r_path = os.path.join(l1r_dir, 'l1r_out.wv.pkl')
+            l1r = read_pickle(l1r_path)
+            global_attrs_path = os.path.join(l1r_dir, 'global_attrs.wv.pkl')
+            global_attrs = read_pickle(global_attrs_path)
+
+            map_settings = {'rgb_rhot': True, 'rgb_rhorc': False, 'rgb_rhos': False, 'rgb_rhow': False}
+            map_settings = atmos.setting.parse(None, settings=map_settings, merge=False)
+
+            write_map(l1r, out_settings=map_settings, out_file_stem='l1r_out', out_dir=l1r_dir, global_attrs=global_attrs)
+
+        with self.subTest(msg='test to write ps-L1R rgb map'):
+
+            l1r_path = os.path.join(l1r_dir, 'l1r_out.ps.snap.pkl')
+            l1r = read_pickle(l1r_path)
+            global_attrs_path = os.path.join(l1r_dir, 'global_attrs.ps.snap.pkl')
+            global_attrs = read_pickle(global_attrs_path)
+
+            map_settings = {'rgb_rhot': True, 'rgb_rhorc': False, 'rgb_rhos': False, 'rgb_rhow': False}
+            map_settings = atmos.setting.parse(None, settings=map_settings, merge=False)
+
+            write_map(l1r, out_settings=map_settings, out_file_stem='l1r_out_snap', out_dir=l1r_dir, global_attrs=global_attrs)

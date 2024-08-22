@@ -1,3 +1,4 @@
+from core.atmos.shared import slotnum_to_bname
 
 def prepare_attr_band_ds(band_ds, rsrd, rhot_names:list, transmit_gas:dict, user_settings:dict):
 
@@ -11,7 +12,7 @@ def prepare_attr_band_ds(band_ds, rsrd, rhot_names:list, transmit_gas:dict, user
     add_band_name, add_detector_name, gas_transmittance = _load_params()
 
     for bi, band_slot in enumerate(rsrd['rsr_bands']):
-        band_key = f'B{band_slot}'
+        band_key = slotnum_to_bname(band_slot)
         if band_key in band_ds:
             band_att = band_ds[band_key]['att']
 
@@ -21,6 +22,7 @@ def prepare_attr_band_ds(band_ds, rsrd, rhot_names:list, transmit_gas:dict, user
 
             band_att['rhot_ds'] = f'rhot_{band_ds[band_key]["att"]["wave_name"]}'
             band_att['rhos_ds'] = f'rhos_{band_ds[band_key]["att"]["wave_name"]}'
+            band_att['parameter'] = f'rhos_{band_ds[band_key]["att"]["wave_name"]}'
 
             if add_band_name:
                 band_att["att"]['rhot_ds'] = f'rhot_{band_slot}_{band_ds[band_key]["att"]["wave_name"]}'

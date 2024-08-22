@@ -81,13 +81,13 @@ def import_luts(pressures = [500, 750, 1013, 1100],
                     lut_data_dict, lut_meta = atmos.aerlut.merged_lut(lut, rsky_lut_name, pr, sensor=sensor, store=store_merged_lut, lut_par=lut_par, get_remote=get_remote)
                 else:
                     lut_data_dict, lut_meta = atmos.aerlut.import_lut(lutid, lutdir, sensor=sensor, lut_par=lut_par, get_remote=get_remote)
+                lut_data_dict = {k.lower():lut_data_dict[k] for k in lut_data_dict}
 
                 if 'bands' not in lut_meta:
                     # get bands from rsr_file as different systems may not keep dict keys in the same order
                     rsr_file = atmos.config['data_dir']+'/RSR/'+sensor+'.txt'
                     # rsr contains response functions for each band, and rsr_bands contains the band numbers
                     rsr, rsr_bands = rsr_read(file=rsr_file)
-
                 else:
                     rsr_bands = lut_meta['bands']
 

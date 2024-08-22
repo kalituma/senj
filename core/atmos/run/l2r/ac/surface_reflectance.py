@@ -2,6 +2,7 @@ from typing import Callable
 import time
 import numpy as np
 
+from core.atmos.shared import bname_to_slotnum
 from core.util import rsr_convolute_nd, tiles_interp
 
 
@@ -49,7 +50,7 @@ def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dic
     l2r['inputs'] = {}
     ## compute surface reflectances
     for bi, (b_slot, b_dict) in enumerate(band_table.items()):
-        b_num = b_slot[1:]
+        b_num = bname_to_slotnum(b_slot)
         if ('rhot_ds' not in b_dict['att']) or ('tt_gas' not in b_dict['att']):
             # print(f'Band {band_slot} at {b_v["att"]["wave_name"]} nm not in bands dataset')
             continue

@@ -16,8 +16,8 @@ def rsr_read(file=None):
                         band = tmp[-1]
                         if bid > 0:
                             bdata = {'wave':rwave, 'response':rresp}
-                            data[prev_band]=bdata
-                            bands.append(prev_band)
+                            data[prev_band.lower()]=bdata
+                            bands.append(prev_band.lower())
                         prev_band = band
                         bid+=1
                         rwave=[]
@@ -33,7 +33,7 @@ def rsr_read(file=None):
 
             if len(rwave) != 0:
                 bdata = {'wave':rwave, 'response':rresp}
-                data[prev_band]=bdata
-                bands.append(prev_band)
+                data[prev_band.lower()]=bdata
+                bands.append(prev_band.lower())
 
         return data,bands

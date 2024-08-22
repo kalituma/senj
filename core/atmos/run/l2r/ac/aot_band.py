@@ -1,6 +1,7 @@
 import time
 import numpy as np
 
+from core.atmos.shared import bname_to_slotnum
 from core.atmos.run.l2r.ac import percentile_filter, band_data_fixed, band_data_tiled, band_data_segmented
 from core.util import fillnan, rsr_convolute_nd
 
@@ -21,7 +22,7 @@ def calculate_aot(band_data:np.ndarray, band_slot:str, var_mem:dict, lut_mod_nam
     for l_i, lut_name in enumerate(lut_mod_names):
         aot_band[lut_name] = np.zeros(band_data.shape, dtype=np.float32) + np.nan
         t0 = time.time()
-        band_num = band_slot[1:]
+        band_num = bname_to_slotnum(band_slot)
 
         ## reverse lut interpolates rhot directly to aot
         if use_revlut:

@@ -7,10 +7,8 @@ from core.atmos.shared import read_tif_meta
 if TYPE_CHECKING:
     from core.raster import Raster
 
-def build_planet_l1r(target_raster: "Raster", meta_dict:dict, user_settings:dict,
-                     target_band_names:list[str], target_band_slot:list[str],
-                     percentiles_compute=True,
-                     percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
+def build_planet_l1r(target_raster: "Raster", target_band_names:list[str], target_band_slot:list[str], meta_dict:dict, user_settings:dict,
+                     percentiles_compute=True, percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
 
     assert len(target_band_names) == len(target_band_slot), 'target_band_names and target_band_slot must have the same length'
     target_band_slot = [slot.lower() for slot in target_band_slot]
@@ -49,6 +47,7 @@ def build_planet_l1r(target_raster: "Raster", meta_dict:dict, user_settings:dict
     tif_meta = read_tif_meta(target_raster.path)
     f0_dict = {f'{slot}_f0': global_attrs[f'{slot}_f0'] for slot in target_band_slot}
     value_conversion = {}
+
     for slot in target_band_slot:
         s_case_list = [slot.title(), slot.lower(), slot.upper()]
         for s_case in s_case_list:

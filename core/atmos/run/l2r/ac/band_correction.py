@@ -43,8 +43,6 @@ def dsf_correction(b_dict, b_data, b_slot:str, b_num:str, xnew:np.ndarray, ynew:
 
     slicing, aot_estimate, glint_correction, glint_correction_method, tile_smoothing, tile_smoothing_kernel_size, tile_interp_method = _load_params()
 
-
-
     valid_mask = None
     if slicing:
         valid_mask = np.isfinite(b_data)

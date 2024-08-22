@@ -3,6 +3,7 @@ import scipy.ndimage, scipy.interpolate
 
 import core.atmos as atmos
 from core.util import rsr_convolute_nd
+from core.atmos.shared import bname_to_slotnum
 from core.atmos.run.l2r.ac.aot_band import calculate_aot_bands
 
 def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_names:list, l1r_band_list:list, ro_type:str, user_settings:dict, use_rev_lut:bool,
@@ -170,7 +171,7 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
                 rhod_f = np.zeros((aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit),dtype=np.float32) + np.nan
 
                 for bi, band_slot in enumerate(aot_bands):
-                    band_num = band_slot[1:]
+                    band_num = bname_to_slotnum(band_slot)
 
                     ## use band specific geometry if available
                     gk_raa = gk
@@ -230,8 +231,10 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
                                         )
 
                                 else:
-                                    rhop_f[aot_loc[0], aot_loc[1], ai] = lut_table[lut_name]['rgi'][band_num]((xi[0], lut_table[lut_name]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4],
-                                                                                                               aot_stack[lut_name]['aot'][aot_loc]))
+                                    rhop_f[aot_loc[0], aot_loc[1], ai] = lut_table[lut_name]['rgi'][band_num](
+                                        (xi[0], lut_table[lut_name]['ipd'][ro_type], xi[1], xi[2], xi[3], xi[4],
+                                         aot_stack[lut_name]['aot'][aot_loc])
+                                    )
 
                 ## rmsd for current bands
                 cur_sel_par = np.sqrt(np.nanmean(np.square((rhod_f - rhop_f)), axis=2))  # band_data - lut value for aot to trans

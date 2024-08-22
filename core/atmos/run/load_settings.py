@@ -45,5 +45,8 @@ def set_earthdata_login_to_env(run_settings:dict):
     for k in ['EARTHDATA_u', 'EARTHDATA_p']:
         kv = run_settings[k] if k in run_settings else atmos.config[k]
         if len(kv) == 0: continue
-        os.environ[k] = kv
+        if '$' in kv:
+            os.environ[k] = os.environ[kv[1:]]
+        else:
+            os.environ[k] = kv
 
