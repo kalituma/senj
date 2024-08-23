@@ -1,0 +1,8 @@
+convert:
+  type: 'dict'
+  required: True
+  schema:
+    to_module:
+      type: 'string'
+      required: True
+      allowed: ['snap', 'gdal']

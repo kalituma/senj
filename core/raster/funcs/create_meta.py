@@ -6,7 +6,7 @@ from core.util import ProductType, read_pickle, parse_meta_xml
 
 from core.raster import RasterType
 from core.util.gdal import get_image_spec_gdal, get_geo_spec_gdal
-from core.util.snap import make_meta_dict, get_image_spec_gpf, get_geo_spec_gpf
+from core.util.snap import make_meta_dict_from_product, get_image_spec_gpf, get_geo_spec_gpf
 
 def update_meta_bounds(meta_dict:dict, raw:Union[Dataset, Product], module_type:RasterType) -> dict:
 
@@ -70,8 +70,8 @@ def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, modu
         return meta_dict
 
     # parse from snap
-    if isinstance(raw, Product) and (product_type == ProductType.S2 or product_type == ProductType.S1):
-        meta_dict = make_meta_dict(raw)
+    if module_type == RasterType.SNAP and (product_type == ProductType.S2 or product_type == ProductType.S1):
+        meta_dict = make_meta_dict_from_product(raw,  product_type)
         return meta_dict
 
     # parse from xml

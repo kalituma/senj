@@ -1,16 +1,22 @@
-from core import OPERATIONS
-from core.operations import CachedOp
-from core.operations import ATMOSCORR_OP
+from typing import TYPE_CHECKING
 
-@OPERATIONS.reg(name=ATMOSCORR_OP)
+from core import OPERATIONS
+from core.operations import CachedOp, Context
+from core.operations import ATMOSCORR_OP
+from core.util.op import available_op, OP_TYPE
+
+from core.raster.funcs import apply_atmos, write_l2r_as_map
+
+if TYPE_CHECKING:
+    from core.raster import Raster
+
+@OPERATIONS.reg(name=ATMOSCORR_OP, conf_no_arg_allowed=False)
+@available_op(OP_TYPE.SNAP, OP_TYPE.GDAL)
 class AtmosCorr(CachedOp):
-    def __init__(self, config:str):
+    def __init__(self):
         super().__init__(ATMOSCORR_OP)
 
-    def __call__(self, *args):
-        prev_result = args[0]
-        x = prev_result[0]
-        prev_att = prev_result[1]
+    def __call__(self, raster:"Raster", context:Context, *args, **kwargs):
 
         x = x + 1
         att = self.post_process(**prev_att)

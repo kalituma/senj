@@ -20,7 +20,6 @@ def build_planet_l1r(target_raster: "Raster", target_band_names:list[str], targe
     # netcdf_projection = user_settings['netcdf_projection']
 
     global_attrs = meta_dict_to_global_attrs(meta_dict, user_settings)
-
     proj_dict = load_proj_from_raw(target_raster.raw, target_raster.module_type)
 
     global_attrs['scene_xrange'] = proj_dict['xrange']

@@ -6,16 +6,17 @@ from core.operations import Op, MODULE_EXT_MAP
 from core.operations import READ_OP
 
 from core.util import check_input_ext
+from core.util.op import available_op, OP_TYPE
 from core.util.errors import ExtensionNotSupportedError
 
 from core.raster import RasterType, Raster
 from core.raster import load_raster
 
-
 if TYPE_CHECKING:
     from core.logic.context import Context
 
-@OPERATIONS.reg(name=READ_OP)
+@OPERATIONS.reg(name=READ_OP, conf_no_arg_allowed=False)
+@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
 class Read(Op):
     def __init__(self, module:str, bands:list=None):
         super().__init__(READ_OP)

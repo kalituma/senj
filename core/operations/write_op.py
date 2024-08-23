@@ -2,14 +2,15 @@ from pathlib import Path
 
 from core import OPERATIONS
 from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
+from core.util.op import OP_TYPE, available_op
 from core.operations import Op
 from core.operations import WRITE_OP
 from core.raster import RasterType, Raster, EXT_MAP
 from core.raster import write_raster
 from core.raster.funcs import has_same_band_shape
 
-
-@OPERATIONS.reg(name=WRITE_OP)
+@OPERATIONS.reg(name=WRITE_OP, no_arg_allowed=False)
+@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
 class Write(Op):
     def __init__(self, path:str, module:str, bands:list[str]=None, out_ext:str='', prefix:str= '', suffix:str= ''):
         super().__init__(WRITE_OP)

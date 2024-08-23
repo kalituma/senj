@@ -3,10 +3,9 @@ import re
 from jsonpath_ng.ext import parse
 from typing import Union, List, Tuple
 
-import core
+from core import LAMBDA
 from core.util import PathType, read_yaml, get_files_recursive
 from core.config import LAMBDA_PATTERN, check_path_or_var, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func
-from core import LAMBDA
 
 def op_dicts(op_names:list, args_list:list) -> list[dict]   :
     out = list()
@@ -55,10 +54,10 @@ def replace_lambda_var_to_func(config:dict) -> dict:
             if not LAMBDA.__contains__(cleaned_func_str):
                 raise ValueError(f'{match.value} is not a registered function')
 
-            match.context.value[match.path.fields[-1]] = LAMBDA[cleaned_func_str]
+            match.context.value[match.path.fields[-1]] = LAMBDA.__get_attr__(name=cleaned_func_str, attr_name='constructor')
 
     return config
-def validate_in_path_recur(input_path:Union[str, list]) -> tuple[bool, PathType]:
+def validate_in_path_recur(input_path:str) -> tuple[bool, PathType]:
 
     # check input if it is a path or a variable
     path_exist, path_type = check_path_or_var(input_path)
@@ -112,7 +111,7 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
         else:
             op_keys = p_config['operations'].copy()
 
-        op_args = [p_config[op_key].copy() for op_key in op_keys]
+        op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)
 
     # replace lambda var with function name

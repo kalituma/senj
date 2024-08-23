@@ -47,6 +47,7 @@ def build_sentinel_l1r(target_raster: "Raster", target_band_names:list[str], tar
                                    det_res=list(res_set))
 
     target_raster = load_bands(target_raster, target_band_names, target_band_slot)
+
     # det_sizes = { det_name : l1r_meta['size_meta_per_band'][det_name] for det_name in det_names}
     l1r_meta['granule_meta']['GRIDS'] = build_det_grid(target_raster, det_names)
 

@@ -12,7 +12,6 @@ from core.logic.context import Context
 class TestReadOp(unittest.TestCase):
     def setUp(self) -> None:
         self.data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
-
         self.s1_safe_grdh_path = os.path.join(self.data_root, 'safe', 's1', 'S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE')
         self.s1_dim_path = os.path.join(self.data_root, 'dim', 's1', 'src_1', 'terrain_corrected_0.dim')
         self.s2_dim_path = os.path.join(self.data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')

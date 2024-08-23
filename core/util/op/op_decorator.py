@@ -1,6 +1,5 @@
 from typing import Callable, TYPE_CHECKING
 from functools import wraps
-
 from core.util.errors import ProductTypeError, OperationTypeError, ModuleError
 
 if TYPE_CHECKING:
@@ -21,7 +20,13 @@ def check_init_operation(*init_ops:tuple[str]):
         return func_wrapper
     return decorator
 
-def check_module_type(*allowed_types):
+def available_op(*added_op_types):
+    def decorator(cls):
+        setattr(cls, 'op_types', list(added_op_types))
+        return cls
+    return decorator
+
+def allow_module_type(*allowed_types):
     def decorator(func:Callable):
         @wraps(func)
         def func_wrapper(self, raster:"Raster", *args, **kwargs):
@@ -32,8 +37,7 @@ def check_module_type(*allowed_types):
         return func_wrapper
     return decorator
 
-
-def op_product_type(*allowed_types):
+def allow_product_type(*allowed_types):
     def decorator(func:Callable):
         @wraps(func)
         def func_wrapper(self, raster:"Raster", *args, **kwargs):

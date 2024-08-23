@@ -4,8 +4,7 @@ import numpy as np
 
 from core.config import expand_var
 from core.util.snap import ORBIT_TYPE
-from core.util import ProductTypeError
-from core.util.errors import ModuleError
+from core.util.errors import ModuleError, ProductTypeError
 from core.operations import Read, Write, Subset
 from core.operations.s1 import ApplyOrbit, Calibrate, TopsarDeburst, TerrainCorrection
 

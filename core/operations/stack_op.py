@@ -1,13 +1,15 @@
 from typing import TYPE_CHECKING
 
+from core.util.op import available_op, OP_TYPE
 from core.raster import merge_raster_func
 from core.operations import Op
 from core.operations import OPERATIONS, STACK_OP
 
-
 if TYPE_CHECKING:
     from core.raster import Raster
-@OPERATIONS.reg(name=STACK_OP)
+
+@OPERATIONS.reg(name=STACK_OP, conf_no_arg_allowed=True)
+@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
 class Stack(Op):
     def __init__(self, axis:int=0, bands:list=None):
         super().__init__(STACK_OP)

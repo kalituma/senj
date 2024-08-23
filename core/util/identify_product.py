@@ -1,29 +1,24 @@
 import json
 from pathlib import Path
 from lxml import etree
-from jsonpath_ng.ext import parse
 
-from core.util import ProductType, read_pickle
+from core.util import S1_MISSION_PATTERN, S2_MISSION_PATTERN
+from core.util import ProductType, read_pickle, query_dict
 from core.util.identify import safe_test, dim_test, planet_test, worldview_test
 
 def check_product_type_using_meta(meta_dict: dict) -> ProductType:
     if meta_dict is None or len(meta_dict) == 0:
         return ProductType.UNKNOWN
 
-    find_product = lambda x : [field.value for field in parse(x).find(meta_dict)]
-
-    s1_mission = '$.Abstracted_Metadata.MISSION'
-    s2_mission = '$.Level-1C_User_Product.General_Info.Product_Info.Datatake.SPACECRAFT_NAME'
     try:
-        if len(find_product(s1_mission)) > 0:
-            found_values = find_product(s1_mission)
+        if len(query_dict(S1_MISSION_PATTERN, target_dict=meta_dict)) > 0:
+            found_values = query_dict(S1_MISSION_PATTERN, target_dict=meta_dict)
             if 'sentinel-1' in found_values[0].lower():
                 return ProductType.S1
             else:
                 return ProductType.UNKNOWN
-
-        elif len(find_product(s2_mission)) > 0:
-            found_values = find_product(s2_mission)
+        elif len(query_dict(S2_MISSION_PATTERN, target_dict=meta_dict)) > 0:
+            found_values = query_dict(S2_MISSION_PATTERN, target_dict=meta_dict)
             if 'sentinel-2' in found_values[0].lower():
                 return ProductType.S2
             else:
@@ -123,7 +118,6 @@ def identify_product(src_path_str:str) -> tuple[ProductType,str]:
             if len(mission_attrs) > 0:
                 if 'PlanetScope' in mission_attrs:
                     return ProductType.PS, meta_path
-
         elif 'metadata_json' in data_files:
             meta_path = data_files['metadata_json']['path']
             meta_dict = json.load(open(meta_path))
@@ -134,4 +128,5 @@ def identify_product(src_path_str:str) -> tuple[ProductType,str]:
     except:
         pass
 
+    # todo: add warning message to alert that meta_path is not found
     return ProductType.UNKNOWN, meta_path

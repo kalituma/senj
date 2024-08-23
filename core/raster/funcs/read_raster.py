@@ -20,14 +20,14 @@ def load_raster(empty_raster:Raster, in_module:RasterType, selected_bands:list[U
     product_type, meta_path = identify_product(path)
 
     if product_type == ProductType.WV: # to merge tiles for WorldView, in_path should be the xml file
-        if Path(meta_path).suffix.lower() == '.xml':
-            empty_raster.path = meta_path
-            path = meta_path
+        empty_raster.path = meta_path
+        path = meta_path
 
     if empty_raster.module_type == RasterType.GDAL:
         if selected_bands:
             assert all([isinstance(b, int) for b in selected_bands]), f'selected_bands for module "{RasterType.GDAL.__str__()}" should be a list of integer'
             assert all([b > 0 for b in selected_bands]), f'selected_bands for module "{RasterType.GDAL.__str__()}" should be > 0'
+
         raw, new_selected_bands, tile_mosaic = load_raster_gdal(path, selected_bands=selected_bands, product_type=product_type)
 
     elif empty_raster.module_type == RasterType.SNAP:

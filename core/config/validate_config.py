@@ -1,9 +1,9 @@
 from cerberus import Validator
 
+from core import OPERATIONS
 from core.util import dict_with_key
 from core.util.errors import check_null_error, NullValueError
 from core.raster import RasterType
-from core.config import check_op_type, OP_TYPE
 from core.operations import MODULE_EXT_MAP
 
 class WriteValidator(Validator):
@@ -46,7 +46,7 @@ def get_validator(key):
         return Validator
 
 def check_root_schema(item, schema, key, allow_unknown: bool = False):
-    v = get_validator(key)(schema, allow_unknown=allow_unknown)
+    v = Validator(schema, allow_unknown=allow_unknown)
     if not v.validate(item):
         if check_null_error(v.errors):
             raise NullValueError(key)
@@ -60,11 +60,12 @@ def validate_config_func(p_key:str, root_config:dict, schema_map:dict, allow_unk
     ops = root_config['operations']
     for op_name in ops:
         assert op_name in schema_map, f'{op_name} is not implemented in schema'
+
         try:
             op_config_dict = dict_with_key(op_name, root_config[op_name])
             check_root_schema(op_config_dict, schema_map[op_name], key=op_name, allow_unknown=allow_unknown)
         except (KeyError, NullValueError) as e:
-            if check_op_type(op_name) == OP_TYPE.S1:
+            if OPERATIONS.__get_attr__(op_name, 'conf_no_arg_allowed'):
                 continue
             else:
                 raise e

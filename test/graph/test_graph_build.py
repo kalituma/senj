@@ -13,9 +13,21 @@ class TestConfigParsing(unittest.TestCase):
         self.stack_config = read_yaml(self.stack_config_path)
 
     def test_graph_manager_item(self):
-        graph_manager = GraphManager(self.stack_config, self.schema_map)
-        self.assertEqual(graph_manager[0].ops['ops_order'], ['input', 'read'])
-        self.assertEqual(graph_manager[0].links, ['stack_s2_1_2'])
+        with self.subTest(msg='stack.yaml'):
+            stack_config_path = f'{self.resource_path}/config/stack.yaml'
+            stack_config = read_yaml(stack_config_path)
+
+            graph_manager = GraphManager(stack_config, self.schema_map)
+            self.assertEqual(graph_manager.get_proc(0).ops['ops_order'], ['input', 'read'])
+            self.assertEqual(graph_manager.get_proc(0).links, ['stack_s2_1_2'])
+
+        with self.subTest(msg='s1'):
+            s1_config_path = f'{self.resource_path}/config/s1_write.yaml'
+            s1_config = read_yaml(s1_config_path)
+
+            graph_manager = GraphManager(s1_config, self.schema_map)
+            self.assertEqual(graph_manager.get_proc(0).ops['ops_order'], ['input', 'read', 'apply_orbit', 'calibrate', 'terrain_correction'])
+            self.assertEqual(graph_manager.get_proc(0).links, [])
 
     def test_processor_builder_stack(self):
         graph_manager = GraphManager(self.stack_config, self.schema_map)

@@ -1,21 +1,18 @@
 import os, copy
 import numpy as np
 
-import pyproj
-from osgeo import ogr, osr
-
 import matplotlib as plot
-import matplotlib.cm as cm
+
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
 
 from PIL import Image
 
 import core.atmos as atmos
 
-def output_map(im, lon, lat, scene_mask, rgb_used, font, title_base:str, cpar, pscale, points, xsb, ysb, xsbl, ysbl, sclabel,
+def create_map(im, lon, lat, scene_mask, rgb_used, font, title_base:str, cpar, pscale, points, xsb, ysb, xsbl, ysbl, sclabel,
                user_settings:dict, out_dir:str, out_file_stem:str, ro_type:str):
 
     def _load_params():
@@ -454,7 +451,7 @@ def write_map(band_dict:dict, out_settings:dict, out_file_stem:str, out_dir:str,
             im = band_dict[ds]
 
         ## plot figure
-        output_map(im, lon=lon, lat=lat, scene_mask=scene_mask, rgb_used=rgb_used, font=font, title_base=title_base,
+        create_map(im, lon=lon, lat=lat, scene_mask=scene_mask, rgb_used=rgb_used, font=font, title_base=title_base,
                    cpar=cpar, pscale=pscale, points=points,
                    xsb=xsb, ysb=ysb, xsbl=xsbl, ysbl=ysbl, sclabel=sclabel,
                    user_settings=user_settings, out_dir=out_dir, out_file_stem=out_file_stem, ro_type=cpar)

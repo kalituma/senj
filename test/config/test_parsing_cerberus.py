@@ -177,3 +177,18 @@ class TestParsingCerberus(unittest.TestCase):
                 with self.subTest():
                     with self.assertRaises(ValueError):
                         validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_convert(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'convert' in success_key:
+                with self.subTest():
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_convert_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+        for fail_key in root_keys:
+            if 'convert' in fail_key:
+                with self.subTest():
+                    with self.assertRaises(KeyError):
+                        validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)

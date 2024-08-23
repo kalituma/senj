@@ -3,13 +3,15 @@ from core.operations import Op
 from core.operations import OPERATIONS, SUBSET_OP
 from core.raster import Raster, RasterType
 from core.util import region_to_wkt
+from core.util.op import OP_TYPE, available_op
 from core.util.gdal import make_transform, create_geom
 from core.util.snap import subset_gpf
 
 if TYPE_CHECKING:
     from core.logic import Context
 
-@OPERATIONS.reg(name=SUBSET_OP)
+@OPERATIONS.reg(name=SUBSET_OP, no_arg_allowed=False)
+@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
 class Subset(Op):
     def __init__(self, bounds:list[float]=None, epsg:int=None, bbox:list=None, bandNames:list[str]=None, tiePointGridNames:list[str]=None, copyMetadata:bool=True):
         super().__init__(SUBSET_OP)

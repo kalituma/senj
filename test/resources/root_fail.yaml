@@ -274,3 +274,7 @@ topsar_deburst_2:
   operations : ['topsar_deburst']
   topsar_deburst:
     selected_polarisations: 'VV'
+
+convert_1:
+    <<: *parent
+    operations : ['convert']

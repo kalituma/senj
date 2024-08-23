@@ -1,4 +1,4 @@
-from osgeo import osr,gdal
+from osgeo import osr, gdal
 
 gdal_types = {
     'uint': gdal.GDT_UInt16,
@@ -100,5 +100,6 @@ def warp_to(source, data, warp_to, rpc_dem=None, type='float'):
 
         data = ds.ReadAsArray()
         ds = None
+
     source_ds = None
     return(data)

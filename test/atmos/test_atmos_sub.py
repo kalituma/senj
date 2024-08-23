@@ -2,7 +2,7 @@ import numpy as np
 import os
 import unittest
 from datetime import datetime
-from jsonpath_ng.ext import parse as parse_ng
+
 
 import core.atmos as atmos
 from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickle, wkt_to_epsg
@@ -20,8 +20,7 @@ from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run
 from core.raster.funcs import read_band_from_raw, get_band_grid_size
 
 from core.util.snap import find_grids_and_angle_meta, read_grid_angle_meta_from_product, \
-    get_product_info_meta, get_reflectance_meta_from_product, get_band_info_meta, get_band_info_meta_from_product, build_grid_meta, \
-    build_grid_meta_from_gpf
+    get_product_info_meta, get_reflectance_meta_from_product, get_band_info_meta, get_band_info_meta_from_product, build_grid_meta_from_gpf, build_grid_meta
 
 from core.util.gdal import build_grid_meta_from_gdal
 
@@ -234,16 +233,13 @@ class TestAtmosSubFuncs(unittest.TestCase):
         dim_raster = Read(module='snap')(self.s2_dim_path, Context())
         tif_raster = Read(module='gdal')(self.res_60_path, Context())
 
-        find_meta_dict = lambda x: [field.value for field in parse_ng(x).find(safe_raster.meta_dict)]
-        find_meta_dict_dim = lambda x: [field.value for field in parse_ng(x).find(dim_raster.meta_dict)]
-
-        grid_from_meta = build_grid_meta(find_meta_dict)
+        grid_from_meta = build_grid_meta(safe_raster.meta_dict)
         grid_from_raw = build_grid_meta_from_gpf(safe_raster.raw, 'B_detector_footprint_B1')
         grid_from_gdal = build_grid_meta_from_gdal(tif_raster.raw)
         self.assertEqual(grid_from_meta['60'], grid_from_raw)
         self.assertEqual(grid_from_meta['60'], grid_from_gdal)
 
-        grid_from_meta = build_grid_meta(find_meta_dict_dim)
+        grid_from_meta = build_grid_meta(dim_raster.meta_dict)
         grid_from_raw = build_grid_meta_from_gpf(dim_raster.raw, 'B_detector_footprint_B1')
         self.assertNotEquals(grid_from_meta['60'], grid_from_raw)
 

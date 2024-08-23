@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 
 class Test6SRSR(unittest.TestCase):
 
+    def load_lut(self):
+        pass
+
     def setup_6s_for_sentinel(self, s, date, lat, lon, wind_speed, sza, rho, tau, gases):
 
         s.geometry.day = date.day

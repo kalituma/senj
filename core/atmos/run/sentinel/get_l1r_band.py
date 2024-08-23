@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage
 from typing import Callable
 
-from core.util.snap import warp_to
+from core.util.gdal import warp_to
 
 def get_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dict, warp_option_for_angle:tuple,
                  percentiles_compute:bool, percentiles:tuple, geo_info_func:Callable) -> dict:

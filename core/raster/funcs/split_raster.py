@@ -4,7 +4,6 @@ from core.raster import Raster, RasterType
 from core.raster.funcs import copy_product, copy_ds, set_raw_metadict, update_meta_band_map, get_band_name_and_index
 from core.util import assert_bnames
 
-
 def split_raster(raster:Raster, bands_to_split:list[list[Union[str, int]]]=None) -> list[Raster]:
 
     if bands_to_split:

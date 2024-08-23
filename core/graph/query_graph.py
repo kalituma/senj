@@ -18,7 +18,7 @@ def get_predecessors_by_relation(graph, node, relation):
 def get_successors_by_relation(graph, node, relation):
     return [successor for successor in graph.successors(node) if graph.get_edge_data(node, successor).get('RELATION') == relation]
 
-def get_ops_args(graph:DiGraph, proc:str, q_relation:str=INCLUDE) -> tuple[list, list]:
+def get_ops_args_from_graph(graph:DiGraph, proc:str, q_relation:str=INCLUDE) -> tuple[list, list]:
     ops = []
     args = []
 

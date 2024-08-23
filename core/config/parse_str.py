@@ -3,26 +3,24 @@ from functools import partial
 from pathlib import Path
 
 from core.util import PathType, sort_by_pattern
+from core.util.errors import PathNotExistsError
 
 VAR_PATTERN = '^{{[a-zA-Z0-9_]+}}$'
 LAMBDA_PATTERN = '^!{[a-zA-Z0-9_]+}$'
 
 def check_path_or_var(path) -> tuple[bool, PathType]:
-    try:
-        if re.match(VAR_PATTERN, path):
-            return False, PathType.VAR
+    if re.match(VAR_PATTERN, path):
+        return False, PathType.VAR
 
-        path = expand_var(path)
+    path = expand_var(path)
 
-        p = Path(path)
-        path_type = PathType.DIR if p.is_dir() else PathType.FILE
+    p = Path(path)
+    path_type = PathType.DIR if p.is_dir() else PathType.FILE
 
-        if p.exists():
-            return True, path_type
-        else:
-            raise ValueError(f'{path} does not exist')
-    except Exception as e:
-        print(e)
+    if p.exists():
+        return True, path_type
+    else:
+        raise PathNotExistsError(path)
 
 def remove_var_bracket(var_str):
     return var_str.replace('{{', '').replace('}}', '')

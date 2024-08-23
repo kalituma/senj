@@ -1,12 +1,14 @@
 
 from core import OPERATIONS
+from core.util.op import available_op, OP_TYPE
 from core.operations import Op
 from core.operations import MULTI_WRITE_OP
 from core.operations import Write
 from core.raster import RasterType, Raster, EXT_MAP
 
 
-@OPERATIONS.reg(name=MULTI_WRITE_OP)
+@OPERATIONS.reg(name=MULTI_WRITE_OP, conf_no_arg_allowed=False)
+@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
 class MultiWrite(Op):
     def __init__(self, path:str, module:str, out_ext:str=''):
         super().__init__(MULTI_WRITE_OP)
@@ -16,6 +18,7 @@ class MultiWrite(Op):
 
     def __call__(self, rasters:list[Raster], *args) -> list[str]:
         assert len(rasters) > 0, 'No raster to write'
+        assert all(rasters[0].module_type == r.module_type for r in rasters), 'All rasters must have the same module type'
 
         out_paths = []
         for i, raster in enumerate(rasters):

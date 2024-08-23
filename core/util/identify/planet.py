@@ -85,4 +85,6 @@ def planet_test(tif_or_xml_path):
         if file.is_file():
             datafiles[band] = {"path":str(file), "file_name":file_name, "ext": ext}
 
+    assert any(['metadata' in datafiles, 'metadata_json' in datafiles]), f'No metadata file found in {ps_dir}'
+
     return datafiles

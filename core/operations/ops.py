@@ -1,5 +1,8 @@
 from typing import TYPE_CHECKING
+from core.util.op import OP_TYPE
+from core.util.errors import OPTypeNotAvailableError
 from core.raster import read_band_from_raw
+
 
 if TYPE_CHECKING:
     from core.raster import Raster
@@ -7,8 +10,10 @@ if TYPE_CHECKING:
 
 class Op:
     def __init__(self, op_name):
-        self._op_name = op_name
-        self._pro_name = '' 
+        self._op_name:str = op_name
+        self._pro_name:str = ''
+        self._avail_types: list[OP_TYPE] = None
+        self._op_type = None
 
     @property
     def name(self):
@@ -26,6 +31,23 @@ class Op:
     def op_name(self):
         return self._op_name
 
+    @property
+    def avail_types(self):
+        return self._avail_types
+
+    @avail_types.setter
+    def avail_types(self, op_types:list[OP_TYPE]):
+        self._avail_types = op_types
+
+    @property
+    def op_type(self):
+        return self._op_type
+
+    @op_type.setter
+    def op_type(self, op_type:OP_TYPE):
+        if op_type not in self.avail_types:
+            raise OPTypeNotAvailableError(self.name, op_type, self.avail_types)
+        self._op_type = op_type
     def __call__(self, *args, **kwargs):
         pass
 
@@ -47,10 +69,7 @@ class CachedOp(Op):
         pass
 
     def pre_process(self, raster:"Raster", context:"Context", *args, **kwargs):
-        if not raster.is_band_cached:
-            selected_bands = raster.selected_bands if raster.selected_bands else None
-            raster = read_band_from_raw(raster, selected_bands)
-        return raster
+        pass
 
     def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):
         #Todo: update cached raster to raw after checking the context

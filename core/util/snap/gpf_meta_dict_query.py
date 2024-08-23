@@ -1,5 +1,6 @@
 import numpy as np
-from jsonpath_ng.ext import parse
+
+from core.util import query_dict
 
 def build_sun_angles_meta(meta_dict_query) -> dict:
     # sun
@@ -18,9 +19,9 @@ def build_sun_angles_meta(meta_dict_query) -> dict:
 
     return sun
 
-def build_grid_meta(meta_dict_query):
+def build_grid_meta(meta_dict:dict):
 
-    image_size_list = meta_dict_query('$.Granules..Size')[0]
+    image_size_list = query_dict('$.Granules..Size', meta_dict)[0]
     grids = {}
     for image_size in image_size_list:
         if image_size['resolution'] not in grids:
@@ -30,7 +31,7 @@ def build_grid_meta(meta_dict_query):
             if key in ['NCOLS', 'NROWS']:
                 grids[image_size['resolution']][key] = float(value)
 
-    geo_pos_list = meta_dict_query('$.Granules..Geoposition')[0]
+    geo_pos_list = query_dict('$.Granules..Geoposition', meta_dict)[0]
     for geo_pos in geo_pos_list:
         if geo_pos['resolution'] not in grids:
             grids[geo_pos['resolution']] = {}

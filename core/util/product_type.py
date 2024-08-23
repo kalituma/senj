@@ -6,6 +6,9 @@ class ProductType(Enum):
     WV = 'WorldView'
     PS = 'PlanetScope'
     K3 = 'Kompsat3'
+    CP = 'Capella'
+    CA = 'CAS500'
+
     UNKNOWN = 'UNKNOWN'
 
     @classmethod
@@ -20,6 +23,10 @@ class ProductType(Enum):
             return cls.PS
         elif s == 'Kompsat3':
             return cls.K3
+        elif s == 'Capella':
+            return cls.CP
+        elif s == 'CAD500':
+            return cls.CA
         elif s == 'OTHER':
             return cls.UNKNOWN
         else:

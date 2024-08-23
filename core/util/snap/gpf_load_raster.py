@@ -17,6 +17,7 @@ def load_raster_gpf(in_path, product_type:ProductType, selected_bands:list[str]=
     band_rename = False
     if ext == '.xml':
         base_path = Path(in_path).parent
+
         if product_type == ProductType.WV:
             tmp_meta = parse_meta_xml(in_path, product_type)
 
@@ -30,14 +31,14 @@ def load_raster_gpf(in_path, product_type:ProductType, selected_bands:list[str]=
             ds_list = [read_gpf(tile_path) for tile_path in tile_paths]
             product = mosaic_gpf(ds_list)
             tile_merged = True
+
+        elif product_type == ProductType.PS:
+            meta_path = in_path
+            file_spec = planet_test(meta_path)
+            assert 'analytic' in file_spec, 'analytic band is not found in the input file'
+            product = read_gpf(file_spec['analytic']['path'])
         else:
-            if product_type == ProductType.PS:
-                meta_path = in_path
-                file_spec = planet_test(meta_path)
-                assert 'analytic' in file_spec, 'analytic band is not found in the input file'
-                product = read_gpf(file_spec['analytic']['path'])
-            else:
-                raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')
+            raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')
 
     elif ext == '.tif':
         meta_path = in_path.replace('.tif', '.pkl')

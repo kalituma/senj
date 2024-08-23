@@ -8,8 +8,8 @@ from jsonpath_ng.ext import parse
 from esa_snappy import jpy
 from esa_snappy import Product
 
-from core.util import tiles_interp, grid_extend, distance_se, projection_geo
-from core.util.gdal import warp_to
+from core.util import distance_se, ProductType
+
 from core.util.snap.meta_func import get_metadata_recursive, get_metadata_value, grid_geom, build_meta_dict, set_meta_recursive
 
 def get_polarization(meta_dict:dict) -> Union[list[str], None]:
@@ -20,8 +20,16 @@ def get_polarization(meta_dict:dict) -> Union[list[str], None]:
 
     return pols
 
-def make_meta_dict(product:Product):
+def make_meta_dict_from_product(product:Product, product_type:ProductType) -> dict:
+
     meta_dict = build_meta_dict(product.getMetadataRoot())
+    if product_type == ProductType.S2:
+        meta_dict['sensor'] = 'S2A_MSI'
+    elif product_type == ProductType.S1:
+        pass
+    else:
+        raise ValueError(f'Product type {product_type} not supported')
+
     return meta_dict
 
 def set_meta_to_product(product:Product, meta_dict:dict):

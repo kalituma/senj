@@ -3,6 +3,10 @@ class NullValueError(Exception):
         self.key = key
         super().__init__(f"Null value for key '{key}'")
 
+class PathNotExistsError(Exception):
+    def __init__(self, path:str):
+        super().__init__(f'{path} does not exist')
+
 def check_null_error(cerberus_error:dict) -> bool:
     for key, value in cerberus_error.items():
         for elem in value:

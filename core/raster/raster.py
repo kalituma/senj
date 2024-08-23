@@ -188,8 +188,9 @@ class Raster:
                 if 'index_to_band' in self.meta_dict and 'band_to_index' in self.meta_dict:
                     self._copy_band_map_from_meta()
                 else:
-                    raise KeyError('index_to_band and band_to_index should be in meta_dict')
-                #     self._init_band_map_raw()
+                    # raise KeyError('index_to_band and band_to_index should be in meta_dict')
+                    # only for the case of updating meta_dict
+                    self._init_band_map_raw()
             else:
                 self._init_band_map_raw()
         else:
