@@ -8,3 +8,6 @@ class Context:
         # self.counter = manager.dict()
         # self.cache = manager.dict()
         # self.lock = Lock()
+
+    def get(self, key):
+        return self.cache[key]

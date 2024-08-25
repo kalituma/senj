@@ -8,7 +8,7 @@ from core.raster import RasterType
 from core.util.gdal import get_image_spec_gdal, get_geo_spec_gdal
 from core.util.snap import make_meta_dict_from_product, get_image_spec_gpf, get_geo_spec_gpf
 
-def update_meta_bounds(meta_dict:dict, raw:Union[Dataset, Product], module_type:RasterType) -> dict:
+def update_meta_dict(meta_dict:dict, raw:Union[Dataset, Product], module_type:RasterType) -> dict:
 
     tmp_tile_info = meta_dict['TILE_INFO'][0].copy()
     tmp_band_info = meta_dict['BAND_INFO'].copy()
@@ -57,12 +57,12 @@ def update_meta_bounds(meta_dict:dict, raw:Union[Dataset, Product], module_type:
 
     return meta_dict
 
-def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, module_type:RasterType, path:str, tile_merged:bool) -> Union[dict, None]:
+def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, module_type:RasterType, raster_path:str, update_meta_bounds:bool) -> Union[dict, None]:
 
     meta_dict = None
 
-    ext = Path(path).suffix
-    meta_path = path.replace(ext, '.pkl')
+    ext = Path(raster_path).suffix
+    meta_path = raster_path.replace(ext, '.pkl')
 
     # load if exists
     if Path(meta_path).exists():
@@ -80,10 +80,10 @@ def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, modu
         if raw is not None:
             if isinstance(raw, Dataset):
                 tif_file_dim = [raw.RasterYSize, raw.RasterXSize]
-        meta_dict = parse_meta_xml(path, product_type, tif_file_dim)
+        meta_dict = parse_meta_xml(raster_path, product_type, tif_file_dim)
 
-        if tile_merged and product_type == ProductType.WV:
-            meta_dict = update_meta_bounds(meta_dict, raw, module_type)
+        if update_meta_bounds and product_type == ProductType.WV:
+            meta_dict = update_meta_dict(meta_dict, raw, module_type)
 
         return meta_dict
 

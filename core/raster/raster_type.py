@@ -9,9 +9,10 @@ class RasterType(Enum):
 
     @classmethod
     def from_str(cls, s):
-        if s == 'gdal':
+        target = s.lower()
+        if target == 'gdal':
             return cls.GDAL
-        elif s == 'snap':
+        elif target == 'snap':
             return cls.SNAP
         else:
             raise ModuleError(s, available_modules=[str(cls.GDAL), str(cls.SNAP)])

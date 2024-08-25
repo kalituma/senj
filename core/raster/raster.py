@@ -75,8 +75,8 @@ class Raster:
         else:
             self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
 
-    def _update_band_map_selected_bands(self):
-        self._index_to_band, self._band_to_index = self._produce_band_map(self.selected_bands)
+    def _update_band_map(self, bnames):
+        self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
 
     def _copy_band_map_from_meta(self):
         self._index_to_band = self.meta_dict['index_to_band']
@@ -147,7 +147,7 @@ class Raster:
         return self.bands[band_name].shape[0]
 
     def cached_bands_have_same_shape(self):
-        return all([self.bands[band].shape == self.bands[self.selected_bands[0]].shape for band in self.selected_bands])
+        return all([self.bands[band]['value'].shape == self.bands[self.selected_bands[0]]['value'].shape for band in self.selected_bands])
 
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'
@@ -175,6 +175,12 @@ class Raster:
     def bands(self, bands):
         self._bands_data = bands
 
+    def get_cached_band_names(self) -> Union[list[str], None]:
+        if self._bands_data:
+            return list(self._bands_data)
+        else:
+            return None
+
     @property
     def meta_dict(self):
         return self._meta_dict
@@ -182,22 +188,6 @@ class Raster:
     @meta_dict.setter
     def meta_dict(self, meta_dict):
         self._meta_dict = meta_dict
-
-        if self._index_to_band is None and self._band_to_index is None:
-            if self.meta_dict:
-                if 'index_to_band' in self.meta_dict and 'band_to_index' in self.meta_dict:
-                    self._copy_band_map_from_meta()
-                else:
-                    # raise KeyError('index_to_band and band_to_index should be in meta_dict')
-                    # only for the case of updating meta_dict
-                    self._init_band_map_raw()
-            else:
-                self._init_band_map_raw()
-        else:
-            if self._meta_dict is not None:
-                self._copy_band_map_from_meta()
-            elif self._selected_bands is not None:
-                self._update_band_map_selected_bands()
 
     @property
     def path(self):
@@ -250,3 +240,23 @@ class Raster:
     @is_band_cached.setter
     def is_band_cached(self, is_cached):
         self._is_band_cached = is_cached
+
+    def update_index_bnames(self, bnames=None):
+        if self._index_to_band is None and self._band_to_index is None:
+            if self.meta_dict:
+                if 'index_to_band' in self.meta_dict and 'band_to_index' in self.meta_dict:
+                    self._copy_band_map_from_meta()
+                else:
+                    # raise KeyError('index_to_band and band_to_index should be in meta_dict')
+                    # only for the case of updating meta_dict
+                    self._init_band_map_raw()
+            else:
+                self._init_band_map_raw()
+        else:
+            if self._meta_dict is not None:
+                self._copy_band_map_from_meta()
+            else:
+                assert bnames is not None, 'bnames should be provided'
+                self._update_band_map(bnames)
+
+        return self

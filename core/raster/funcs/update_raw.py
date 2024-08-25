@@ -30,19 +30,16 @@ def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
 
     return raster_obj
 
-def update_cached_to_raw(raster_obj:Raster, selected_bands=None):
+def update_cached_to_raw(raster_obj:Raster):
     # raw to cache
     if raster_obj.is_band_cached:
-        if selected_bands is None:
-            selected_bands = raster_obj.get_band_names()
-        else:
-            assert_bnames(selected_bands, list(raster_obj.bands.keys()), f'selected bands not found in raster key')
+        cached_bands = raster_obj.get_cached_band_names()
 
         module_type = raster_obj.module_type
 
         if module_type == RasterType.SNAP:
-            for b_name in selected_bands:
-                copy_cached_to_raw_gpf(raster_obj.raw, b_name, raster_obj.bands[b_name])
+            for b_name in cached_bands:
+                copy_cached_to_raw_gpf(raster_obj.raw, b_name, raster_obj.bands[b_name]['value'])
 
         elif module_type == RasterType.GDAL:
             assert raster_obj.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
@@ -53,5 +50,7 @@ def update_cached_to_raw(raster_obj:Raster, selected_bands=None):
             raster_obj.raw = create_ds_with_dict(raster_obj.bands, 'MEM', proj_wkt=proj, transform=gt, metadata=metadata, out_path='')
         else:
             raise NotImplementedError(f'Raster type {module_type} is not implemented')
+
+    raster_obj.del_bands_cache()
 
     return raster_obj

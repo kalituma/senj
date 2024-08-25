@@ -60,9 +60,6 @@ def build_subset_params(**kwargs):
     if 'tiePointGridNames' in kwargs:
         kwargs['tiePointGridNames'] = jpy.array('java.lang.String', kwargs['tiePointGridNames'])
 
-    if 'region' in kwargs:
-        kwargs['region'] = Rectangle(*kwargs['region'])
-
     return _build_params(**kwargs)
 
 def build_topsar_deburst_params(selectedPolarisations:list[str]):

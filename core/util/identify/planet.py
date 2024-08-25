@@ -43,7 +43,7 @@ def planet_test(tif_or_xml_path):
 
         if ext not in ['.json', '.tif', '.xml', '.ntf']:
             continue
-        if '.aux.xml' in stem:
+        if '.aux' in stem:
             continue ## skip QGIS files
 
         band,clp= None, ''

@@ -14,7 +14,7 @@ def rename_bands(product:Product, band_names:list) -> Product:
 
 def add_band_to_product(product, bands:dict):
 
-    for band_name, band_elem_dict in tqdm(bands.items(), desc='Adding bands to raw dataset.'):
+    for band_name, band_elem_dict in bands.items():
         band_arr = band_elem_dict['value']
         dtype = band_arr.dtype.name
         data_type = ProductData.getType(dtype)
@@ -22,7 +22,10 @@ def add_band_to_product(product, bands:dict):
         if isinstance(band_name, int):
             band_name = f'{band_name}'
         band = product.addBand(band_name, data_type)
-        band.setNoDataValue(band_elem_dict['no_data'])
+        if band_elem_dict['no_data'] is not None:
+            band.setNoDataValue(band_elem_dict['no_data'])
+        else:
+            band.setNoDataValue(0)
         band.setRasterData(raster_data)
         band = None
 

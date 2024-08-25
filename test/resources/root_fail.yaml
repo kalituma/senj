@@ -278,3 +278,9 @@ topsar_deburst_2:
 convert_1:
     <<: *parent
     operations : ['convert']
+
+convert_2:
+    <<: *parent
+    operations : ['convert']
+    convert:
+      to_module: 'gda'

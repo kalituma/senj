@@ -13,7 +13,7 @@ def write_raster(raster:Raster, out_path:str, out_module:"RasterType"):
     ext = Path(out_path).suffix[1:]
 
     raster = update_cached_to_raw(raster) # copy bands to raw
-    raster = wrap_up_raster(raster, selected_bands=selected_bands, out_module=out_module)
+    # raster = wrap_up_raster(raster, selected_bands=selected_bands, out_module=out_module)
 
     if raster.module_type == RasterType.GDAL:
         is_bigtiff = is_bigtiff_gdal(raster.raw)

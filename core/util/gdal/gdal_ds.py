@@ -69,7 +69,10 @@ def create_ds_with_dict(raster_bands:dict[str], gdal_format,
 
     for b_idx, (band_name, band_elem_dict) in zip(range(1, band_num+1), s_bands.items()):
         b = mem_ds.GetRasterBand(b_idx)
-        b.SetNoDataValue(band_elem_dict['no_data'])
+        if band_elem_dict['no_data'] is not None:
+            b.SetNoDataValue(band_elem_dict['no_data'])
+        else:
+            b.SetNoDataValue(0)
         b.WriteArray(band_elem_dict['value'])
 
     mem_ds.FlushCache()

@@ -45,7 +45,7 @@ def merge(datasets:list["Dataset"], sbands:list[Union[list[int], None]], cobands
     merged_ds = create_ds_with_arr(concat_band, gdal_format='MEM', proj_wkt=datasets[0].GetProjection(), transform=datasets[0].GetGeoTransform())
     return merged_ds
 
-def mosaic_tiles(tile_paths:list) -> "Dataset":
+def mosaic_tiles(tile_paths:list[str]) -> "Dataset":
 
     file_infos = names_to_fileinfos(tile_paths)
 

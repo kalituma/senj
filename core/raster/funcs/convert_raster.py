@@ -31,6 +31,7 @@ def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union
             new_meta = None
 
         raster_obj = set_raw_metadict(raster_obj, raw=raw, meta_dict=new_meta, selected_bands=selected_bands, product_type=raster_obj.product_type)
+        raster_obj = raster_obj.update_index_bnames()
     else:
         raster_obj = convert_raster(raster_obj, out_module_type)
 
@@ -38,19 +39,21 @@ def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union
 
     return raster_obj
 
-def convert_raster(raster_obj:Raster, out_module_type:RasterType) -> Raster:
-    assert raster_obj.module_type != out_module_type, 'input and output module type should be different'
+def convert_raster(raster_obj:Raster, out_module:RasterType) -> Raster:
+    assert raster_obj.module_type != out_module, 'input and output module type should be different'
 
     # bands should be loaded before converting
     if not raster_obj.is_band_cached:
         raster_obj = read_band_from_raw(raster_obj, selected_band=raster_obj.selected_bands)
 
-    if out_module_type == RasterType.SNAP:
+    if out_module == RasterType.SNAP:
         raster_obj = _convert_to_gpf(raster_obj, selected_bands=raster_obj.selected_bands, cached_bands=raster_obj.bands) # Product
-    elif out_module_type == RasterType.GDAL:
+    elif out_module == RasterType.GDAL:
         raster_obj = _convert_to_gdal(raster_obj, selected_bands=raster_obj.selected_bands, cache_bands=raster_obj.bands) # MEM dataset
     else:
-        raise NotImplementedError(f'Raster type {out_module_type.__str__()} is not implemented')
+        raise NotImplementedError(f'Raster type {out_module.__str__()} is not implemented')
+
+    raster_obj.del_bands_cache()
 
     return raster_obj
 

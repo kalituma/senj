@@ -1,5 +1,8 @@
 import os
 import unittest
+from esa_snappy import Product
+
+from osgeo.gdal import Dataset
 
 from core.config import expand_var
 from core.util.snap import read_gpf_bands_as_dict
@@ -11,69 +14,109 @@ from core.logic.context import Context
 
 class TestReadOp(unittest.TestCase):
     def setUp(self) -> None:
-        self.data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
-        self.s1_safe_grdh_path = os.path.join(self.data_root, 'safe', 's1', 'S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE')
-        self.s1_dim_path = os.path.join(self.data_root, 'dim', 's1', 'src_1', 'terrain_corrected_0.dim')
-        self.s2_dim_path = os.path.join(self.data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
-        self.s1_safe_slc_path = os.path.join(self.data_root, 'safe', 's1', 'S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE')
-        self.s2_safe_path = os.path.join(self.data_root, 'safe', 's2', 'S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE')
 
-        self.s1_tif_snap_path = os.path.join(self.data_root, 'tif', 's1', 'snap', 'src_1', 'terrain_corrected_0.tif')
-        self.s2_tif_snap_path = os.path.join(self.data_root, 'tif', 's2', 'snap', 'out_0_B2_B3_B4_B_detector_footprint_B2_B_detector_footprint_B3_B_detector_footprint_B4.tif')
-        self.s1_tif_gdal_path = os.path.join(self.data_root, 'tif', 's1', 'gdal', 'src_1', 'terrain_corrected_0.tif')
-        self.s2_tif_gdal_path = os.path.join(self.data_root, 'tif', 's2', 'gdal', 'out_0_read.tif')
+        self.test_data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
+        self.s1_safe_grdh_path = os.path.join(self.test_data_root, 'safe', 's1', 'S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE')
+        self.s1_dim_path = os.path.join(self.test_data_root, 'dim', 's1', 'src_1', 'terrain_corrected_0.dim')
+        self.s2_dim_path = os.path.join(self.test_data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
+        self.s1_safe_slc_path = os.path.join(self.test_data_root, 'safe', 's1', 'S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE')
+        self.s2_safe_path = os.path.join(self.test_data_root, 'safe', 's2', 'S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE')
 
-    def test_read_snap(self):
+        self.wv_xml_path = os.path.join(self.test_data_root, 'tif', 'wv', '014493935010_01_P001_MUL', '19APR04021253-M2AS-014493935010_01_P001.XML')
+        self.wv_tif_path = os.path.join(self.test_data_root, 'tif', 'wv', '014493935010_01_P001_MUL', '19APR04021253-M2AS_R1C1-014493935010_01_P001.TIF')
+
+        self.ge_tif_path = os.path.join(self.test_data_root, 'tif', 'ge', '014493907010_01_P001_MUL', '19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF')
+        self.ge_xml_path = os.path.join(self.test_data_root, 'tif', 'ge', '014493907010_01_P001_MUL', '19APR07023734-M2AS-014493907010_01_P001.XML')
+
+        self.ps_tif_path = os.path.join(self.test_data_root, 'tif', 'ps', '20190817_Radiance', 'files', '20200817_013159_78_2277_3B_AnalyticMS_clip.tif')
+        self.ps_xml_path = os.path.join(self.test_data_root, 'tif', 'ps', '20190817_Radiance', 'files', '20200817_013159_78_2277_3B_AnalyticMS_metadata_clip.xml')
+
+        self.s1_tif_snap_path = os.path.join(self.test_data_root, 'tif', 's1', 'snap', 'src_1', 'terrain_corrected_0.tif')
+        self.s2_tif_snap_path = os.path.join(self.test_data_root, 'tif', 's2', 'snap', 'out_0_B2_B3_B4_B_detector_footprint_B2_B_detector_footprint_B3_B_detector_footprint_B4.tif')
+        self.s1_tif_gdal_path = os.path.join(self.test_data_root, 'tif', 's1', 'gdal', 'src_1', 'terrain_corrected_0.tif')
+        self.s2_tif_gdal_path = os.path.join(self.test_data_root, 'tif', 's2', 'gdal', 'out_0_read.tif')
+        self.s2_without_meta = os.path.join(self.test_data_root, 's2merge_1_stack_subset.tif')
+
+    def test_read_snap_sentinel(self):
         context = Context()
 
-        s2_without_meta = os.path.join(self.data_root, 's2merge_1_stack_subset.tif')
+        s2_without_meta = os.path.join(self.test_data_root, 's2merge_1_stack_subset.tif')
 
         with self.subTest('read safe file with band-word included option'):
-            raster = Read(module='snap', bands=['VV'])(self.s1_safe_grdh_path, context, bname_word_included=True)
-            self.assertEqual(raster.selected_bands, ['Amplitude_VV', 'Intensity_VV'])
-
-        with self.subTest('read safe file with specified bands'):
-            raster = Read(module='snap')(self.s1_safe_grdh_path, context, bname_word_included=False)
+            raster = Read(module='snap', bword='*VV', bname_word_included=True)(self.s1_safe_grdh_path, context)
+            self.assertEqual(raster.get_band_names(), ['Amplitude_VV', 'Intensity_VV'])
+        with self.subTest('read safe file with specific bands'):
+            raster = Read(module='snap', bname_word_included=False)(self.s1_safe_grdh_path, context)
             self.assertEqual(list(raster.get_band_names()), ['Amplitude_VV', 'Intensity_VV', 'Amplitude_VH', 'Intensity_VH'])
-
         with self.subTest('read s2 safe file with specified bands'):
             raster = Read(module='snap', bands=['B2', 'B4'])(self.s2_safe_path, context)
-            self.assertEqual(raster.selected_bands, ['B2', 'B4'])
-
+            self.assertEqual(raster.get_band_names(), ['B2', 'B4'])
         with self.subTest('read s2 safe file without specified bands'):
             raster = Read(module='snap')(self.s2_safe_path, context)
             self.assertEqual(len(raster.get_band_names()), 163)
-
-        # with self.subTest('read tif using snap'):
-        #     result_raster = Read(module='snap')(self.s1_tif_snap_path, context)
-
+        with self.subTest('read s1 dim file'):
+            raster = Read(module='snap')(self.s1_dim_path, context)
+            self.assertEqual(list(raster.get_band_names()), ['Sigma0_VV'])
 
         with self.subTest('read tif not having meta using snap'):
-            result_raster = Read(module='snap')(s2_without_meta, context)
+            result_raster = Read(module='snap', bword='*4', bname_word_included=True)(s2_without_meta, context)
+            self.assertEqual(list(result_raster.get_band_names()), ['band_4'])
             self.assertEqual(result_raster.meta_dict, None)
             self.assertEqual(result_raster.product_type, ProductType.UNKNOWN)
+            self.assertTrue(isinstance(result_raster.raw, Product))
+
+        with self.subTest('read tif not having meta using gdal'):
+            result_raster = Read(module='gdal', bands=['band_1', 'band_5'])(s2_without_meta, context)
+            self.assertEqual(list(result_raster.get_band_names()), ['band_1', 'band_5'])
+            self.assertEqual(result_raster.meta_dict, None)
+            self.assertEqual(result_raster.product_type, ProductType.UNKNOWN)
+            self.assertTrue(isinstance(result_raster.raw, Dataset))
+
+    def test_read_world_view(self):
+        context = Context()
+        with self.subTest('read world view'):
+            tif_raster = Read(module='snap', bands=['BAND_R', 'BAND_B'])(self.wv_tif_path, context)
+            self.assertEqual(list(tif_raster.get_band_names()), ['BAND_R', 'BAND_B'])
+            xml_raster = Read(module='snap', bname_word_included=True, bword='*_G')(self.wv_xml_path, context)
+            self.assertEqual(list(xml_raster.get_band_names()), ['BAND_G'])
+            tif_raster = xml_raster = None
+            wv_gdal_raster = Read(module='gdal', bands=['BAND_R', 'BAND_N'])(self.wv_tif_path, context)
+            self.assertEqual(list(wv_gdal_raster.get_band_names()), ['BAND_R', 'BAND_N'])
+
+        with self.subTest('read geo eye 1'):
+            ge_snap = Read(module='snap', bname_word_included=True, bword='*_G')(self.ge_tif_path, context)
+            self.assertEqual(list(ge_snap.get_band_names()), ['BAND_G'])
+            ge_snap_xml = Read(module='snap')(self.ge_xml_path, context)
+            self.assertEqual(list(ge_snap_xml.get_band_names()), ['BAND_B', 'BAND_G', 'BAND_R', 'BAND_N'])
+            ge_snap = ge_snap_xml = None
+
+            ge_gdal = Read(module='gdal')(self.ge_tif_path, context)
+            self.assertEqual(list(ge_gdal.get_band_names()), ['BAND_B', 'BAND_G', 'BAND_R', 'BAND_N'])
+            ge_gdal_xml = Read(module='gdal', bands=['BAND_B'])(self.ge_xml_path, context)
+            self.assertEqual(list(ge_gdal_xml.get_band_names()), ['BAND_B'])
+            ge_gdal = ge_gdal_xml = None
+
+    def test_read_planet_scope(self):
+        context = Context()
+        with self.subTest('read planet scope'):
+            tif_raster = Read(module='snap', bands=['band_1', 'band_3'])(self.ps_tif_path, context)
+            self.assertEqual(list(tif_raster.get_band_names()), ['band_1', 'band_3'])
+            xml_raster = Read(module='snap', bands=['band_2', 'band_3'])(self.ps_xml_path, context)
+            self.assertEqual(list(xml_raster.get_band_names()), ['band_2', 'band_3'])
+            tif_raster = xml_raster = None
+            wv_gdal_raster = Read(module='gdal', bands=['band_4'])(self.ps_tif_path, context)
+            self.assertEqual(list(wv_gdal_raster.get_band_names()), ['band_4'])
+            xml_gdal_raster = Read(module='gdal', bands=['band_1'])(self.ps_xml_path, context)
+            self.assertEqual(list(xml_gdal_raster.get_band_names()), ['band_1'])
 
     def test_read_snap_fail(self):
 
-        with self.subTest('wrong band name'):
-            with self.assertRaises(ContainedBandError):
-                Read(module='snap', bands=['VV'])(self.s1_safe_grdh_path, Context(), bname_word_included=False)
-
         with self.subTest('wrong module'):
             with self.assertRaises(ModuleError):
-                Read(module='jpg', bands=['Sigma0_VV'])(self.s1_tif_snap_path, Context())
-
-        with self.subTest('wrong band name'):
-            with self.assertRaises(ContainedBandError):
-                Read(module='snap', bands=['Delta0_VV'])(self.s1_tif_snap_path, Context())
-
-        with self.subTest('try to read snap tif band with integer index'):
-            with self.assertRaises(ContainedBandError):
-                Read(module='snap', bands=[2])(self.s1_tif_snap_path, Context())
-
-        with self.subTest('try to read gdal tif band with string name'):
-            with self.assertRaises(ContainedBandError):
-                Read(module='snap', bands=['Sigma0_VV'])(self.s1_tif_gdal_path, Context())
+                Read(module='jpg')(self.s1_tif_snap_path, Context())
+        with self.subTest('wrong module'):
+            with self.assertRaises(ValueError):
+                Read(module='snap')('not_exist.tif', Context())
 
     def test_read_gdal(self):
         context = Context()
@@ -277,12 +320,10 @@ class TestReadOp(unittest.TestCase):
             self.assertEqual(gdal_band_names, gpf_band_names)
             self.assertEqual(gdal_band_names, gdal_out_band_names)
 
-    def test_read_tif_meta(self):
+    def test_select_band(self):
 
-        ps_file = '/home/airs_khw/mount/expand/data/etri/9.PlanetScope_20190405_고성/20190405_Radiance/files/20190404_005838_104b_3B_AnalyticMS_clip.tif'
-
-        ctx = Context()
-        gdal_raster = Read(module='gdal')(ps_file, ctx)
-        snap_raster = Read(module='snap')(ps_file, ctx)
-        print()
+        bword = '*B1'
+        r = Read(module='SNAP', bword=bword, bname_word_included=True)(self.s2_dim_path, Context())
+        r_gdal = Read(module='GDAL', bword=bword, bname_word_included=True)(self.s2_dim_path, Context())
+        self.assertTrue(compare_nested_dicts_with_arrays(r.meta_dict, r_gdal.meta_dict))
 
