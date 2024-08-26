@@ -11,9 +11,10 @@ class TestSubset(unittest.TestCase):
 
     def test_subset(self):
         out_path = os.path.join(self.test_data_root, 'subset.tif')
-        context = Context()
-        snap_tif_raster = Read(module='snap')(self.s2_snap_tif, context)
-        snap_tif_raster = Subset(bounds=[128.252, 34.9448, 128.3277, 34.8775], bands=['B1', 'B3', 'B4'])(snap_tif_raster, context)
-        print(Write(module='snap', path=out_path)(snap_tif_raster, context))
+        with self.subTest(msg='subset with bounds'):
+            context = Context(None)
+            snap_tif_raster = Read(module='snap')(self.s2_snap_tif, context)
+            snap_tif_raster = Subset(bounds=[128.252, 34.9448, 128.3277, 34.8775], bands=['B2', 'B3', 'B4'])(snap_tif_raster, context)
+            print(Write(out_dir=self.test_data_root, out_stem='subset_out', out_ext='tif')(snap_tif_raster, context))
 
 

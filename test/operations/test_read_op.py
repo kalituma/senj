@@ -38,7 +38,7 @@ class TestReadOp(unittest.TestCase):
         self.s2_without_meta = os.path.join(self.test_data_root, 's2merge_1_stack_subset.tif')
 
     def test_read_snap_sentinel(self):
-        context = Context()
+        context = Context(None)
 
         s2_without_meta = os.path.join(self.test_data_root, 's2merge_1_stack_subset.tif')
 

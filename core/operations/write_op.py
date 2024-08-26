@@ -1,77 +1,56 @@
 from pathlib import Path
 
 from core import OPERATIONS
+from core.util import assert_bnames
 from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
 from core.util.op import OP_TYPE, available_op
-from core.operations import Op
+from core.operations import SelectOp
 from core.operations import WRITE_OP
 from core.raster import RasterType, Raster, EXT_MAP
 from core.raster import write_raster
-from core.raster.funcs import has_same_band_shape
+from core.raster.funcs import has_same_band_shape, update_cached_to_raw, select_band_raster
+
+DEFAULT_OUT_EXT = {
+    RasterType.GDAL : 'tif',
+    RasterType.SNAP : 'dim'
+}
 
 @OPERATIONS.reg(name=WRITE_OP, no_arg_allowed=False)
 @available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
-class Write(Op):
-    def __init__(self, path:str, module:str, bands:list[str]=None, out_ext:str='', prefix:str= '', suffix:str= ''):
-        super().__init__(WRITE_OP)
+class Write(SelectOp):
+    def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:list[str]=None, prefix:str= '', suffix:str= ''):
+        super().__init__(WRITE_OP, bands)
 
-        self._module = RasterType.from_str(module)
-        self._selected_bands = bands
+        self._out_dir = out_dir
+        self._out_ext = out_ext
+        self._out_stem = out_stem
 
-        self._out_ext = Path(path).suffix[1:].lower()
-
-        if self._out_ext == '':
-            if out_ext == '':
-                raise ExtensionNotSupportedError(module, EXT_MAP[module], out_ext)
-            else:
-                self._out_ext = out_ext
-            self._is_file_specified = False
-        else:
-            if out_ext != '':
-                if self._out_ext != out_ext:
-                    raise ExtensionMatchingError(self._out_ext, out_ext)
-                if self._out_ext not in EXT_MAP[module]:
-                    raise ExtensionNotSupportedError(module, EXT_MAP[module], self._out_ext)
-
-            self._is_file_specified = True
-
-        self._path = path
-        self._prefix = f'{prefix}_' if prefix else ''
-        self._suffix = f'_{suffix}' if suffix else ''
+        self._prefix = prefix
+        self._suffix = suffix
 
     def __call__(self, raster:Raster, *args):
 
-        if self._selected_bands is not None:
-            raster.selected_bands = self._selected_bands
-
-        if self._suffix == '':
-            suffix = raster.op_history[-1]
+        if self._out_ext == '':
+            self._out_ext = DEFAULT_OUT_EXT[raster.module_type.__str__()]
         else:
-            suffix = self._suffix
+            if self._out_ext not in EXT_MAP[raster.module_type.__str__()]:
+                raise ExtensionNotSupportedError(raster.module_type, EXT_MAP[raster.module_type], self._out_ext)
 
-        if self._is_file_specified:
-            basename = Path(self._path).stem
-            ext = self._out_ext
-            output_dir = str(Path(self._path).parent)
-        else:
-            basename = Path(raster.path).stem
-            if self._out_ext:
-                ext = self._out_ext
-            else:
-                ext = Path(raster.path).suffix
-            output_dir = str(Path(self._path))
+        # if self._selected_bands is not None:
+        #     raster.selected_bands = self._selected_bands
 
-        output_stem = f'{self._prefix}{basename}{suffix}'
-        output_ext = ext
+        Path(self._out_dir).mkdir(parents=True, exist_ok=True)
 
-        output_path = f'{output_dir}/{output_stem}.{output_ext}'
+        output_basename = f'{f"{self._prefix}_" if self._prefix else self._prefix}{self._out_stem}{f"_{self._suffix}" if self._suffix else self._suffix}.{self._out_ext}'
+        output_path = f'{self._out_dir}/{output_basename}'
 
-        if has_same_band_shape(raster):
-            write_raster(raster, output_path, self._module)
-        else:
-            raise NotHaveSameBandShapeError(str(raster))
+        result = update_cached_to_raw(raster)  # copy bands to raw
+        result = self.pre_process(result, band_select=True) # select bands first
 
+        if self._out_ext == 'tif':
+            if not has_same_band_shape(raster):
+                raise NotHaveSameBandShapeError(f'All bands should have same shape if out extensions({self._out_ext}) is for tiff format.')
+        write_raster(result, output_path)
         raster = None
-        print(f'{output_path} is saved')
+        # print(f'{output_path} is saved')
         return output_path
-

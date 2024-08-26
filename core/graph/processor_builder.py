@@ -8,8 +8,8 @@ if TYPE_CHECKING:
     from core.logic import Processor
 
 class ProcessorBuilder:
-    def __init__(self, graph_manager:"GraphManager"):
-        self._graph_manager:"GraphManager" = graph_manager
+    def __init__(self, context:Context):
+        self._context:"Context" = context
         self._processor_map = {}
         self._end_points:list["Processor"] = []
 
@@ -40,9 +40,9 @@ class ProcessorBuilder:
         if proc in self._processor_map:
             return self._processor_map[proc]
 
-        if self._graph_manager.is_init(proc):
+        if self._context.graph_manager.is_init(proc):
             constructor = PROCESSOR.__get_attr__(FILE_PROCESSOR, 'constructor')
-            input_args = self._graph_manager.get_op_args(proc, 'input')
+            input_args = self._context._graph_manager.get_op_args(proc, 'input')
         else:
             constructor = PROCESSOR.__get_attr__(LINK_PROCESSOR, 'constructor')
             input_args = {}
@@ -50,25 +50,25 @@ class ProcessorBuilder:
         self._processor_map[proc] = constructor(proc_name=proc, **input_args)
         self.build_operation(graph_elem)
 
-        if self._graph_manager.is_end(proc):
+        if self._context._graph_manager.is_end(proc):
             self._end_points.append(self._processor_map[proc])
 
         return self._processor_map[proc]
 
     def connect_link(self):
-        for graph_elem in self._graph_manager:
+        for graph_elem in self._context._graph_manager:
             for next_proc in graph_elem.links:
                 self._processor_map[next_proc].add_linked_process(self._processor_map[graph_elem.name])
 
-    def build_executor(self):
-        self._executors = ProcessingExecutor(Context())
+    def build_executor(self, context:Context):
+        self._executors = ProcessingExecutor(context)
         for end_point in self._end_points:
             end_point.set_executor(self._executors)
 
     def build(self) -> list["Processor"]:
-        for graph_elem in self._graph_manager:
+        for graph_elem in self._context._graph_manager:
             self.build_processor(graph_elem)
         self.connect_link()
-        self.build_executor()
+        self.build_executor(self._context)
 
         return self.end_point

@@ -1,12 +1,15 @@
 from typing import TYPE_CHECKING
 
+from core.logic import ContextManager
+
 if TYPE_CHECKING:
     from core.logic import Context
     from core.logic.processor import Processor
 
-class ProcessingExecutor:
+class ProcessingExecutor(ContextManager):
     def __init__(self, context:"Context"):
-        self.context = context
+        super().__init__(context)
+        self.execution_count = 0
 
     def execute(self, processor:"Processor"):
         for i, data in enumerate(processor.preprocess()):

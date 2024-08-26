@@ -1,6 +1,7 @@
 from typing import Union
 from esa_snappy import Product, GPF, HashMap, jpy
 from copy import deepcopy
+
 def get_merged_len_gpf(products:list[Product], sbands:Union[list[Union[list[str], None]], None], cobands:Union[list[list[str]], None]):
     len_sum = 0
     for product, sband, cband in zip(products, sbands, cobands):

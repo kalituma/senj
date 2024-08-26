@@ -4,6 +4,8 @@ from core import SCHEMA_PATH
 from core.util import PathType, read_yaml
 from core.config import extract_pnodes_pops, validate_in_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_lambda_var_to_func, load_schema_map
 from core.graph import GraphManager, ProcessorBuilder
+from core.logic import Context
+
 class TestConfigParsing(unittest.TestCase):
     def setUp(self) -> None:
         self.resource_path = '../resources'
@@ -31,6 +33,8 @@ class TestConfigParsing(unittest.TestCase):
 
     def test_processor_builder_stack(self):
         graph_manager = GraphManager(self.stack_config, self.schema_map)
-        processor_builder = ProcessorBuilder(graph_manager)
-        end_points = processor_builder.build()
+        with Context(graph_manager) as ctx:
+            processor_builder = ProcessorBuilder(ctx)
+            end_points = processor_builder.build()
+
         self.assertEqual(len(end_points), 1)

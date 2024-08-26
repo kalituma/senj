@@ -4,7 +4,7 @@ from pathlib import Path
 from core.operations import READ_OP
 
 from core import PROCESSOR
-from core.util import check_init_operation
+from core.util.op import check_init_operation
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor
 

@@ -37,11 +37,11 @@ class GraphManager:
     def __len__(self):
         return len(self.procs)
 
-    def __next__(self):
+    def __next__(self) -> ProcessingSource:
         if self.current_idx < len(self.procs):
             proc = self.procs[self.current_idx]
             self.current_idx += 1
-            return self._get_item(proc)
+            return self._get_proc_by_name(proc)
         else:
             self._reset()
             raise StopIteration

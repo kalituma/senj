@@ -36,6 +36,21 @@ class Processor(metaclass=ABCMeta):
         self.ops.append(op)
         return self
 
+    def get_op_map(self) -> dict:
+        op_map = {}
+        op_count = {}
+
+        for op in self.ops:
+            tmp_op_name = op.name.split('_')[-1]
+            if op not in op_map:
+                op_map[tmp_op_name] = op
+                op_count[tmp_op_name] = 1
+            else:
+                op_map[f'{tmp_op_name}_{op_count[tmp_op_name]}'] = op
+                op_count[op.name] += 1
+
+        return op_map
+
     def process(self, input:"Raster", ctx:"Context"):
         x = input
         for i, op in enumerate(self.ops):
@@ -52,6 +67,7 @@ class Processor(metaclass=ABCMeta):
 
     def set_executor(self, executor:"ProcessingExecutor"):
         self.executor = executor
+        self.executor.add_ops_to_context(self.proc_name, self.get_op_map())
 
     def execute(self):
         if self.executor:

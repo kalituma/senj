@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from esa_snappy import Product
 
 def is_bigtiff_gpf(product):
-    print()
+
     product_size = product.getRasterDataNode(product.getBandNames()[0]).getRasterWidth() * \
                    product.getRasterDataNode(product.getBandNames()[0]).getRasterHeight() * \
                    len(product.getBandNames()) * 4

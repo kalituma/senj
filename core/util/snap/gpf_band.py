@@ -55,8 +55,9 @@ def copy_product(src_product, selected_bands:list=None):
     # ProductUtils.copyFlagBands(src_product, new_product, True)
 
     for target_band_name in matched_band:
-        target_band = src_product.getBand(target_band_name)
-        new_product.addBand(target_band)
+        ProductUtils.copyBand(target_band_name, src_product, new_product, True)
+        # target_band = src_product.getBand(target_band_name)
+        # new_product.addBand(target_band)
 
     return new_product
 

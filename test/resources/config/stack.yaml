@@ -34,5 +34,4 @@ stack_s2_1_2:
   write:
     path: '$ETRI_DATA/_sentinel_1_2/export/merged/s2'
     suffix: '_stacked'
-    module: 'snap'
     ext: 'tif'

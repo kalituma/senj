@@ -14,8 +14,7 @@ class ExtensionMatchingError(Exception):
         super(ExtensionMatchingError, self).__init__(msg)
 
 class NotHaveSameBandShapeError(Exception):
-    def __init__(self, raster_name:str):
-        msg = f'Band shape is not same in {raster_name}'
+    def __init__(self, msg):
         super(NotHaveSameBandShapeError, self).__init__(msg)
 
 class OPTypeNotAvailableError(Exception):

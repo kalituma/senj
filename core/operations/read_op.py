@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from core import OPERATIONS
 
-from core.operations import Op, MODULE_EXT_MAP
+from core.operations import SelectOp, MODULE_EXT_MAP
 from core.operations import READ_OP
 
 from core.util import check_input_ext
@@ -18,13 +18,13 @@ if TYPE_CHECKING:
 
 @OPERATIONS.reg(name=READ_OP, conf_no_arg_allowed=False)
 @available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
-class Read(Op):
+class Read(SelectOp):
     def __init__(self, module:str, bands:list=None, bword:str='*', bname_word_included:bool=False):
-        super().__init__(READ_OP)
+        super().__init__(READ_OP, bands)
         self._module = RasterType.from_str(module)
         self._bname_word_included = bname_word_included
         self._bword = bword
-        self._selected_bands = bands
+        # self._selected_bands = bands
 
     def __call__(self, path:str, context:"Context", *args, **kwargs) -> Raster:
 
@@ -43,11 +43,7 @@ class Read(Op):
             # assert self._module == RasterType.SNAP, 'bname_word_included is only available for SNAP module'
             self._selected_bands = find_bands_contains_word(result, self._bword)
 
-        if self._selected_bands:
-            assert_bnames(self._selected_bands, result.get_band_names(), f'selected bands{self._selected_bands} should be in source bands({result.get_band_names()})')
-            if len(self._selected_bands) < len(result.get_band_names()):
-                result = select_band_raster(result, self._selected_bands)
-
+        result = self.pre_process(result, band_select=True) # select bands after
         result = self.post_process(result, context)
 
         return result

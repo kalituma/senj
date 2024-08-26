@@ -5,8 +5,22 @@ from osgeo.gdal import WarpOptions, Dataset
 from core.util import epsg_to_wkt
 from core.util.gdal import RESAMPLING_METHODS
 
-def warp_gdal(ds:Dataset, warp_options: WarpOptions) -> Dataset:
-    output_ds = gdal.Warp('', ds, options=warp_options)
+def warp_gdal(ds:Dataset, snap_params: dict) -> Dataset:
+
+    warp_option_dict = {}
+
+    target_srs = snap_params['crs']
+    src_srs = snap_params['src_crs']
+
+
+
+
+
+    if 'pixelSizeX' in snap_params:
+        warp_option_dict['xRes'] = snap_params['pixelSizeX']
+        warp_option_dict['yRes'] = snap_params['pixelSizeY']
+
+    # output_ds = gdal.Warp('', ds, options=warp_options)
     return output_ds
 
 def _build_params(options:dict, build=False) -> WarpOptions:
