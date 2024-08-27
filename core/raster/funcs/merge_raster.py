@@ -1,31 +1,38 @@
 from typing import Union
 
 from core.raster import Raster, RasterType
-from core.util import assert_bnames
+from core.raster.funcs import create_meta_dict, create_band_name_idx, set_raw_metadict
+from core.util import assert_bnames, ProductType
 from core.util.snap import merge as merge_gpf
 from core.util.gdal import merge as merge_gdal
 
-def merge_raster_func(rasters:list[Raster], co_bands:Union[list[list[Union[str, int]]], None]=None):
+def merge_product_types(rasters:list[Raster]):
+    product_types = [r.product_type for r in rasters]
+    if len(set(product_types)) > 1:
+        return ProductType.UNKNOWN
+    return product_types[0]
 
-    if co_bands:
-        assert len(rasters) == len(co_bands), 'The number of rasters and selected bands must be the same'
-        for raster, co_band in zip(rasters, co_bands):
-            assert_bnames(co_band, raster.get_band_names(), f'selected bands({co_band}) not found in raster{raster.path}')
-    else:
-        co_bands = [None for _ in rasters]
-
-    assert all([r.module_type == rasters[0].module_type for r in rasters]), 'all rasters should have the same module type'
+def merge_raster_func(rasters:list[Raster], module_type:RasterType):
 
     raw_list = [r.raw for r in rasters]
-    sband_list = [r.selected_bands for r in rasters]
 
-    if rasters[0].module_type == RasterType.GDAL:
-        merged = merge_gdal(raw_list, sband_list, co_bands)
-    elif rasters[0].module_type == RasterType.SNAP:
-        merged = merge_gpf(raw_list, sband_list, co_bands)
+    band_name_list = []
+    if module_type == RasterType.GDAL:
+        merged = merge_gdal(raw_list)
+        for i, r in enumerate(rasters):
+            if i == 0:
+                ds_name = 'masterDs'
+            else:
+                ds_name = f'slaveDs{i}'
+            band_name_list += [f'{ds_name}${b}' for b in r.get_band_names()]
+    elif module_type == RasterType.SNAP:
+        merged = merge_gpf(raw_list)
+        band_name_list = list(merged.getBandNames())
     else:
         raise NotImplementedError(f'Raster type {rasters[0].module_type} is not implemented')
 
-    merged_raster = Raster.from_raster(rasters[0], path='', raw=merged, selected_bands=None)
+    new_product_type = merge_product_types(rasters)
+    merged_raster = Raster.from_raster(rasters[0], path='', raw=merged, module_type=module_type, product_type=new_product_type, selected_bands=None)
+    merged_raster.update_band_map(band_name_list)
 
     return merged_raster

@@ -1,14 +1,14 @@
 
 from core import OPERATIONS
-from core.util.op import available_op, OP_TYPE
+from core.util.op import op_constraint, OP_TYPE
 from core.operations import Op
 from core.operations import MULTI_WRITE_OP
-from core.operations import Write
+from core.operations import Write, Split
 from core.raster import RasterType, Raster, EXT_MAP
 
 
 @OPERATIONS.reg(name=MULTI_WRITE_OP, conf_no_arg_allowed=False)
-@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
+@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP], must_after=Split)
 class MultiWrite(Op):
     def __init__(self, path:str, module:str, out_ext:str=''):
         super().__init__(MULTI_WRITE_OP)

@@ -6,14 +6,14 @@ from core.operations import READ_OP
 from core import PROCESSOR
 from core.util.op import check_init_operation
 from core.logic import FILE_PROCESSOR
-from core.logic.processor import Processor
+from core.logic.processor import Processor, ProcessorType
 
 
 @PROCESSOR.reg(FILE_PROCESSOR)
 class FileProcessor(Processor):
 
     def __init__(self, proc_name:str, path:str, pattern:str='*', sort:dict=None, splittable:bool=True):
-        super().__init__(proc_name=proc_name, splittable=splittable)
+        super().__init__(proc_name=proc_name, proc_type=ProcessorType.FILE, splittable=splittable)
         self.root:str = path
         self.search_pattern:str = pattern
         self.sort_func: Union[Callable, None] = None
@@ -50,3 +50,6 @@ class FileProcessor(Processor):
 
     def postprocess(self, x, result_clone:bool=False):
         return x
+
+    def get_initial_op_type(self):
+        pass

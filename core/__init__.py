@@ -21,6 +21,6 @@ from core.registry import Registry, LAMBDA, PROCESSOR, OPERATIONS
 from core import util
 from core import lambda_funcs
 from core import atmos
-from core import config
 from core import operations
+from core import config
 from core import logic

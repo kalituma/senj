@@ -7,20 +7,28 @@ GDAL_OPS = ['gdal']
 # snap -> convert -> gdal
 # gdal -> convert -> snap
 class OP_TYPE(Enum):
-    GDAL = 'GDAL'
-    SNAP = 'SNAP'
-    CACHED = 'CACHED'
-    CONVERT = 'CONVERT'
+    NOTSET = 'none'
+    GDAL = 'gdal'
+    SNAP = 'snap'
+    CONVERT = 'convert'
 
     @classmethod
     def from_str(cls, s):
-        if s == 'GDAL':
+        if s == 'gdal':
             return cls.GDAL
-        elif s == 'SNAP':
+        elif s == 'snap':
             return cls.SNAP
-        elif s == 'CACHED':
-            return cls.CACHED
-        elif s == 'CONVERT':
+        elif s == 'convert':
             return cls.CONVERT
+        elif s == 'notset':
+            return cls.NOTSET
         else:
             raise ValueError(f"Unknown OP_TYPE: {s}")
+
+    def __invert__(self):
+        if self == self.GDAL:
+            return self.SNAP
+        elif self == self.SNAP:
+            return self.GDAL
+        else:
+            raise ValueError(f"Cannot invert OP_TYPE: {self}")

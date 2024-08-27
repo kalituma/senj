@@ -61,13 +61,14 @@ def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, modu
 
     meta_dict = None
 
-    ext = Path(raster_path).suffix
-    meta_path = raster_path.replace(ext, '.pkl')
+    if raster_path != '':
+        ext = Path(raster_path).suffix
+        meta_path = raster_path.replace(ext, '.pkl')
 
-    # load if exists
-    if Path(meta_path).exists():
-        meta_dict = read_pickle(meta_path)
-        return meta_dict
+        # load if exists
+        if Path(meta_path).exists():
+            meta_dict = read_pickle(meta_path)
+            return meta_dict
 
     # parse from snap
     if module_type == RasterType.SNAP and (product_type == ProductType.S2 or product_type == ProductType.S1):

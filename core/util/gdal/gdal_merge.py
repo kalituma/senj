@@ -23,26 +23,25 @@ def get_merged_len_gdal(datasets: list["Dataset"], sbands: Union[list[Union[list
 
     return len_sum
 
-def merge(datasets:list["Dataset"], sbands:list[Union[list[int], None]], cobands:list[Union[list[int], None]]):
-    assert len(datasets) == len(sbands) and len(datasets) == len(cobands), 'The number of products and selected bands must be the same'
+def merge(datasets:list["Dataset"]):
+
     assert_ds_equal(datasets)
 
     band_list = []
-    for ds, sband, cband in zip(datasets, sbands, cobands):
-        if cband:
-            selected_bands = cband
-        elif sband:
-            selected_bands = sband
-        else:
-            selected_bands = list(range(1, ds.RasterCount + 1))
-
-        band_arr = read_gdal_bands(ds, selected_bands)
+    no_data_list = []
+    for ds in datasets:
+        no_data, band_arr = read_gdal_bands(ds)
         if band_arr.ndim != 3:
             band_arr = band_arr[np.newaxis, :, :]
         band_list.append(band_arr)
+        no_data_list += no_data
     concat_band = np.concatenate(band_list, axis=0)
 
     merged_ds = create_ds_with_arr(concat_band, gdal_format='MEM', proj_wkt=datasets[0].GetProjection(), transform=datasets[0].GetGeoTransform())
+
+    for i in range(0, merged_ds.RasterCount):
+        merged_ds.GetRasterBand(i + 1).SetNoDataValue(no_data_list[i])
+
     return merged_ds
 
 def mosaic_tiles(tile_paths:list[str]) -> "Dataset":

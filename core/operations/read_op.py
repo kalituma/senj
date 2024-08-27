@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union, AnyStr
 
 from core import OPERATIONS
 
@@ -6,7 +6,7 @@ from core.operations import SelectOp, MODULE_EXT_MAP
 from core.operations import READ_OP
 
 from core.util import check_input_ext
-from core.util.op import available_op, OP_TYPE
+from core.util.op import op_constraint, OP_TYPE
 from core.util.errors import ExtensionNotSupportedError
 from core.util import assert_bnames
 
@@ -17,14 +17,16 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=READ_OP, conf_no_arg_allowed=False)
-@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
+@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class Read(SelectOp):
-    def __init__(self, module:str, bands:list=None, bword:str='*', bname_word_included:bool=False):
-        super().__init__(READ_OP, bands)
+    def __init__(self, module:str, bands:List[Union[int,AnyStr]]=None, bword:str='*', bname_word_included:bool=False):
+        super().__init__(READ_OP)
         self._module = RasterType.from_str(module)
         self._bname_word_included = bname_word_included
         self._bword = bword
-        # self._selected_bands = bands
+        self._selected_bands = bands
+        self.op_type = OP_TYPE.from_str(module)
+
 
     def __call__(self, path:str, context:"Context", *args, **kwargs) -> Raster:
 
@@ -43,7 +45,7 @@ class Read(SelectOp):
             # assert self._module == RasterType.SNAP, 'bname_word_included is only available for SNAP module'
             self._selected_bands = find_bands_contains_word(result, self._bword)
 
-        result = self.pre_process(result, band_select=True) # select bands after
+        result = self.pre_process(result, selected_bands_or_indices=self._selected_bands, band_select=True) # select bands after
         result = self.post_process(result, context)
 
         return result

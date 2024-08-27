@@ -3,7 +3,7 @@ from core.operations import CachedOp, NL_DENOISING_OP
 from core.registry import OPERATIONS
 from core.util import nonlocal_mean_denoising, assert_bnames
 from core.util import percentile_norm
-from core.util.op import available_op, OP_TYPE
+from core.util.op import op_constraint, OP_TYPE
 from core.raster import Raster
 
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=NL_DENOISING_OP, conf_no_arg_allowed=False)
-@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
+@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class NLMeanDenoising(CachedOp):
     def __init__(self, h:float=10, templateWindowSize:int=7, searchWindowSize:int=21, bands:list[str]=None):
         super().__init__(NL_DENOISING_OP)

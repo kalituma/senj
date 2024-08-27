@@ -39,10 +39,7 @@ class Raster:
         new_raster = Raster(raster.path)
 
         for key, value in vars(raster).items():
-            if key in ['op_history', '_warp_options', '_index_to_band', '_band_to_index']:
-                if value:
-                    setattr(new_raster, key, value.copy())
-            elif key in ['_module_type', '_path', '_product_type']:
+            if key in ['op_history', '_module_type', '_path', '_product_type']:
                 setattr(new_raster, key, value)
             else:
                 continue
@@ -84,7 +81,7 @@ class Raster:
         else:
             self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
 
-    def _update_band_map(self, bnames):
+    def update_band_map(self, bnames):
         self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
 
     def _copy_band_map_from_meta(self):
@@ -264,6 +261,6 @@ class Raster:
                 self._copy_band_map_from_meta()
             else:
                 assert bnames is not None, 'bnames should be provided'
-                self._update_band_map(bnames)
+                self.update_band_map(bnames)
 
         return self

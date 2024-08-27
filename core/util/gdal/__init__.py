@@ -24,7 +24,6 @@ RESAMPLING_METHODS = {
 from .check_projection import *
 from .gdal_meta_from_raw import *
 from .warp_to import *
-from .gdal_warp import *
 from .op_funcs import *
 from .gdal_funcs import *
 from .gdal_read import *
@@ -32,3 +31,4 @@ from .gdal_ds import *
 from .gdal_merge import *
 from .load_gdal import *
 from .projection_read import *
+from .gdal_warp import *

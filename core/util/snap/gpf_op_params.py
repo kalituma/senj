@@ -100,9 +100,11 @@ def build_speckle_filter_params(**kwargs):
 def build_reproject_params(**kwargs):
 
     assert kwargs['crs'], "crs must be provided"
-    assert kwargs['resamplingName'].lower() in ['nearest', 'bilinear', 'bicubic'], "Invalid resampling method"
-    double_type = jpy.get_type('java.lang.Double')
+    assert kwargs['resamplingName'] in ['nearest', 'bilinear', 'bicubic'], "Invalid resampling method"
 
+    kwargs['resamplingName'] = kwargs['resamplingName'].title()
+
+    double_type = jpy.get_type('java.lang.Double')
     if 'pixelSizeX' in kwargs and 'pixelSizeY' in kwargs:
         kwargs['pixelSizeY'] = kwargs['pixelSizeX'] = double_type(kwargs['pixelSizeX'])
 

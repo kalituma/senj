@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, CALIBRATE_OP
 from core.util import assert_bnames, ProductType
-from core.util.op import available_op, OP_TYPE
+from core.util.op import op_constraint, OP_TYPE
 from core.raster import RasterType
-from core.util.op import allow_product_type, allow_module_type
+from core.util.op import  call_constraint
 from core.raster import Raster
 from core.util.snap import calibrate, get_polarization
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=CALIBRATE_OP, conf_no_arg_allowed=True)
-@available_op(OP_TYPE.SNAP)
+@op_constraint(avail_op_types=[OP_TYPE.SNAP])
 class Calibrate(Op):
 
     def __init__(self, selectedPolarisations:list[str]=None, outputSigmaBand=True, outputBetaBand:bool=False, outputGammaBand:bool=False,
@@ -29,8 +29,7 @@ class Calibrate(Op):
             'outputImageScaleInDb': outputImageScaleInDb
         }
 
-    @allow_module_type(RasterType.SNAP)
-    @allow_product_type(ProductType.S1)
+    @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
         pols = get_polarization(raster.meta_dict)

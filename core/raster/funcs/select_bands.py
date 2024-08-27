@@ -1,3 +1,4 @@
+from typing import List, Union
 from core.util import assert_bnames
 from core.util import glob_match
 from core.raster import Raster, RasterType
@@ -10,11 +11,11 @@ def find_bands_contains_word(raster:Raster, bname_word):
         selected_bands = None
     return selected_bands
 
-def select_band_raster(raster:Raster, selected_list:list[str]) -> Raster:
+def select_band_raster(raster:Raster, selected_bands_or_indices:List[Union[int,str]]) -> Raster:
 
     src_bands = raster.get_band_names()
-    selected_band_name, selected_index = get_band_name_and_index(raster, selected_list)
-    assert_bnames(selected_band_name, src_bands, f'bands list to split {selected_list} should be in source bands({src_bands})')
+    selected_band_name, selected_index = get_band_name_and_index(raster, selected_bands_or_indices)
+    assert_bnames(selected_band_name, src_bands, f'bands list to split {selected_band_name} should be in source bands({src_bands})')
 
     new_raster = Raster.from_raster(raster)
 

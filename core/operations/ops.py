@@ -1,7 +1,7 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, List, Union
 from core.util.op import OP_TYPE
 from core.util.errors import OPTypeNotAvailableError
-from core.raster.funcs import assert_bnames, select_band_raster
+from core.raster.funcs import assert_bnames, select_band_raster, get_band_name_and_index
 
 
 if TYPE_CHECKING:
@@ -13,7 +13,8 @@ class Op:
         self._op_name:str = op_name
         self._pro_name:str = ''
         self._avail_types: list[OP_TYPE] = None
-        self._op_type = None
+        self._must_after: Type[Op] = None
+        self._op_type:OP_TYPE = OP_TYPE.from_str(op_name) if op_name in ['convert'] else OP_TYPE.NOTSET
 
     @property
     def name(self):
@@ -48,6 +49,15 @@ class Op:
         if op_type not in self.avail_types:
             raise OPTypeNotAvailableError(self.name, op_type, self.avail_types)
         self._op_type = op_type
+
+    @property
+    def must_after(self):
+        return self._must_after
+
+    @must_after.setter
+    def must_after(self, must_after:Type["Op"]):
+        self._must_after = must_after
+
     def __call__(self, *args, **kwargs):
         pass
 
@@ -62,19 +72,19 @@ class Op:
         return raster
 
 class SelectOp(Op):
-    def __init__(self, op_name, selected_bands:list[str]):
+    def __init__(self, op_name):
         super().__init__(op_name)
-        self._selected_bands = selected_bands
 
-    def pre_process(self, raster:"Raster", band_select:bool=False, *args, **kwargs):
-        if self._selected_bands:
-            assert_bnames(self._selected_bands, raster.get_band_names(), f'selected bands{self._selected_bands} should be in source bands({raster.get_band_names()})')
-            if len(self._selected_bands) < len(raster.get_band_names()):
+    def pre_process(self, raster:"Raster", selected_bands_or_indices:List[Union[str,int]], band_select:bool=False, *args, **kwargs):
+        if selected_bands_or_indices:
+            selected_bands, selected_indices = get_band_name_and_index(raster, selected_bands_or_indices)
+            assert_bnames(selected_bands, raster.get_band_names(), f'selected bands{selected_bands} should be in source bands({raster.get_band_names()})')
+            if len(selected_bands) < len(raster.get_band_names()):
                 if band_select:
-                    raster = select_band_raster(raster, self._selected_bands)
+                    raster = select_band_raster(raster, selected_bands_or_indices)
         return raster
 
-class SnapOp(Op):
+class ParamOp(Op):
     def __init__(self, op_name):
         super().__init__(op_name)
         self._snap_params = {}
@@ -82,7 +92,7 @@ class SnapOp(Op):
         self._snap_params.update(kwargs)
 
     def get_param(self, key:str):
-        return self.snap_params[key]
+        return self.snap_params.get(key, None)
 
     def del_param(self, key:str):
         del self.snap_params[key]

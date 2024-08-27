@@ -1,22 +1,23 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 
 from core import PROCESSOR
+from core.util.op import OP_TYPE
 from core.logic import LINK_PROCESSOR
-from core.logic.processor import Processor
+from core.logic.processor import Processor, ProcessorType
 
 if TYPE_CHECKING:
     from core.logic.executor import ProcessingExecutor
 
 @PROCESSOR.reg(LINK_PROCESSOR)
 class LinkProcessor(Processor):
-    def __init__(self, proc_name:str='', processors:list[Processor]=None, splittable:bool=False):
-        super().__init__(proc_name=proc_name, splittable=splittable)
+    def __init__(self, proc_name:str='', processors:list[Type[Processor]]=None, splittable:bool=False):
+        super().__init__(proc_name=proc_name, proc_type=ProcessorType.LINK, splittable=splittable)
         if processors is None:
             self.proc_list = []
         else:
             self.proc_list = processors
 
-    def add_linked_process(self, linked_proc:Processor):
+    def add_linked_process(self, linked_proc:Type[Processor]):
         self.proc_list.append(linked_proc)
         return self
 
@@ -46,6 +47,24 @@ class LinkProcessor(Processor):
         for single_process in self.proc_list:
             if isinstance(single_process, Processor):
                 single_process.set_executor(executor)
+
+    def get_first_op_type(self) -> OP_TYPE:
+        if self.ops[0].op_type == OP_TYPE.NOTSET:
+            raise ValueError('First operation type is not set.')
+        return self.ops[0].op_type
+
+    def get_prev_last_op_type(self) -> OP_TYPE:
+        prev_op_types = []
+        for proc in self.proc_list:
+            prev_op_types.append(proc.get_prev_last_op_type())
+
+        if len(set(prev_op_types)) == 1:
+            return self.set_op_type(prev_op_types[0])
+        else:
+            return self.set_op_type(self.get_first_op_type())
+
+
+
 
     def __contains__(self, proc):
         return proc in self.proc_list

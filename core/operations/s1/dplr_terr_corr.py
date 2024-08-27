@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.operations import Op, TERR_CORR_OP
 from core.util import assert_bnames, ProductType
-from core.util.op import allow_product_type, allow_module_type, OP_TYPE, available_op
+from core.util.op import  call_constraint, OP_TYPE, op_constraint
 from core.raster import Raster, RasterType
 from core.util.snap import DemType, InterpolType, terrain_correction_func
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=TERR_CORR_OP, conf_no_arg_allowed=True)
-@available_op(OP_TYPE.SNAP)
+@op_constraint(avail_op_types=[OP_TYPE.SNAP])
 class TerrainCorrection(Op):
     def __init__(self, sourceBandNames:list[str]=None, demName:DemType=DemType.SRTM_3SEC,
                  pixelSpacingInMeter:float=0.0, pixelSpacingInDegree: float=0.0,
@@ -37,8 +37,7 @@ class TerrainCorrection(Op):
             'mapProjection': mapProjection
         }
 
-    @allow_module_type(RasterType.SNAP)
-    @allow_product_type(ProductType.S1)
+    @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
         if not self.terr_corr_params['sourceBandNames']:

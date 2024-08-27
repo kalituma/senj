@@ -8,7 +8,8 @@ MULTI_WRITE_OP = 'multi_write'
 STACK_OP = 'stack'
 SUBSET_OP = 'subset'
 SPLIT_OP = 'split'
-REPROJECT_OP = 'reproject'
+RESAMPLE_OP = 'resample'
+SELECT_OP = 'select'
 
 #pixel-wise
 WARP_OP = 'warp'

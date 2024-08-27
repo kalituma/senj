@@ -1,19 +1,19 @@
-from typing import TYPE_CHECKING
-from core.operations import SelectOp, SnapOp
+from typing import TYPE_CHECKING, List, Union, AnyStr
+from core.operations import SelectOp, ParamOp
 from core.operations import OPERATIONS, SUBSET_OP
 from core.raster import Raster, RasterType
 from core.util import region_to_wkt
-from core.util.op import OP_TYPE, available_op
+from core.util.op import OP_TYPE, op_constraint
 from core.util.snap import subset_gpf
 
 if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=SUBSET_OP, no_arg_allowed=False)
-@available_op(OP_TYPE.GDAL, OP_TYPE.SNAP)
-class Subset(SelectOp, SnapOp):
-    def __init__(self, bounds:list[float], bounds_epsg:int=4326, bands:list[str]=None, tiePointGridNames:list[str]=None, copyMetadata:bool=True):
-        super().__init__(SUBSET_OP, bands)
+@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
+class Subset(SelectOp, ParamOp):
+    def __init__(self, bounds:list[float], bounds_epsg:int=4326, bands:List[Union[int,AnyStr]]=None, tiePointGridNames:list[str]=None, copyMetadata:bool=True):
+        super().__init__(SUBSET_OP)
 
         self.add_param(bandNames=bands, tiePointGridNames=tiePointGridNames, copyMetadata=copyMetadata)
         assert len(bounds) == 4, 'bounds should have 4(min_x, max_y, max_x, min_y) elements'
@@ -35,7 +35,7 @@ class Subset(SelectOp, SnapOp):
         #     wkt = region_to_wkt(bounds)
         #     self.subset_params['geoRegion'] = wkt
 
-        raster = self.pre_process(raster, band_select=False)
+        raster = self.pre_process(raster, selected_bands_or_indices=self._selected_bands, band_select=False)
 
         if raster.module_type == RasterType.SNAP:
             if self.get_param('bandNames') is None:

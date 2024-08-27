@@ -1,5 +1,5 @@
 from osgeo import osr, ogr
-def check_epsg_code_valid(epsg:int):
+def is_epsg_code_valid(epsg:int):
     srs = osr.SpatialReference()
     err = srs.ImportFromEPSG(epsg)
     if err != ogr.OGRERR_NONE:
