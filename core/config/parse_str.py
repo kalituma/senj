@@ -8,17 +8,16 @@ from core.util.errors import PathNotExistsError
 VAR_PATTERN = '^{{[a-zA-Z0-9_]+}}$'
 LAMBDA_PATTERN = '^!{[a-zA-Z0-9_]+}$'
 
-def check_path_or_var(path) -> tuple[bool, PathType]:
+def check_path_or_var(path) -> tuple[bool, PathType, str]:
     if re.match(VAR_PATTERN, path):
-        return False, PathType.VAR
+        return False, PathType.VAR, path
 
     path = expand_var(path)
-
     p = Path(path)
     path_type = PathType.DIR if p.is_dir() else PathType.FILE
 
     if p.exists():
-        return True, path_type
+        return True, path_type, path
     else:
         raise PathNotExistsError(path)
 

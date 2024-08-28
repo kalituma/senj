@@ -2,7 +2,6 @@ import os, unittest
 from core.config import expand_var
 from core.raster.funcs import read_band_from_raw
 
-
 class TestConverOp(unittest.TestCase):
     def setUp(self) -> None:
         self.data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))

@@ -1,10 +1,11 @@
 from typing import Callable, TYPE_CHECKING, Type, Tuple, AnyStr
 from functools import wraps
-from core.util.errors import ProductTypeError, OperationTypeError, ModuleError
+from pathlib import Path
+from core.util.errors import ProductTypeError, OperationTypeError, ModuleError, ExtensionError
 
 if TYPE_CHECKING:
     from core.raster import Raster, RasterType
-    from core.operations import Op
+    from core.operations.parent import Op
 
 def check_init_operation(*init_ops:Tuple[AnyStr]):
     def decorator(func:Callable):
@@ -27,7 +28,7 @@ def op_constraint(avail_op_types:list, must_after:Type["Op"]=None):
         return cls
     return decorator
 
-def call_constraint(module_types=None, product_types=None):
+def call_constraint(module_types=None, product_types=None, ext=None):
     def decorator(func:Callable):
         check_module_type = lambda x: True if x in module_types else False
         check_product_type = lambda x: True if x in product_types else False
@@ -40,7 +41,10 @@ def call_constraint(module_types=None, product_types=None):
             if product_types is not None:
                 if not check_product_type(raster.product_type):
                     raise ProductTypeError(supported_product=[t.value for t in product_types], current_product=raster.product_type.value)
-
+            if ext is not None:
+                raster_ext = Path(raster.path).suffix[1:].lower()
+                if not raster_ext in ext:
+                    raise ExtensionError(ext=raster_ext, available_exts=ext)
             return func(self, raster, *args, **kwargs)
 
         return func_wrapper

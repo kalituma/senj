@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List, Union, AnyStr
-from core.operations import SelectOp, ParamOp
-from core.operations import OPERATIONS, SUBSET_OP
+from core.operations import SelectOp, OPERATIONS, SUBSET_OP
+from core.operations.parent import ParamOp
 from core.raster import Raster, RasterType
 from core.util import region_to_wkt
 from core.util.op import OP_TYPE, op_constraint

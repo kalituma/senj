@@ -1,7 +1,7 @@
 
 from core import OPERATIONS
 from core.util.op import op_constraint, OP_TYPE
-from core.operations import Op
+from core.operations.parent import Op
 from core.operations import MULTI_WRITE_OP
 from core.operations import Write, Split
 from core.raster import RasterType, Raster, EXT_MAP

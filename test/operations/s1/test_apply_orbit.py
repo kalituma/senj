@@ -4,7 +4,7 @@ import numpy as np
 
 from core.config import expand_var
 from core.util.snap import ORBIT_TYPE
-from core.util.errors import ModuleError, ProductTypeError
+from core.util.errors import ModuleError, ProductTypeError, ExtensionError
 from core.operations import Read, Write, Subset
 from core.operations.s1 import ApplyOrbit, Calibrate, TopsarDeburst, TerrainCorrection
 
@@ -19,7 +19,8 @@ class TestApplyOrbit(unittest.TestCase):
         self.s1_grdh_tif = os.path.join(self.data_root, 'tif', 's1', 'gdal', 'src_1', 'terrain_corrected_0.tif')
 
     def test_apply_orbit(self):
-        context = Context()
+
+        context = Context(None)
         with self.subTest('try to open and apply orbit'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             prev_orbit = raster.meta_dict['Abstracted_Metadata']['Orbit_State_Vectors'].copy()
@@ -31,7 +32,7 @@ class TestApplyOrbit(unittest.TestCase):
             self.assertEqual(cur_orbit, k5_orbit)
 
     def test_apply_orbit_polydegree(self):
-        context = Context()
+        context = Context(None)
         raster_1 = Read(module='snap')(self.s1_safe_grdh_path, context)
         raster_poly_3 = ApplyOrbit(orbitType=ORBIT_TYPE.SENTINEL_PRECISE, polyDegree=3, continueOnFail=False)(raster_1, context)
 
@@ -61,7 +62,7 @@ class TestApplyOrbit(unittest.TestCase):
                     float(raster_poly_6.meta_dict['Abstracted_Metadata']['Orbit_State_Vectors'][f'orbit_vector{i}']['z_vel']), 0)
 
     def testApplyOrbitFail(self):
-        context = Context()
+        context = Context(None)
 
         with self.subTest('try to apply orbit to non-s1 raster'):
             s2_raster = Read(module='snap')(self.s2_safe_path, context)
@@ -76,4 +77,9 @@ class TestApplyOrbit(unittest.TestCase):
         with self.subTest('try to apply orbit to tif raster'):
             s2_raster = Read(module='gdal')(self.s1_grdh_tif, context)
             with self.assertRaises(ModuleError):
+                ApplyOrbit(orbitType=ORBIT_TYPE.SENTINEL_PRECISE, continueOnFail=False)(s2_raster, context)
+
+        with self.subTest('try to apply orbit with the file which has wrong extension'):
+            s2_raster = Read(module='snap')(self.s1_grdh_tif, context)
+            with self.assertRaises(ExtensionError):
                 ApplyOrbit(orbitType=ORBIT_TYPE.SENTINEL_PRECISE, continueOnFail=False)(s2_raster, context)

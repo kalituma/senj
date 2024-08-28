@@ -83,6 +83,8 @@ class Raster:
 
     def update_band_map(self, bnames):
         self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
+    def update_band_map_to_meta(self, bnames):
+        self.meta_dict['index_to_band'], self.meta_dict['band_to_index'] = self._produce_band_map(bnames)
 
     def _copy_band_map_from_meta(self):
         self._index_to_band = self.meta_dict['index_to_band']
@@ -262,5 +264,13 @@ class Raster:
             else:
                 assert bnames is not None, 'bnames should be provided'
                 self.update_band_map(bnames)
+
+        return self
+
+    def update_index_bnames_from_raw(self):
+        if self.module_type == RasterType.SNAP:
+            bnames = self.raw.getBandNames()
+            self.update_band_map(bnames)
+            self.update_band_map_to_meta(bnames)
 
         return self

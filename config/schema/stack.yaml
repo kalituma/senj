@@ -3,25 +3,42 @@ stack:
   required: true
 
   schema:
-    axis:
-      type: 'integer'
-      allowed: [ 0, -1 ]
-      required: false
-    bands:
+    bands_list:
       type: 'list'
       required: false
       empty: false
       oneof:
         - type: 'list'
           schema:
-            type: 'list'
-            empty: false
-            schema:
-              type: 'integer'
-              min: 1
-        - type: 'list'
-          schema:
-            type: 'list'
-            empty: false
-            schema:
-              type: 'string'
+            oneof:
+            - type: 'string'
+              allowed: ['None']
+            - type: 'list'
+              empty: false
+              schema:
+                oneof:
+                  - type: 'integer'
+                    min: 1
+                  - type: 'string'
+
+#                  allowed: ['None']
+#              type: 'integer'
+#              min: 1
+#        - type: 'list'
+#          schema:
+#            type: 'list'
+#            empty: false
+#            schema:
+#              oneof:
+#                - type: 'integer'
+#                - type: 'string'
+#                  allowed: ['None']
+#              type: 'string'
+#        - type: 'list'
+#          schema:
+#            type: 'string'
+#            allowed: ['None']
+    master_module:
+      type: 'string'
+      required: true
+      allowed: ['gdal', 'snap']

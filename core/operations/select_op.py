@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, List, AnyStr, Union
-from core.operations import SelectOp
+from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, SELECT_OP
 from core.util.op import OP_TYPE, op_constraint
 

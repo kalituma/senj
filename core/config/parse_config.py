@@ -1,11 +1,12 @@
+from functools import partial
 import os
 import re
 from jsonpath_ng.ext import parse
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Callable
 
 from core import LAMBDA
-from core.util import PathType, read_yaml, get_files_recursive
-from core.config import LAMBDA_PATTERN, check_path_or_var, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func
+from core.util import PathType, read_yaml, get_files_recursive, query_dict
+from core.config import LAMBDA_PATTERN, check_path_or_var, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, expand_var
 
 def op_dicts(op_names:list, args_list:list) -> list[dict]   :
     out = list()
@@ -44,36 +45,66 @@ def extract_pnodes_pops(all_config:dict):
 
     return p_nodes, p_ops, configs
 
-def replace_lambda_var_to_func(config:dict) -> dict:
-
-    q_target = parse('$..*')
+def replace_config_property(config, config_find_pattern, val_match_func:Callable,
+                            change_val_func:Callable=None, err_chk:Callable=None, val_func:Callable=None):
+    q_target = parse(config_find_pattern)
     for match in q_target.find(config):
-        if isinstance(match.value, str) and re.match(LAMBDA_PATTERN, match.value):
-            # func exist
-            cleaned_func_str = remove_func_bracket(match.value)
-            if not LAMBDA.__contains__(cleaned_func_str):
-                raise ValueError(f'{match.value} is not a registered function')
+        if isinstance(match.value, str) and val_match_func(match.value):
+            src_value = match.value
+            changed_value = change_val_func(src_value)
+            if err_chk:
+                err_chk(changed_value, src_value)
+            match.context.value[match.path.fields[-1]] = val_func(changed_value)
+        elif isinstance(match.value, list):
+            matched_indices = val_match_func(match.value)
+            if matched_indices is not None:
+                for index in matched_indices:
+                    match.value[index] = None
+    return config
 
-            match.context.value[match.path.fields[-1]] = LAMBDA.__get_attr__(name=cleaned_func_str, attr_name='constructor')
+def replace_config_properties(config:dict) -> dict:
+
+    def lambda_exists(changed_value, src_value):
+        if not LAMBDA.__contains__(changed_value):
+            raise ValueError(f'{src_value} is not a registered function')
+    def get_lambda_contructor(changed_value):
+        return LAMBDA.__get_attr__(name=changed_value, attr_name='constructor')
+
+    def lambda_val_match(src_str, pattern):
+        return re.match(pattern, src_str)
+
+    # lambda
+    config = replace_config_property(config, '$..func', val_match_func=partial(lambda_val_match, pattern=LAMBDA_PATTERN),
+                                     change_val_func=remove_func_bracket, err_chk=lambda_exists, val_func=get_lambda_contructor)
+
+    def none_val_match(target_list:list):
+        none_str = 'none'
+        if none_str in target_list or none_str.upper() in target_list or none_str.title() in target_list:
+            return [idx for idx, row in enumerate(target_list) if row in [none_str, none_str.upper(), none_str.title()]]
+        return None
+
+    # bands_list for stack op
+    config = replace_config_property(config, '$..bands_list', val_match_func=none_val_match)
 
     return config
-def validate_in_path_recur(input_path:str) -> tuple[bool, PathType]:
+
+def validate_input_path_recur(input_path:str) -> tuple[bool, PathType, str]:
 
     # check input if it is a path or a variable
-    path_exist, path_type = check_path_or_var(input_path)
+    path_exist, path_type, new_path = check_path_or_var(input_path)
 
     if not path_exist and (path_type == PathType.DIR or path_type == PathType.FILE):
         raise ValueError(f'{input_path} does not exist')
 
-    return path_exist, path_type
+    return path_exist, path_type, new_path
 
-def validate_in_path(input_path:Union[str, list[str]]) -> list[tuple[bool, PathType]]:
+def validate_input_path(input_path:Union[str, list[str]]) -> list[tuple[bool, PathType, str]]:
     result = []
     if isinstance(input_path, list):
         for input_value in input_path:
-            result.append(validate_in_path_recur(input_value))
+            result.append(validate_input_path_recur(input_value))
     else:
-        result.append(validate_in_path_recur(input_path))
+        result.append(validate_input_path_recur(input_path))
     return result
 
 def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dict, List[str], List[Tuple[str, str]], dict]:
@@ -95,10 +126,11 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
             p_end.append(p_key)
 
         input_path = p_config['input']['path']
-        input_checks = validate_in_path(input_path)
+        check_result = validate_input_path(input_path)
 
-        for idx, (path_exist, path_type) in enumerate(input_checks):
+        for idx, (path_exist, path_type, new_path) in enumerate(check_result):
             if path_exist:
+                p_config['input']['path'] = new_path
                 p_init[p_key] = path_type
 
             if path_type == PathType.VAR:
@@ -115,6 +147,6 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
         p_ops[p_key] = op_dicts(op_keys, op_args)
 
     # replace lambda var with function name
-    n_config = replace_lambda_var_to_func(n_config)
+    n_config = replace_config_properties(n_config)
 
     return n_config, p_nodes, p_init, p_end, p_link, p_ops

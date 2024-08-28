@@ -4,7 +4,7 @@ from functools import partial
 from core import SCHEMA_PATH
 from core.util import PathType, read_yaml
 from core.lambda_funcs import sort_by_name
-from core.config import extract_pnodes_pops, validate_in_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_lambda_var_to_func, load_schema_map, parse_config
+from core.config import extract_pnodes_pops, validate_input_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_config_properties, load_schema_map, parse_config
 from core.graph import build_graph_func
 
 class TestConfigParsing(unittest.TestCase):
@@ -33,19 +33,19 @@ class TestConfigParsing(unittest.TestCase):
         self.assertEqual(p_ops, ops_target)
 
     def test_validate_in_path(self):
-        input_checks = validate_in_path(self.read_config['read_s2_1']['input']['path'])
+        input_checks = validate_input_path(self.read_config['read_s2_1']['input']['path'])
         self.assertEqual(input_checks, [(True, PathType.DIR)])
 
     def test_validate_in_path_2(self):
-        input_checks = validate_in_path(self.read_config['read_s2_2']['input']['path'])
+        input_checks = validate_input_path(self.read_config['read_s2_2']['input']['path'])
         self.assertEqual(input_checks, [(True, PathType.DIR), (True, PathType.DIR)])
 
     def test_validate_in_path_3(self):
-        input_checks = validate_in_path(self.read_config['read_s2_3']['input']['path'])
+        input_checks = validate_input_path(self.read_config['read_s2_3']['input']['path'])
         self.assertEqual(input_checks, [(False, PathType.VAR), (False, PathType.VAR)])
 
     def test_validate_in_path_4(self):
-        input_checks = validate_in_path(self.read_config['read_s2_4']['input']['path'])
+        input_checks = validate_input_path(self.read_config['read_s2_4']['input']['path'])
         self.assertEqual(input_checks, [(False, PathType.VAR)])
 
     def test_remove_var_bracket(self):
@@ -60,7 +60,7 @@ class TestConfigParsing(unittest.TestCase):
         self.assertEqual(remove_func_bracket('!{test}'), 'test')
 
     def test_lambda_var_to_func(self):
-        new_config = replace_lambda_var_to_func(self.read_config['read_s2_4'].copy())
+        new_config = replace_config_properties(self.read_config['read_s2_4'].copy())
         self.assertEqual(new_config['input']['sort']['func'], sort_by_name)
 
     def test_parse_config(self):

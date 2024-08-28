@@ -5,16 +5,20 @@ write:
   type: 'dict'
   required: true
   schema:
-    path:
+    out_dir:
       type: 'string'
 #      dependencies: [output_affix, output_prefix]
       regex: *path_cons
       required: true
+    out_stem:
+      type: 'string'
+      required: true
+
     suffix:
       type: 'string'
     prefix:
       type: 'string'
-    ext:
+    out_ext:
       type: 'string'
 #      dependencies: [module]
       allowed: [ 'tif', 'dim']

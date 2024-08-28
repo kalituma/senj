@@ -4,9 +4,9 @@ MODULE_EXT_MAP = {
     RasterType.GDAL : ['tif', 'xml'],
     RasterType.SNAP : ['dim', 'tif', 'safe', 'xml']
 }
+from .parent import *
 
 from core.util.op.op_const import *
-from .ops import *
 from .read_op import *
 from .write_op import *
 from .split_op import *

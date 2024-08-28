@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from core.util.op import OP_TYPE, op_constraint
-from core.operations import Op
+from core.operations.parent import Op
 from core.operations import OPERATIONS, SPLIT_OP
 from core.raster.funcs import split_raster
 

@@ -4,7 +4,7 @@ from pathlib import Path
 from core.operations import READ_OP
 
 from core import PROCESSOR
-from core.util.op import check_init_operation
+from core.util.op import check_init_operation, OP_TYPE
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
 
@@ -51,5 +51,8 @@ class FileProcessor(Processor):
     def postprocess(self, x, result_clone:bool=False):
         return x
 
-    def get_initial_op_type(self):
-        pass
+    def get_first_op_type(self) -> OP_TYPE:
+        return self.ops[0].op_type
+
+    def apply_op_type_from_root_proc(self):
+        return self.apply_op_type(self.get_first_op_type())

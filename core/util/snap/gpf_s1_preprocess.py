@@ -7,7 +7,7 @@ def apply_orbit_func(product:Product, params:dict):
     ap_product = GPF.createProduct('Apply-Orbit-File', app_orb_params, product)
     return ap_product
 
-def calibrate(product:Product, params:dict):
+def calibrate(product:Product, params:dict) -> Product:
 
     calib_params = build_calib_params(**params)
     calib_product = GPF.createProduct('Calibration', calib_params, product)

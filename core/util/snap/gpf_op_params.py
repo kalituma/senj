@@ -1,6 +1,7 @@
 from esa_snappy import HashMap, jpy, Rectangle
 
 from core.util.snap import get_default_bands, get_default_masks
+from core.util.snap.gpf_const import BOXCAR, MEDIAN, FROST, GAMMA_MAP, LEE_SPECKLE, LEE_REFINED, LEE_SIGMA, IDAN, MEAN_SPECKLE
 
 def _build_params(params: HashMap=None, **kwargs):
     if params is None:

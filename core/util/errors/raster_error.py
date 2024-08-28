@@ -11,3 +11,7 @@ class ModuleError(Exception):
         msg = f'"{module}" module is not supported. Available modules are {available_modules}'
         super(ModuleError, self).__init__(msg)
 
+class ExtensionError(Exception):
+    def __init__(self, ext:str, available_exts:list[str]):
+        msg = f'"{ext}" extention is not supported. Available extentions are {available_exts}'
+        super(ExtensionError, self).__init__(msg)

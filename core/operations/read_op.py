@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING, List, Union, AnyStr
 
 from core import OPERATIONS
 
-from core.operations import SelectOp, MODULE_EXT_MAP
-from core.operations import READ_OP
+from core.operations import MODULE_EXT_MAP, READ_OP
+from core.operations.parent import SelectOp
 
 from core.util import check_input_ext
 from core.util.op import op_constraint, OP_TYPE

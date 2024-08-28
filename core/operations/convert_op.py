@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
 from core.util.op import op_constraint, OP_TYPE
-from core.operations import Op, CONVERT_OP
+from core.operations import CONVERT_OP
+from core.operations.parent import Op
 
 from core.raster import RasterType
 from core.raster.funcs import convert_raster

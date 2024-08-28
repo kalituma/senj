@@ -6,7 +6,7 @@ from core.util import assert_bnames
 from core.util.op import op_constraint, OP_TYPE
 from core.raster import merge_raster_func, RasterType
 from core.raster.funcs import convert_raster, get_band_name_and_index
-from core.operations import SelectOp
+from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, STACK_OP
 
 if TYPE_CHECKING:
@@ -15,9 +15,9 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=STACK_OP, conf_no_arg_allowed=True)
 @op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class Stack(SelectOp):
-    def __init__(self, bands:List[List[Union[str, int]]]=None, master_module:str=None):
+    def __init__(self, bands_list:List[List[Union[str, int]]]=None, master_module:str=None):
         super().__init__(STACK_OP)
-        self._selected_bands_list = bands
+        self._selected_bands_list = bands_list
         self._module = RasterType.from_str(master_module)
         self.op_type = OP_TYPE.from_str(master_module)
 

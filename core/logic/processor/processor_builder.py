@@ -20,9 +20,6 @@ class ProcessorBuilder(ContextManager):
         return self._end_points
 
     def build_op_args(self, op, op_args):
-        if op == 'write':
-            op_args['out_ext'] = op_args['ext']
-            del op_args['ext']
         return op_args
 
     def build_operations(self, proc_name:str, ops:dict[str]):
@@ -67,9 +64,11 @@ class ProcessorBuilder(ContextManager):
 
     def build_executor(self):
         for end_point in self._end_points:
+            end_point.apply_op_type_from_root_proc()
             end_point.set_executor(self._executor)
 
     def build(self) -> list[Type["Processor"]]:
+
         for graph_elem in self._context._graph_manager:
             self.build_processor(proc_name=graph_elem.name)
             self.build_operations(proc_name=graph_elem.name, ops=graph_elem.ops) # check available op types

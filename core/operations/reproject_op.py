@@ -1,6 +1,6 @@
 import numpy as np
 from osgeo import osr, ogr
-from core.operations import ParamOp
+from core.operations.parent import ParamOp
 from core.operations import OPERATIONS, RESAMPLE_OP
 from core.logic import Context
 from core.raster import Raster, RasterType, get_epsg, get_res

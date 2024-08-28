@@ -121,9 +121,9 @@ def identify_product(src_path_str:str) -> tuple[ProductType,str]:
         elif 'metadata_json' in data_files:
             meta_path = data_files['metadata_json']['path']
             meta_dict = json.load(open(meta_path))
-            mission_attrs = parse('$.properties.provider').find(meta_dict)
-            if len(mission_attrs) > 0:
-                if 'planetscope' in mission_attrs[0].value:
+            mission_attrs_values = query_dict('$.properties.provider', meta_dict)
+            if len(mission_attrs_values) > 0:
+                if 'planetscope' in mission_attrs_values[0]:
                     return ProductType.PS, meta_path
     except:
         pass

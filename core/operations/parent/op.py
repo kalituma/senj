@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING, Type, List, Union
 from core.util.op import OP_TYPE
 from core.util.errors import OPTypeNotAvailableError
-from core.raster.funcs import assert_bnames, select_band_raster, get_band_name_and_index
-
 
 if TYPE_CHECKING:
     from core.raster import Raster
@@ -71,51 +69,10 @@ class Op:
         raster.op_history.append(self.name)
         return raster
 
-class SelectOp(Op):
-    def __init__(self, op_name):
-        super().__init__(op_name)
 
-    def pre_process(self, raster:"Raster", selected_bands_or_indices:List[Union[str,int]], band_select:bool=False, *args, **kwargs):
-        if selected_bands_or_indices:
-            selected_bands, selected_indices = get_band_name_and_index(raster, selected_bands_or_indices)
-            assert_bnames(selected_bands, raster.get_band_names(), f'selected bands{selected_bands} should be in source bands({raster.get_band_names()})')
-            if len(selected_bands) < len(raster.get_band_names()):
-                if band_select:
-                    raster = select_band_raster(raster, selected_bands_or_indices)
-        return raster
 
-class ParamOp(Op):
-    def __init__(self, op_name):
-        super().__init__(op_name)
-        self._snap_params = {}
-    def add_param(self, **kwargs):
-        self._snap_params.update(kwargs)
 
-    def get_param(self, key:str):
-        return self.snap_params.get(key, None)
 
-    def del_param(self, key:str):
-        del self.snap_params[key]
 
-    @property
-    def snap_params(self) -> dict:
-        return self._snap_params
 
-    @snap_params.setter
-    def snap_params(self, snap_params:dict):
-        self._snap_params = snap_params
 
-class CachedOp(Op):
-    def __init__(self, op_name):
-        super().__init__(op_name)
-
-    def __call__(self, *args, **kwargs):
-        pass
-
-    def pre_process(self, raster:"Raster", context:"Context", *args, **kwargs):
-        pass
-
-    def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):
-        #Todo: update cached raster to raw after checking the context
-        raster = super().post_process(raster, context)
-        return raster
