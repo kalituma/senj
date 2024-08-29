@@ -2,18 +2,16 @@ from typing import TYPE_CHECKING
 
 
 import core.atmos as atmos
-from core.atmos.run import load_bands, load_proj_from_raw
+from core.atmos.run import load_proj_from_raw
 from core.atmos.run.worldview import init_l1r, get_l1r_band, meta_dict_to_global_attrs
 
 if TYPE_CHECKING:
     from core.raster import Raster
 
-def build_worldview_l1r(target_raster: "Raster", target_band_names:list[str], target_band_slot:list[str],
-                        meta_dict:dict, user_settings:dict,
+def build_worldview_l1r(target_raster: "Raster", target_band_names:list[str], meta_dict:dict, user_settings:dict,
                         percentiles_compute=True, percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
-    assert len(target_band_names) == len(
-        target_band_slot), 'target_band_names and target_band_slot must have the same length'
-    target_band_slot = [slot.lower() for slot in target_band_slot]
+
+    target_band_slot = [target_raster[bname]['slot'].lower() for bname in target_band_names]
     for slot in target_band_slot:
         assert slot in ['blue', 'green', 'red', 'nir', 'nir1', 'nir2', 'pan'], f'Invalid band slot: {slot}'
 
@@ -40,7 +38,7 @@ def build_worldview_l1r(target_raster: "Raster", target_band_names:list[str], ta
     nc_projection = atmos.shared.projection_netcdf(proj_dict, add_half_pixel=False)
     global_attrs['projection_key'] = [k for k in nc_projection if k not in ['x', 'y']][0]
 
-    target_raster = load_bands(target_raster, target_band_names, target_band_slot)
+    # target_raster = load_bands(target_raster, target_band_names, target_band_slot)
 
     l1r = init_l1r(proj_dict, global_dims=global_dims, meta_dict=meta_dict, output_geolocation=output_geolocation)
 

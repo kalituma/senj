@@ -6,7 +6,7 @@ import core.atmos as atmos
 from core.atmos.setting import parse
 from core.atmos.run import set_l2w_and_polygon
 
-from core.config import expand_var
+from core.util import expand_var
 from core.atmos.run import apply_l2r, set_earthdata_login_to_env, write_map
 from core.util import write_pickle, read_pickle, get_files_recursive
 

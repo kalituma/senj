@@ -2,7 +2,7 @@ from typing import Union
 from osgeo.gdal import Dataset
 from esa_snappy import Product
 
-from core.util import ProductType
+from core.util import ProductType, assert_bnames
 from core.raster import Raster, RasterType
 
 def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -> tuple[list[str], list[int]]:
@@ -13,6 +13,7 @@ def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -
         band_name = raster.index_to_band_name(band_id_list)
         index = band_id_list
     else:
+        assert_bnames(band_id_list, raster.get_band_names(), f'selected bands{band_id_list} should be in source bands({raster.get_band_names()})')
         band_name = band_id_list
         index = raster.band_name_to_index(band_id_list)
 

@@ -5,9 +5,10 @@ from core.util import ProductType
 
 import core.atmos as atmos
 from core.atmos.setting import parse
+
 from core.atmos.run import apply_l2r, write_map
 from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run, set_earthdata_login_to_env
-from core.atmos.run.sentinel import build_sentinel_l1r
+from core.atmos.run.sentinel import build_sentinel_l1r, load_det
 from core.atmos.run.worldview import build_worldview_l1r
 from core.atmos.run.planet import build_planet_l1r
 
@@ -20,7 +21,8 @@ def load_user_settings(sensor:str):
     atmos.settings['run'] = update_user_to_run(run_settings=atmos.settings['run'], user_settings=atmos.settings['user'])
     return {k: atmos.settings['run'][k] for k in atmos.settings['run']}
 
-def apply_atmos(target_raster: "Raster", product_type:ProductType, target_band_names:list[str], target_band_slot:list[str], det_bands:str=None):
+
+def apply_atmos(target_raster: "Raster", product_type:ProductType, target_band_names:list[str], det_dict:dict, det_names:list[str]) -> dict:
 
     time_start = datetime.now()
     atmos.settings['run']['runid'] = time_start.strftime('%Y%m%d_%H%M%S')
@@ -29,11 +31,11 @@ def apply_atmos(target_raster: "Raster", product_type:ProductType, target_band_n
     user_settings = load_user_settings(sensor=target_raster.meta_dict['sensor'])
 
     if product_type == ProductType.S2:
-        l1r, l1r_global_attrs = build_sentinel_l1r(target_raster, target_band_names, target_band_slot, det_bands, user_settings=user_settings)
+        l1r, l1r_global_attrs = build_sentinel_l1r(target_raster, det_names=det_names, det_dict=det_dict, user_settings=user_settings)
     elif product_type == ProductType.WV:
-        l1r, l1r_global_attrs = build_worldview_l1r(target_raster, target_band_names, target_band_slot, target_raster.meta_dict, user_settings=user_settings)
+        l1r, l1r_global_attrs = build_worldview_l1r(target_raster, target_band_names, target_raster.meta_dict, user_settings=user_settings)
     elif product_type == ProductType.PS:
-        l1r, l1r_global_attrs = build_planet_l1r(target_raster, target_band_names, target_band_slot, target_raster.meta_dict, user_settings=user_settings)
+        l1r, l1r_global_attrs = build_planet_l1r(target_raster, target_band_names, target_raster.meta_dict, user_settings=user_settings)
     else:
         raise ValueError(f'Atmospheric correction cannot be applied to {product_type}')
 

@@ -13,6 +13,7 @@ class Op:
         self._avail_types: list[OP_TYPE] = None
         self._must_after: Type[Op] = None
         self._op_type:OP_TYPE = OP_TYPE.from_str(op_name) if op_name in ['convert'] else OP_TYPE.NOTSET
+        self._counter = 0
 
     @property
     def name(self):
@@ -56,6 +57,16 @@ class Op:
     def must_after(self, must_after:Type["Op"]):
         self._must_after = must_after
 
+    @property
+    def counter(self):
+        return self._counter
+
+    def reset_counter(self):
+        self._counter = 0
+
+    def __increase_counter(self):
+        self._counter += 1
+
     def __call__(self, *args, **kwargs):
         pass
 
@@ -67,6 +78,7 @@ class Op:
 
     def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):
         raster.op_history.append(self.name)
+        self.__increase_counter()
         return raster
 
 

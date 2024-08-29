@@ -2,10 +2,10 @@ import numpy as np
 
 from core.util import query_dict
 
-def build_sun_angles_meta(meta_dict_query) -> dict:
+def build_sun_angles_meta(meta_dict) -> dict:
     # sun
     sun = {}
-    sun_angle_grid = meta_dict_query('$.Granules..Sun_Angles_Grid')[0]
+    sun_angle_grid = query_dict('$.Granules..Sun_Angles_Grid', meta_dict)[0]
     for key, value in sun_angle_grid.items():
         angle_list = []
         if key in ['Zenith', 'Azimuth']:
@@ -13,7 +13,7 @@ def build_sun_angles_meta(meta_dict_query) -> dict:
                 angle_list.append([float(value_str) for value_str in value_line.split(' ')])
             sun[key] = np.array(angle_list)
 
-    mean_sun_angle = meta_dict_query('$.Granules..Mean_Sun_Angle')[0]
+    mean_sun_angle = query_dict('$.Granules..Mean_Sun_Angle', meta_dict)[0]
     sun['Mean_Zenith'] = float(mean_sun_angle['ZENITH_ANGLE'])
     sun['Mean_Azimuth'] = float(mean_sun_angle['AZIMUTH_ANGLE'])
 
@@ -42,12 +42,12 @@ def build_grid_meta(meta_dict:dict):
 
     return grids
 
-def build_view_angles_meta(meta_dict_query):
+def build_view_angles_meta(meta_dict):
 
     view = {}
     view_det = {}
 
-    view_angle_grids = meta_dict_query('$.Granules..Viewing_Incidence_Angles_Grids')[0]
+    view_angle_grids = query_dict('$.Granules..Viewing_Incidence_Angles_Grids', meta_dict)[0]
     for view_angle_grid in view_angle_grids:
         band_id = view_angle_grid['bandId']
         detector_id = view_angle_grid['detectorId']
@@ -97,28 +97,27 @@ def find_grids_and_angle_meta(meta_dict:dict) -> dict:
 
     # called metadata_granule
 
-    find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
+    # find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
 
     granule_meta = {}
 
-    for key, gen_info in find_meta_dict('$.Granules..General_Info')[0].items():
+    for key, gen_info in query_dict('$.Granules..General_Info', meta_dict)[0].items():
         if key in ['TILE_ID', 'DATASTRIP_ID', 'SENSING_TIME']:
             granule_meta[key] = gen_info
 
-    granule_meta['HORIZONTAL_CS_NAME'] = find_meta_dict('$.Granules..HORIZONTAL_CS_NAME')[0]
-    granule_meta['HORIZONTAL_CS_CODE'] = find_meta_dict('$.Granules..HORIZONTAL_CS_CODE')[0]
+    granule_meta['HORIZONTAL_CS_NAME'] = query_dict('$.Granules..HORIZONTAL_CS_NAME', meta_dict)[0]
+    granule_meta['HORIZONTAL_CS_CODE'] = query_dict('$.Granules..HORIZONTAL_CS_CODE', meta_dict)[0]
 
-    granule_meta['SUN'] = build_sun_angles_meta(find_meta_dict)
-    granule_meta['VIEW'], granule_meta['VIEW_DET'] = build_view_angles_meta(find_meta_dict)
+    granule_meta['SUN'] = build_sun_angles_meta(meta_dict)
+    granule_meta['VIEW'], granule_meta['VIEW_DET'] = build_view_angles_meta(meta_dict)
 
-    granule_meta['GRANULE_PARENT'] = list(find_meta_dict('$.Granules')[0].keys())[0]
+    granule_meta['GRANULE_PARENT'] = list(query_dict('$.Granules', meta_dict)[0].keys())[0]
 
     return granule_meta
 
 def get_granule_info(meta_dict:dict) -> str:
     granule_uri = '$.Level-1C_User_Product..Granule_List.Granule'
-    find_meta_dict = lambda x: [field.value for field in parse(x).find(meta_dict)]
-    granule_dict = find_meta_dict(granule_uri)[0]
+    granule_dict = query_dict(granule_uri, meta_dict)[0]
     if len(granule_dict['IMAGE_FILE']) > 1:
         granule_info = granule_dict['IMAGE_FILE'][0].split('/')[1]
     else:

@@ -48,6 +48,7 @@ def get_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dic
 
             l1r_band_attr['wavelength'] = wave_mu[b_slot_id] * 1000
             l1r_band_attr['parameter'] = f'rhot_{wave_names[b_slot_id]}'
+            l1r_band_attr['band_name'] = band_name
 
             if gains & (gains_dict is not None):
                 l1r_band_attr['toa_gain'] = gains_dict[b_slot_id]

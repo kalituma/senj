@@ -44,7 +44,7 @@ def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_
         if atmospherically_corrected:
             ds = ds.replace('rhot_', 'rhos_acomp_')
 
-        l1r_band_attr = {'wavelength': waves_mu[band_slot] * 1000, 'band_slot': band_slot, 'f0': f0_b[band_slot] / 10.,
+        l1r_band_attr = {'wavelength': waves_mu[band_slot] * 1000, 'band_name': band_name, 'f0': f0_b[band_slot] / 10.,
                          'parameter' : ds }
         if gains != None:
             l1r_band_attr['gain'] = gains[band_slot]['gain']

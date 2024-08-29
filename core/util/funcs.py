@@ -1,4 +1,4 @@
-import re
+import re, os
 import numpy as np
 from pathlib import Path
 from enum import Enum, auto
@@ -7,6 +7,11 @@ class PathType(Enum):
     FILE = auto()
     DIR = auto()
     VAR = auto()
+
+def remove_list_elements(tar_list:list[str], ref_list:list[str]) -> list[str]:
+    ref_set = set(ref_list)
+    return list(filter(lambda x: x not in ref_set, tar_list))
+
 
 def dict_with_key(key:str, value:dict) -> dict:
     return {key: value}
@@ -63,3 +68,6 @@ def check_input_ext(path):
         raise ValueError('input path is a directory')
 
     return _input_ext
+
+def expand_var(path:str) -> str:
+    return os.path.expandvars(path)

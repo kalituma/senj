@@ -4,7 +4,7 @@ from esa_snappy import Product
 
 from osgeo.gdal import Dataset
 
-from core.config import expand_var
+from core.util import expand_var
 from core.util.snap import read_gpf_bands_as_dict
 from core.util.gdal import read_gdal_bands_as_dict
 from core.util import ProductType, compare_nested_dicts_with_arrays
@@ -40,7 +40,7 @@ class TestReadOp(unittest.TestCase):
     def test_read_snap_sentinel(self):
         context = Context(None)
 
-        s2_without_meta = os.path.join(self.test_data_root, 's2merge_1_stack_subset.tif')
+        s2_without_meta = os.path.join(self.test_data_root, 'tif', 'no_meta', 'out_0_read.tif')
 
         with self.subTest('read safe file with band-word included option'):
             raster = Read(module='snap', bword='*VV', bname_word_included=True)(self.s1_safe_grdh_path, context)
@@ -67,7 +67,9 @@ class TestReadOp(unittest.TestCase):
 
         with self.subTest('read tif not having meta using gdal'):
             result_raster = Read(module='gdal', bands=['band_1', 'band_5'])(s2_without_meta, context)
+            idx_result_raster = Read(module='gdal', bands=[1, 5])(s2_without_meta, context)
             self.assertEqual(list(result_raster.get_band_names()), ['band_1', 'band_5'])
+            self.assertEqual(list(idx_result_raster.get_band_names()), ['band_1', 'band_5'])
             self.assertEqual(result_raster.meta_dict, None)
             self.assertEqual(result_raster.product_type, ProductType.UNKNOWN)
             self.assertTrue(isinstance(result_raster.raw, Dataset))
@@ -222,7 +224,7 @@ class TestReadOp(unittest.TestCase):
             out_path = Write(module='gdal', path=out_path)(wv_raster, context)
             out_raster = Read(module='snap')(out_path, context)
 
-            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(wv_raster.raw, band_names=wv_raster.get_band_names())
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(wv_raster.raw, all_band_names=wv_raster.get_band_names())
             gpf_bands, gpf_band_names = read_gpf_bands_as_dict(out_raster.raw)
             self.assertTrue(compare_nested_dicts_with_arrays(gdal_bands, gpf_bands))
             self.assertEqual(gdal_band_names, gpf_band_names)
@@ -238,7 +240,7 @@ class TestReadOp(unittest.TestCase):
             out_path = Write(module='snap', path=out_path)(wv_snap_raster, context)
             out_raster = Read(module='gdal')(out_path, context)
 
-            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, band_names=out_raster.get_band_names())
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, all_band_names=out_raster.get_band_names())
             gpf_bands, gpf_band_names = read_gpf_bands_as_dict(wv_snap_raster.raw)
             self.assertEqual(np.sum(gdal_bands['BAND_B']['value'] - gpf_bands['BAND_B']['value']), 0)
             self.assertEqual(np.sum(gdal_bands['BAND_G']['value'] - gpf_bands['BAND_G']['value']), 0)
@@ -259,7 +261,7 @@ class TestReadOp(unittest.TestCase):
             out_path = Write(module='gdal', path=out_path)(ge_raster, context)
             out_raster = Read(module='snap')(out_path, context)
 
-            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(ge_raster.raw, band_names=ge_raster.get_band_names())
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(ge_raster.raw, all_band_names=ge_raster.get_band_names())
             gpf_bands, gpf_band_names = read_gpf_bands_as_dict(out_raster.raw)
             self.assertTrue(compare_nested_dicts_with_arrays(gdal_bands, gpf_bands))
             self.assertEqual(gdal_band_names, gpf_band_names)
@@ -273,7 +275,7 @@ class TestReadOp(unittest.TestCase):
             out_path = Write(module='snap', path=out_path)(ge_snap_raster, context)
             out_raster = Read(module='gdal')(out_path, context)
 
-            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, band_names=out_raster.get_band_names())
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(out_raster.raw, all_band_names=out_raster.get_band_names())
             gpf_bands, gpf_band_names = read_gpf_bands_as_dict(ge_snap_raster.raw)
             self.assertEqual(np.sum(gdal_bands['BAND_B']['value'] - gpf_bands['BAND_B']['value']), 0)
             self.assertEqual(np.sum(gdal_bands['BAND_G']['value'] - gpf_bands['BAND_G']['value']), 0)
@@ -303,8 +305,8 @@ class TestReadOp(unittest.TestCase):
             self.assertEqual(ps_raster_snap.meta_dict, ps_meta_raster_snap.meta_dict)
             self.assertEqual(ps_meta_raster_gdal.meta_dict, ps_meta_raster_snap.meta_dict)
 
-            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(ps_raster.raw, band_names=ps_raster.get_band_names())
-            gdal_out_bands, gdal_out_band_names = read_gdal_bands_as_dict(ps_meta_raster_gdal.raw, band_names=ps_meta_raster_gdal.get_band_names())
+            gdal_bands, gdal_band_names = read_gdal_bands_as_dict(ps_raster.raw, all_band_names=ps_raster.get_band_names())
+            gdal_out_bands, gdal_out_band_names = read_gdal_bands_as_dict(ps_meta_raster_gdal.raw, all_band_names=ps_meta_raster_gdal.get_band_names())
             gpf_bands, gpf_band_names = read_gpf_bands_as_dict(ps_meta_raster_snap.raw)
 
             self.assertEqual(np.sum(gdal_bands['band_1']['value'] - gpf_bands['band_1']['value']), 0)

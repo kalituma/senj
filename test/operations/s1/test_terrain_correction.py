@@ -2,7 +2,7 @@ import numpy as np
 import os
 import unittest
 
-from core.config import expand_var
+from core.util import expand_var
 from core.util.errors import ModuleError, ProductTypeError
 from core.raster import read_gpf_bands_as_dict
 from core.util.snap import DemType, InterpolType

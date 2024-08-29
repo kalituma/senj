@@ -1,7 +1,8 @@
-from core.util import assert_bnames
-from core.raster import Raster, RasterType
+from core.util import assert_bnames, remove_list_elements
 from core.util.gdal import read_gdal_bands_as_dict, create_ds_with_dict
 from core.util.snap import copy_cached_to_raw_gpf, read_gpf_bands_as_dict
+from core.raster import Raster, RasterType
+from core.raster.funcs import read_band_from_raw
 
 def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
     # cache to raw
@@ -30,10 +31,11 @@ def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
 
     return raster_obj
 
-def update_cached_to_raw(raster_obj:Raster):
+def update_raw_from_cache(raster_obj:Raster):
     # raw to cache
     if raster_obj.is_band_cached:
         cached_bands = raster_obj.get_cached_band_names()
+        not_cached_bands = remove_list_elements(raster_obj.get_band_names(), cached_bands)
 
         module_type = raster_obj.module_type
 
@@ -43,6 +45,10 @@ def update_cached_to_raw(raster_obj:Raster):
 
         elif module_type == RasterType.GDAL:
             assert raster_obj.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
+
+            if len(not_cached_bands) > 0:
+                raster_obj = read_band_from_raw(raster_obj, selected_bands=not_cached_bands, add_to_cache=True)
+
             proj = raster_obj.raw.GetProjection()
             gt = raster_obj.raw.GetGeoTransform()
             metadata = raster_obj.raw.GetMetadata()

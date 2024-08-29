@@ -1,7 +1,7 @@
 from typing import Union, TYPE_CHECKING
 
 from core.util import glob_match
-from core.atmos.run import load_bands
+# from core.atmos.run import load_bands
 from core.atmos.run.sentinel import get_l1r_band, build_det_grid, meta_dict_to_l1r_meta, load_det, l1r_meta_to_global_attrs, init_l1r
 
 if TYPE_CHECKING:
@@ -19,39 +19,14 @@ def get_geo_info_from_meta(meta, geom_res, prefix=""):
 
     return src_params
 
-def build_sentinel_l1r(target_raster: "Raster", target_band_names:list[str], target_band_slot:list[str], det_bands:Union[str, list[str]],
+def build_sentinel_l1r(target_raster: "Raster", det_names:list[str], det_dict:dict,
                        user_settings:dict, percentiles_compute=True, percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
 
-
     l1r_meta = meta_dict_to_l1r_meta(target_raster)
-
-    res_set = set()
-    for bname in target_band_names:
-        x_res = int(l1r_meta['size_meta_per_band'][bname]['x_res'])
-        if x_res not in res_set:
-            res_set.add(x_res)
-
-    all_bands = target_raster.get_band_names()
-    if isinstance(det_bands, str):
-        # find the band with glob pattern with asterisk described in det_bands
-        det_bands = glob_match(all_bands, det_bands)
-    elif isinstance(det_bands, list):
-        det_bands = det_bands
-    else:
-        raise ValueError('det_bands should be either a string or a list of strings.')
-
-    assert len(det_bands) > 0, 'No matching band found in target raster.'
-
-    # read det
-    det_dict, det_names = load_det(target_raster, det_bands=det_bands, size_per_band=l1r_meta['size_meta_per_band'],
-                                   det_res=list(res_set))
-
-    target_raster = load_bands(target_raster, target_band_names, target_band_slot)
 
     # det_sizes = { det_name : l1r_meta['size_meta_per_band'][det_name] for det_name in det_names}
     l1r_meta['granule_meta']['GRIDS'] = build_det_grid(target_raster, det_names)
 
-    # todo: load band to cache if it is not already loaded
     global_attrs, user_settings = l1r_meta_to_global_attrs(l1r_meta, user_settings)
 
     warp_option_for_angle = (

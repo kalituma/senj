@@ -44,7 +44,7 @@ def convert_raster(raster_obj:Raster, out_module:RasterType) -> Raster:
 
     # bands should be loaded before converting
     if not raster_obj.is_band_cached:
-        raster_obj = read_band_from_raw(raster_obj, selected_band=raster_obj.selected_bands)
+        raster_obj = read_band_from_raw(raster_obj, selected_bands=raster_obj.selected_bands)
 
     if out_module == RasterType.SNAP:
         raster_obj = _convert_to_gpf(raster_obj, selected_bands=raster_obj.selected_bands, cached_bands=raster_obj.bands) # Product

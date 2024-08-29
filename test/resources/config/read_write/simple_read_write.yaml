@@ -1,0 +1,12 @@
+read_s2_safe:
+  input:
+    path: '$PROJECT_PATH/data/test/safe/s2/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE'
+  operations: ['read', 'write']
+  read:
+    module: 'snap'
+    bands: ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B11', 'B12']
+  write:
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/read_write_config'
+    out_stem: 'S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526'
+    suffix: 'read_write'
+    out_ext: 'dim'

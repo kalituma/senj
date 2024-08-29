@@ -5,7 +5,7 @@ import core.atmos as atmos
 from core.atmos.setting import parse
 from core.atmos.run import set_l2w_and_polygon
 
-from core.config import expand_var
+from core.util import expand_var
 from core.util import read_pickle
 
 class TestAtmosRGB(unittest.TestCase):

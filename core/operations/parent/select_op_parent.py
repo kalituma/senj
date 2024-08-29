@@ -15,5 +15,5 @@ class SelectOp(Op):
             assert_bnames(selected_bands, raster.get_band_names(), f'selected bands{selected_bands} should be in source bands({raster.get_band_names()})')
             if len(selected_bands) < len(raster.get_band_names()):
                 if band_select:
-                    raster = select_band_raster(raster, selected_bands_or_indices)
+                    raster = select_band_raster(raster, selected_bands)
         return raster

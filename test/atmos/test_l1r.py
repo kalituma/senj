@@ -5,7 +5,7 @@ import core.atmos as atmos
 from core.atmos.run.worldview import build_worldview_l1r
 from core.atmos.run.planet import build_planet_l1r
 from core.atmos.run.sentinel import build_sentinel_l1r
-from core.config import expand_var
+from core.util import expand_var
 from core.logic.context import Context
 from core.operations import Read
 

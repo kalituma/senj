@@ -2,7 +2,7 @@ import os
 import unittest
 import numpy as np
 
-from core.config import expand_var
+from core.util import expand_var
 from core.util.snap import ORBIT_TYPE
 from core.raster.funcs import read_band_from_raw
 from core.operations import Read, Write, Subset

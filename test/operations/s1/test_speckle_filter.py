@@ -2,7 +2,7 @@ import os
 import unittest
 import numpy as np
 
-from core.config import expand_var
+from core.util import expand_var
 from core.operations import Read, Write, Subset
 from core.operations.s1 import SpeckleFilter
 from core.util.errors import ProductTypeError

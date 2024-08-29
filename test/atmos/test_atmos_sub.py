@@ -7,7 +7,7 @@ from datetime import datetime
 import core.atmos as atmos
 from core.util import compare_nested_dicts_with_arrays, write_pickle, read_pickle, wkt_to_epsg
 
-from core.config import expand_var
+from core.util import expand_var
 from core.atmos.run import apply_atmos, write_map
 # from core.atmos.run import l1r_meta_to_global_attrs, meta_dict_to_l1r_meta, apply_atmos
 # from core.atmos.run.l1r import process_l1r_band

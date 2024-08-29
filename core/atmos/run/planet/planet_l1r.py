@@ -1,17 +1,17 @@
 from typing import TYPE_CHECKING
-
+from pathlib import Path
+from core.util.identify import planet_test
 from core.atmos.run.planet import init_l1r, get_l1r_band, meta_dict_to_global_attrs
-from core.atmos.run import load_bands, load_proj_from_raw
+from core.atmos.run import load_proj_from_raw
 from core.atmos.shared import read_tif_meta
 
 if TYPE_CHECKING:
     from core.raster import Raster
 
-def build_planet_l1r(target_raster: "Raster", target_band_names:list[str], target_band_slot:list[str], meta_dict:dict, user_settings:dict,
+def build_planet_l1r(target_raster: "Raster", target_band_names:list[str], meta_dict:dict, user_settings:dict,
                      percentiles_compute=True, percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
 
-    assert len(target_band_names) == len(target_band_slot), 'target_band_names and target_band_slot must have the same length'
-    target_band_slot = [slot.lower() for slot in target_band_slot]
+    target_band_slot = [target_raster[bname]['slot'].lower() for bname in target_band_names]
     for slot in target_band_slot:
         assert slot in ['blue', 'green', 'red', 'nir'], f'Invalid band slot: {slot}'
 
@@ -43,7 +43,15 @@ def build_planet_l1r(target_raster: "Raster", target_band_names:list[str], targe
 
     l1r = init_l1r(dct_prj, output_geolocation=output_geolocation, output_xy=output_xy)
     band_indices = {f'{slot}-band_idx': i for i, slot in enumerate(target_band_slot)}
-    tif_meta = read_tif_meta(target_raster.path)
+
+    if Path(target_raster.path).suffix == '.xml':
+        file_spec = planet_test(target_raster.path)
+        image_path = file_spec['analytic']['path']
+    else:
+        image_path = target_raster.path
+
+    tif_meta = read_tif_meta(image_path)
+
     f0_dict = {f'{slot}_f0': global_attrs[f'{slot}_f0'] for slot in target_band_slot}
     value_conversion = {}
 
@@ -61,7 +69,7 @@ def build_planet_l1r(target_raster: "Raster", target_band_names:list[str], targe
 
     assert len(value_conversion) == 2 * len(target_band_slot), 'value_conversion must have 2 entries per band slot'
 
-    target_raster = load_bands(target_raster, target_band_names, target_band_slot)
+    # target_raster = load_bands(target_raster, target_band_names, target_band_slot)
 
     l1r['bands'] = get_l1r_band(target_raster.bands, band_indices=band_indices, tif_meta=tif_meta, f0_dict=f0_dict, sensor=meta_dict['sensor'],
                                 se_distance=global_attrs['se_distance'], mus=global_attrs['mus'], waves_names=global_attrs['wave_names'], waves_mu=global_attrs['wave_mu'],

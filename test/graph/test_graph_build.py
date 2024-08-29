@@ -2,7 +2,7 @@ import unittest, os
 
 from core import SCHEMA_PATH
 from core.util import PathType, read_yaml
-from core.config import expand_var, load_schema_map
+from core.util import expand_var, load_schema_map
 from core.graph import GraphManager
 from core.logic import Context
 from core.logic.processor import ProcessorBuilder

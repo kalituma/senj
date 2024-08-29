@@ -136,6 +136,7 @@ class Raster:
     def del_bands_cache(self):
         self.bands = None
         self.is_band_cached = False
+        self.selected_bands = None
 
     def close(self):
         self.bands = None
@@ -257,7 +258,10 @@ class Raster:
                 else:
                     self._init_band_map_raw()
             else:
-                self._init_band_map_raw()
+                if bnames is not None:
+                    self.update_band_map(bnames)
+                else:
+                    self._init_band_map_raw()
         else:
             if self._meta_dict is not None:
                 self._copy_band_map_from_meta()

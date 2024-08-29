@@ -5,7 +5,7 @@ import unittest
 from core.raster.funcs import get_res, get_epsg
 from core.operations import Read, Resample, Write
 from core.logic import Context
-from core.config import expand_var
+from core.util import expand_var
 
 class TestReproject(unittest.TestCase):
     def setUp(self) -> None:

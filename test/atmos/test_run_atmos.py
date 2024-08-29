@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from core.config import expand_var
-from core.atmos.run import apply_atmos
+from core.util import expand_var
+# from core.atmos.run import apply_atmos
 
 class TestAtmosL2R(unittest.TestCase):
     def setUp(self):

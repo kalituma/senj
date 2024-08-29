@@ -2,14 +2,15 @@ from typing import List, Union, AnyStr
 from pathlib import Path
 
 from core import OPERATIONS
-from core.util import assert_bnames
+
+from core.util import expand_var
 from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
 from core.util.op import OP_TYPE, op_constraint
 from core.operations import SelectOp
 from core.operations import WRITE_OP
 from core.raster import RasterType, Raster, EXT_MAP
 from core.raster import write_raster
-from core.raster.funcs import has_same_band_shape, update_cached_to_raw, select_band_raster
+from core.raster.funcs import has_same_band_shape
 
 DEFAULT_OUT_EXT = {
     RasterType.GDAL : 'tif',
@@ -33,18 +34,23 @@ class Write(SelectOp):
     def __call__(self, raster:Raster, *args):
 
         if self._out_ext == '':
-            self._out_ext = DEFAULT_OUT_EXT[raster.module_type.__str__()]
+            self._out_ext = DEFAULT_OUT_EXT[raster.module_type]
         else:
             if self._out_ext not in EXT_MAP[raster.module_type.__str__()]:
                 raise ExtensionNotSupportedError(raster.module_type, EXT_MAP[raster.module_type], self._out_ext)
 
         # if self._selected_bands is not None:
         #     raster.selected_bands = self._selected_bands
+        expanded_dir = expand_var(self._out_dir)
+        Path(expanded_dir).mkdir(parents=True, exist_ok=True)
 
-        Path(self._out_dir).mkdir(parents=True, exist_ok=True)
+        output_basename = ''
+        output_basename += f'{f"{self._prefix}_" if self._prefix else self._prefix}'
+        output_basename += f'{self._out_stem}'
+        output_basename += f'{f"_{self._suffix}" if self._suffix else self._suffix}'
+        output_basename += f'.{self.counter}.{self._out_ext}'
 
-        output_basename = f'{f"{self._prefix}_" if self._prefix else self._prefix}{self._out_stem}{f"_{self._suffix}" if self._suffix else self._suffix}.{self._out_ext}'
-        output_path = f'{self._out_dir}/{output_basename}'
+        output_path = f'{expanded_dir}/{output_basename}'
 
         # result = update_cached_to_raw(raster)  # copy bands to raw
         result = self.pre_process(raster, selected_bands_or_indices=self._selected_bands, band_select=True) # select bands first
@@ -53,6 +59,8 @@ class Write(SelectOp):
             if not has_same_band_shape(result):
                 raise NotHaveSameBandShapeError(f'All bands should have same shape if out extensions({self._out_ext}) is for tiff format.')
         write_raster(result, output_path)
+
+        self.post_process(result, None)
         raster = None
-        # print(f'{output_path} is saved')
+
         return output_path

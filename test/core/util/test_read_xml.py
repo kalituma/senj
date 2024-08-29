@@ -2,7 +2,7 @@ import os
 import unittest
 from lxml import objectify, etree
 
-from core.config import expand_var
+from core.util import expand_var
 from core.util import ProductType, identify_product
 
 class TestAtmosSubFuncs(unittest.TestCase):

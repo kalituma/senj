@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from core.config import expand_var
+from core.util import expand_var
 from core.operations import Write, Read
 from core.logic import Context
 

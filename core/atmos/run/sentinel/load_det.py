@@ -25,7 +25,7 @@ def load_det(target_raster: "Raster", det_bands:list[str], size_per_band:dict, d
     assert len(det_res_map) == len(det_res), 'Detectors should have the same resolution.'
 
     # target_bands = target_bands + [target_det]
-    target_raster = read_band_from_raw(target_raster, selected_band=list(det_res_map.values()))
+    target_raster = read_band_from_raw(target_raster, selected_bands=list(det_res_map.values()))
 
     for res, det_bname in det_res_map.items():
         det_elems = np.unique(target_raster[det_bname]['value']).tolist()

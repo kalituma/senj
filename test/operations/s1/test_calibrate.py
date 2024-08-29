@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from core.config import expand_var
+from core.util import expand_var
 from core.operations import Read
 from core.operations.s1 import Calibrate
 from core.util.snap import read_gpf_bands_as_dict

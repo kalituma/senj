@@ -2,7 +2,7 @@ import re, os
 from functools import partial
 from pathlib import Path
 
-from core.util import PathType, sort_by_pattern
+from core.util import PathType, sort_by_pattern, expand_var
 from core.util.errors import PathNotExistsError
 
 VAR_PATTERN = '^{{[a-zA-Z0-9_]+}}$'
@@ -26,9 +26,6 @@ def remove_var_bracket(var_str):
 
 def remove_func_bracket(func_str):
     return func_str.replace('!{', '').replace('}', '')
-
-def expand_var(path:str) -> str:
-    return os.path.expandvars(path)
 
 def parse_sort(atts:dict) -> dict:
     for k, att in atts.items():

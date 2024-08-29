@@ -3,7 +3,7 @@ import unittest
 from functools import partial
 from pathlib import Path
 
-from core.config import expand_var
+from core.util import expand_var
 from core.util import sort_by_pattern
 from core.util.errors import OperationTypeError
 from core.raster import Raster

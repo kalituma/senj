@@ -1,7 +1,7 @@
 import os, unittest
 
 from core.logic import Context
-from core.config import expand_var
+from core.util import expand_var
 
 from core.operations import Read
 from core.operations.s1 import Calibrate, ApplyOrbit, TopsarDeburst, TerrainCorrection

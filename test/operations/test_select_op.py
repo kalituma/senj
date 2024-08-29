@@ -1,5 +1,5 @@
 import os, unittest
-from core.config import expand_var
+from core.util import expand_var
 from core.operations import Read, Select, Write
 from core.logic import Context
 class TestReproject(unittest.TestCase):

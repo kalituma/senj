@@ -45,6 +45,8 @@ def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
     if raster.module_type == RasterType.SNAP:
         return get_band_grid_size_gpf(raster.raw, selected_bands=selected_bands)
     elif raster.module_type == RasterType.GDAL:
+        if selected_bands is None:
+            selected_bands = raster.get_band_names()
         _, index = get_band_name_and_index(raster, selected_bands)
         all_band_name = raster.get_band_names()
         return get_band_grid_size_gdal(raster.raw, band_name=all_band_name, selected_index=index)

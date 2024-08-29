@@ -47,7 +47,7 @@ def get_l1r_band(bands:dict, band_indices:dict, tif_meta:dict, f0_dict:dict, sen
         d[nodata] = np.nan
 
         ds = f'rhot_{waves_names[band_slot]}'
-        l1r_band_attr = {'wavelength': waves_mu[band_slot] * 1000, 'band_slot': band_slot, 'parameter': ds}
+        l1r_band_attr = {'wavelength': waves_mu[band_slot] * 1000, 'band_name': band_name, 'parameter': ds}
 
         if gains and gains_dict is not None:
             l1r_band_attr['toa_gain'] = gains_dict[band_slot]
