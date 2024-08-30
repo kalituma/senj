@@ -300,13 +300,54 @@ topsar_deburst_4:
     selected_polarisations: [ 'VV', 'VH' ]
 
 convert_1:
-    <<: *parent
-    operations : ['convert']
-    convert:
-      to_module: 'gdal'
+  <<: *parent
+  operations : ['convert']
+  convert:
+    to_module: 'gdal'
 
 convert_2:
-    <<: *parent
-    operations : ['convert']
-    convert:
-      to_module: 'snap'
+  <<: *parent
+  operations : ['convert']
+  convert:
+    to_module: 'snap'
+
+atmos_corr_1:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    det_bnames: [ 15, 20, 23 ]
+
+atmos_corr_2:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    write_map: true
+    map_dir: 'resources/s2merge_1_stack_subset'
+    det_bnames: [ 15, 20, 23 ]
+
+atmos_corr_3:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    write_map: true
+    map_dir: 'resources/s2merge_1_stack_subset'
+    map_stem: 's2merge_1_stack_subset'
+
+atmos_corr_4:
+  <<: *parent
+  operations: [ 'atmos_corr' ]
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    write_map: true
+    map_dir: 'resources/s2merge_1_stack_subset'
+    map_stem: 's2merge_1_stack_subset'
+    det_bword_included: true
+    det_bpattern: '*detector*'
+

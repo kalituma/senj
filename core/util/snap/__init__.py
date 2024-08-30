@@ -79,8 +79,8 @@ from .gpf_meta import *
 from .gpf_meta_dict_query import *
 
 from .gpf_constructor import *
-from .gpf_copy import *
 from .gpf_band import *
+from .gpf_copy import *
 from .gpf_read import *
 from .gpf_write import *
 from .gpf_s1_preprocess import *

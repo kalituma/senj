@@ -21,6 +21,9 @@ class Convert(Op):
 
     def __call__(self, raster_obj:"Raster", context:"Context", *args, **kwargs) -> "Raster":
 
+        # reset selected bands
+        raster_obj.selected_bands = None
+
         if self._module == raster_obj.module_type:
             return raster_obj
 

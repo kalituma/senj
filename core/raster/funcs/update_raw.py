@@ -35,19 +35,18 @@ def update_raw_from_cache(raster_obj:Raster):
     # raw to cache
     if raster_obj.is_band_cached:
         cached_bands = raster_obj.get_cached_band_names()
-        not_cached_bands = remove_list_elements(raster_obj.get_band_names(), cached_bands)
+        not_cached_bands = remove_list_elements(raster_obj.get_band_names(), remove_list=cached_bands)
 
         module_type = raster_obj.module_type
 
         if module_type == RasterType.SNAP:
-            for b_name in cached_bands:
-                copy_cached_to_raw_gpf(raster_obj.raw, b_name, raster_obj.bands[b_name]['value'])
+            raster_obj.raw = copy_cached_to_raw_gpf(raster_obj.raw, cached_band=raster_obj.bands)
 
         elif module_type == RasterType.GDAL:
             assert raster_obj.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
 
             if len(not_cached_bands) > 0:
-                raster_obj = read_band_from_raw(raster_obj, selected_bands=not_cached_bands, add_to_cache=True)
+                raster_obj = read_band_from_raw(raster_obj, selected_name_or_id=not_cached_bands, add_to_cache=True)
 
             proj = raster_obj.raw.GetProjection()
             gt = raster_obj.raw.GetGeoTransform()

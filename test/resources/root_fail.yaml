@@ -284,3 +284,77 @@ convert_2:
     operations : ['convert']
     convert:
       to_module: 'gda'
+
+atmos_corr_1:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+
+atmos_corr_2:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: 'no_band'
+
+atmos_corr_3:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: []
+    band_slots: []
+
+atmos_corr_4:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    write_map: 'a'
+
+atmos_corr_5:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    map_dir: '23jdi3 fdjklsf'
+
+atmos_corr_6:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2']
+
+atmos_corr_7:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    map_dir: '23jdi3/fdjklsf'
+    map_stem: 123
+
+atmos_corr_8:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    det_bnames: []
+
+atmos_corr_9:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    det_bword_included: 'a'
+
+atmos_corr_10:
+  <<: *parent
+  operations : ['atmos_corr']
+  atmos_corr:
+    bands: [ 1, 2, 3 ]
+    band_slots: [ 'B1', 'B2', 'B3' ]
+    det_bpattern: 123

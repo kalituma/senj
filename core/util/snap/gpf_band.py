@@ -1,10 +1,12 @@
 import numpy as np
 from tqdm import tqdm
+import re
 from esa_snappy import jpy, Product, Band, ProductUtils, ProductData, PixelPos
 
 from core.util import assert_bnames
 from core.util.errors import ContainedBandError
 from core.util.snap import create_product_data
+
 
 def rename_bands(product:Product, band_names:list) -> Product:
     assert len(band_names) == len(product.getBandNames()), 'The number of band names should be the same as the source product'
@@ -16,12 +18,20 @@ def add_band_to_product(product, bands:dict):
 
     for band_name, band_elem_dict in bands.items():
         band_arr = band_elem_dict['value']
-        dtype = band_arr.dtype.name
-        data_type = ProductData.getType(dtype)
-        raster_data = create_product_data(band_arr)
+        arr_dtype = band_arr.dtype.name
+        bnum_pattern = '[a-z]+'
+        arr_dtype = re.search(bnum_pattern, arr_dtype).group()
+
+        if 'uint' in arr_dtype:
+            band_arr = band_arr.astype('int16')
+            arr_dtype = 'int16'
+
+        p_dtype = ProductData.getType(arr_dtype)
+        raster_data = create_product_data(band_arr, arr_dtype)
+
         if isinstance(band_name, int):
             band_name = f'{band_name}'
-        band = product.addBand(band_name, data_type)
+        band = product.addBand(band_name, p_dtype)
         if band_elem_dict['no_data'] is not None:
             band.setNoDataValue(band_elem_dict['no_data'])
         else:

@@ -24,5 +24,5 @@ TOPSAR_DEBURST_OP = 'topsar_deburst'
 SPECKLE_FILTER_OP = 'speckle_filter'
 
 #cached
-ATMOSCORR_OP = 'atmos'
+ATMOSCORR_OP = 'atmos_corr'
 NL_DENOISING_OP = 'nl_mean_denoising'

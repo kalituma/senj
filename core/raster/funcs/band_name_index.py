@@ -5,6 +5,20 @@ from esa_snappy import Product
 from core.util import ProductType, assert_bnames
 from core.raster import Raster, RasterType
 
+def check_bname_index_valid(raster:Raster, band_id_list:list[Union[str, int]]) -> bool:
+
+    if band_id_list is None:
+        return False
+
+    is_index = all([isinstance(b, int) for b in band_id_list])
+
+    if is_index:
+        assert all([b <= raster.get_bands_size() and b > 0 for b in band_id_list]), f'band index should be less than or equal to {raster.get_bands_size()}'
+    else:
+        assert_bnames(band_id_list, raster.get_band_names(), f'selected bands{band_id_list} should be in source bands({raster.get_band_names()})')
+
+    return True
+
 def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -> tuple[list[str], list[int]]:
 
     is_index = all([isinstance(b, int) for b in band_id_list])

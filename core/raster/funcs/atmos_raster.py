@@ -8,7 +8,7 @@ from core.atmos.setting import parse
 
 from core.atmos.run import apply_l2r, write_map
 from core.atmos.run.load_settings import set_l2w_and_polygon, update_user_to_run, set_earthdata_login_to_env
-from core.atmos.run.sentinel import build_sentinel_l1r, load_det
+from core.atmos.run.sentinel import build_sentinel_l1r
 from core.atmos.run.worldview import build_worldview_l1r
 from core.atmos.run.planet import build_planet_l1r
 

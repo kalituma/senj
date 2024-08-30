@@ -8,9 +8,9 @@ class PathType(Enum):
     DIR = auto()
     VAR = auto()
 
-def remove_list_elements(tar_list:list[str], ref_list:list[str]) -> list[str]:
-    ref_set = set(ref_list)
-    return list(filter(lambda x: x not in ref_set, tar_list))
+def remove_list_elements(src_list:list[str], remove_list:list[str]) -> list[str]:
+    ref_set = set(remove_list)
+    return list(filter(lambda x: x not in ref_set, src_list))
 
 
 def dict_with_key(key:str, value:dict) -> dict:

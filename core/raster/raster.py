@@ -61,6 +61,14 @@ class Raster:
     def __str__(self):
         return f'Raster : {self.path} processed from {self.op_history[0]} to {self.op_history[-1]}'
 
+    def get_bands_size(self) -> int:
+        if self.module_type == RasterType.GDAL:
+            return self.raw.RasterCount
+        elif self.module_type == RasterType.SNAP:
+            return self.raw.getNumBands()
+        else:
+            raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
+
     def _init_band_map_raw(self):
         assert self._index_to_band is None and self._band_to_index is None, 'Band map should be initialized only once.'
 
@@ -148,12 +156,6 @@ class Raster:
             self.raw.dispose()
 
         self.is_band_cached = False
-
-    def width(self, band_name:str):
-        return self.bands[band_name].shape[1]
-
-    def height(self, band_name:str):
-        return self.bands[band_name].shape[0]
 
     def cached_bands_have_same_shape(self):
         return all([self.bands[band]['value'].shape == self.bands[self.selected_bands[0]]['value'].shape for band in self.selected_bands])

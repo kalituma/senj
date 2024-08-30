@@ -2,7 +2,9 @@ import unittest
 
 from core import SCHEMA_PATH
 from core.util import read_yaml
+from core.util.errors import NullValueError, ParseError
 from core.config import load_schema_map, validate_config_func
+
 
 class TestParsingCerberus(unittest.TestCase):
     def setUp(self) -> None:
@@ -197,3 +199,68 @@ class TestParsingCerberus(unittest.TestCase):
                     with self.subTest():
                         with self.assertRaises(ValueError):
                             validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+
+    def test_parse_atmos_corr(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'atmos' in success_key:
+                with self.subTest(success_key):
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_parse_atmos_corr_fail(self):
+        root_keys = list(self.root_fail_config.keys())
+
+        error_map = {
+            1: {
+                'error_type' : NullValueError
+            },
+            2: {
+                'error_type' : ParseError,
+                'error_msg' : "Error in atmos_corr: {'atmos_corr': [{'band_slots': ['required field'], 'bands': ['must be of list type']}]}"
+            },
+            3: {
+                'error_type' : ParseError,
+                'error_msg' : "Error in atmos_corr: {'atmos_corr': [{'band_slots': ['empty values not allowed'], 'bands': ['empty values not allowed']}]}",
+            },
+            4: {
+                'error_type' : ParseError,
+                'error_msg' : "Error in atmos_corr: {'atmos_corr': [{'write_map': ['must be of boolean type']}]}"
+            },
+            5: {
+                'error_type': ParseError,
+                'error_msg': "Error in atmos_corr: {'atmos_corr': [{'map_dir': ['value does not match regex"
+            },
+            6: {
+                'error_type': ParseError,
+                'error_msg': "Error in atmos_corr: {'atmos_corr': [{'band_slots': [\"band_slots and ['bands'] must have the same length\"]}]}"
+            },
+            7: {
+                'error_type': ParseError,
+                'error_msg': "Error in atmos_corr: {'atmos_corr': [{'map_stem': ['must be of string type']}]}"
+            },
+            8: {
+                'error_type': ParseError,
+                'error_msg': "Error in atmos_corr: {'atmos_corr': [{'det_bnames': ['empty values not allowed']}]}"
+            },
+            9: {
+                'error_type': ParseError,
+                'error_msg': "Error in atmos_corr: {'atmos_corr': [{'det_bword_included': ['must be of boolean type']}]}"
+            },
+            10: {
+                'error_type': ParseError,
+                'error_msg': "Error in atmos_corr: {'atmos_corr': [{'det_bpattern': ['must be of string type']}]}"
+            }
+        }
+
+        cnt = 1
+        for fail_key in root_keys:
+            if 'atmos' in fail_key:
+                if fail_key == f'atmos_corr_{cnt}':
+                    with self.subTest(fail_key):
+                        with self.assertRaises(error_map[cnt]['error_type']) as error_ctx:
+                            validate_config_func(fail_key, self.root_fail_config[fail_key], self.schema_map)
+                        if cnt > 1 and cnt != 5:
+                            self.assertEqual(str(error_ctx.exception), str(error_map[cnt]['error_msg']))
+                        elif cnt == 5:
+                            self.assertTrue(error_map[cnt]['error_msg'] in str(error_ctx.exception))
+                cnt += 1

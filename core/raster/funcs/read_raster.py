@@ -91,19 +91,20 @@ def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
 
     return empty_raster
 
-def read_band_from_raw(raster:Raster, selected_bands:list[Union[str, int]]=None, add_to_cache=False) -> Raster:
+def read_band_from_raw(raster:Raster, selected_name_or_id:list[Union[str, int]]=None, add_to_cache=False) -> Raster:
 
     module_type = raster.module_type
 
-    if selected_bands is None:
-        selected_bands = raster.get_band_names()
+    if selected_name_or_id is None:
+        selected_name_or_id = raster.get_band_names()
 
-    bands = new_selected_bands = None
+    bnames, index = get_band_name_and_index(raster, selected_name_or_id)
+
     if module_type == RasterType.GDAL:
-        _, index = get_band_name_and_index(raster, selected_bands)
-        bands, new_selected_bands = read_gdal_bands_as_dict(raster.raw, all_band_names=raster.get_band_names(), selected_index=index)
+        all_bnames = raster.get_band_names()
+        bands, new_selected_bands = read_gdal_bands_as_dict(raster.raw, all_band_names=all_bnames, selected_index=index)
     elif module_type == RasterType.SNAP:
-        bands, new_selected_bands = read_gpf_bands_as_dict(raster.raw, selected_bands)
+        bands, new_selected_bands = read_gpf_bands_as_dict(raster.raw, bnames)
     else:
         raise NotImplementedError(f'Module type({module_type}) is not implemented for the input process.')
 

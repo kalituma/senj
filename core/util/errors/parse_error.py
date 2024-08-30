@@ -3,6 +3,10 @@ class NullValueError(Exception):
         self.key = key
         super().__init__(f"Null value for key '{key}'")
 
+class ParseError(Exception):
+    def __init__(self, msg:str, reason:dict):
+        super().__init__(msg)
+
 class PathNotExistsError(Exception):
     def __init__(self, path:str):
         super().__init__(f'{path} does not exist')

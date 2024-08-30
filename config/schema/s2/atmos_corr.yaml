@@ -1,0 +1,56 @@
+path_const: &path_cons '^(?:[a-zA-Z]:[\/]|[\/])?(?:[^\/:*?"<>{}|]+[\/])*[^\/:*?"<>{}| ]*$'
+
+atmos_corr:
+  type: 'dict'
+  required: True
+  schema:
+    bands:
+      type: 'list'
+      empty: False
+      required: true
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+    band_slots:
+      type: 'list'
+      empty: False
+      required: true
+      schema:
+        type: 'string'
+      dependencies:
+        same_length_with: [ 'bands' ]
+
+    write_map:
+      type: 'boolean'
+      required: false
+      default: false
+
+    map_dir:
+      type: 'string'
+      required: false
+      regex: *path_cons
+
+    map_stem:
+      type: 'string'
+      required: false
+
+    det_bnames:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+
+    det_bword_included:
+      type: 'boolean'
+      required: false
+      default: false
+
+    det_bpattern:
+      type: 'string'
+      required: false

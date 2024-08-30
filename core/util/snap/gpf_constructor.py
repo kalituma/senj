@@ -11,15 +11,13 @@ def create_product(product_name:str, file_format:str, width:int, height:int):
 
     return product
 
-def create_product_data(band_arr):
-
-    bnum_pattern = '[a-z]+'
+def create_product_data(band_arr, arr_dtype:str):
 
     height, width = band_arr.shape
-    data_type = band_arr.dtype.name
-    pdata = ProductData.createInstance(ProductData.getType(data_type), width * height)
-    data_type = re.search(bnum_pattern, data_type).group().replace('uint', 'short')
-    bjarr = jpy.array(data_type, band_arr.flatten())
+    pdata = ProductData.createInstance(ProductData.getType(arr_dtype), width * height)
+    if arr_dtype == 'int16':
+        arr_dtype = 'short'
+    bjarr = jpy.array(arr_dtype, band_arr.flatten())
     pdata.setElems(bjarr)
 
     return pdata

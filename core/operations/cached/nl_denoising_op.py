@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, AnyStr, Union
 from core.operations import CachedOp, NL_DENOISING_OP
 from core.registry import OPERATIONS
 from core.util import nonlocal_mean_denoising, assert_bnames
 from core.util import percentile_norm
 from core.util.op import op_constraint, OP_TYPE
 from core.raster import Raster
+from core.raster.funcs import check_bname_index_valid
 
 
 if TYPE_CHECKING:
@@ -13,27 +14,25 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=NL_DENOISING_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class NLMeanDenoising(CachedOp):
-    def __init__(self, h:float=10, templateWindowSize:int=7, searchWindowSize:int=21, bands:list[str]=None):
+    def __init__(self, bands:List[Union[AnyStr, int]]=None, h:float=10, templateWindowSize:int=7, searchWindowSize:int=21):
         super().__init__(NL_DENOISING_OP)
         self.h = h
         self.templateWindowSize = templateWindowSize
         self.searchWindowSize = searchWindowSize
-        self.bands = bands
+        self.selected_names_or_indices = bands
 
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
-        if self.bands:
-            selected_bands = self.bands
-        elif raster.selected_bands:
-            selected_bands = raster.selected_bands
+        if check_bname_index_valid(raster, self.selected_names_or_indices):
+            selected_name_or_id = self.selected_names_or_indices
         else:
-            selected_bands = raster.get_band_names()
+            selected_name_or_id = raster.get_band_names()
 
-        assert_bnames(selected_bands, raster.get_band_names(), f'selected bands not found in raster{raster.path}')
-        raster = self.pre_process(raster, context)
+        raster = self.pre_process(raster, bands_to_load=selected_name_or_id, context=context)
 
         for key in raster.bands.keys():
-            raster[key]['value'] = nonlocal_mean_denoising(raster[key]['value'], h=self.h, templateWindowSize=self.templateWindowSize, searchWindowSize=self.searchWindowSize,
-                                                           norm_func=percentile_norm)
+            raster[key]['value'] = nonlocal_mean_denoising(raster[key]['value'], h=self.h,
+                                                           templateWindowSize=self.templateWindowSize, searchWindowSize=self.searchWindowSize, norm_func=percentile_norm)
         raster = self.post_process(raster, context)
+
         return raster

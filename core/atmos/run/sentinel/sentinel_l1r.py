@@ -2,7 +2,7 @@ from typing import Union, TYPE_CHECKING
 
 from core.util import glob_match
 # from core.atmos.run import load_bands
-from core.atmos.run.sentinel import get_l1r_band, build_det_grid, meta_dict_to_l1r_meta, load_det, l1r_meta_to_global_attrs, init_l1r
+from core.atmos.run.sentinel import get_l1r_band, build_det_grid, meta_dict_to_l1r_meta, l1r_meta_to_global_attrs, init_l1r
 
 if TYPE_CHECKING:
     from core.raster import Raster
