@@ -78,7 +78,7 @@ def create_ds_with_dict(raster_bands:dict[str], gdal_format,
     mem_ds.FlushCache()
     return mem_ds
 
-def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=None, is_bigtiff=False, compress=False, band_to_index=None):
+def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=None, is_bigtiff=False, compress=False):
     if not out_path:
         out_path = ''
 
@@ -104,17 +104,9 @@ def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=
     else:
         tar_ds = driver.CreateCopy(out_path, src_ds)
 
-    if band_to_index:
-        tar_ds = set_band_to_index_on_tif_meta(tar_ds, band_to_index)
-
     tar_ds.FlushCache()
 
     return tar_ds
 
-def set_band_to_index_on_tif_meta(ds, band_name_to_index:dict[str, int]):
 
-    ds.SetMetadata({}, 'band_to_index')
-    for bname, bidx in band_name_to_index.items():
-        ds.SetMetadataItem(bname, f'{bidx}', 'band_to_index')
-    return ds
 

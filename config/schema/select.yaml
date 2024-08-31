@@ -1,0 +1,19 @@
+select:
+  type: 'dict'
+  required: true
+  schema:
+    bands:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+    band_labels:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+          type: 'string'

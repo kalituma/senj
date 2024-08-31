@@ -6,7 +6,7 @@ from core.util.op import call_constraint, op_constraint, OP_TYPE
 from core.operations import APPLYORBIT_OP
 from core.operations.parent import ParamOp, SnappyOp
 from core.raster import Raster, RasterType
-from core.raster.funcs import create_band_name_idx
+from core.raster.funcs import init_bname_index_in_meta
 
 from core.util.snap import apply_orbit_func, make_meta_dict_from_product, ORBIT_TYPE
 
@@ -28,7 +28,7 @@ class ApplyOrbit(ParamOp, SnappyOp):
 
         # update meta_dict with new orbits
         meta_dict = make_meta_dict_from_product(raster.raw, raster.product_type)
-        meta_dict = create_band_name_idx(meta_dict, raster.raw, product_type=raster.product_type, module_type=raster.module_type)
+        meta_dict = init_bname_index_in_meta(meta_dict, raster.raw, product_type=raster.product_type, module_type=raster.module_type)
         raster.meta_dict = meta_dict
 
         raster = self.post_process(raster, context)

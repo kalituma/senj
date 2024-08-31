@@ -9,3 +9,7 @@ def sort_by_name(file_name: str, pattern=None) -> str:
 @LAMBDA.reg(name='sort_by_last_number')
 def sort_by_last_number(file_name: str) -> int:
     return int(Path(file_name).stem.split('_')[-1])
+
+@LAMBDA.reg(name='sort_by_second_number')
+def sort_by_second_number(file_name: str) -> int:
+    return int(Path(file_name).stem.split('_')[1])

@@ -5,7 +5,7 @@ from jsonpath_ng.ext import parse
 from typing import Union, List, Tuple, Callable
 
 from core import LAMBDA
-from core.util import PathType, read_yaml, get_files_recursive, query_dict
+from core.util import PathType, read_yaml, get_files_recursive, query_dict, assert_bnames
 from core.config import LAMBDA_PATTERN, check_path_or_var, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, expand_var
 
 def op_dicts(op_names:list, args_list:list) -> list[dict]   :
@@ -142,6 +142,10 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
             p_config['input'] = parse_sort(p_config['input'])
         else:
             op_keys = p_config['operations'].copy()
+
+        arg_op_keys = [arg_key for arg_key in p_config if arg_key not in ['input', 'operations']]
+
+        assert_bnames(arg_op_keys, op_keys, f'operations({op_keys}) set in config should match with operation arguments({arg_op_keys})')
 
         op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)

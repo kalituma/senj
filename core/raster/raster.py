@@ -72,16 +72,10 @@ class Raster:
     def _init_band_map_raw(self):
         assert self._index_to_band is None and self._band_to_index is None, 'Band map should be initialized only once.'
 
-        band_to_index = None
-        if self.module_type == RasterType.GDAL:
-            band_to_index = self.raw.GetMetadata('band_to_index')
-            if len(band_to_index) == 0:
-                band_to_index = None
-
-        if band_to_index is None:
-            bnames = self.get_band_names()
-        else:
-            bnames = list(band_to_index.keys())
+        # if band_to_index is None:
+        bnames = self.get_band_names()
+        # else:
+        # bnames = list(band_to_index.keys())
 
         if self.meta_dict:
             self.meta_dict['index_to_band'], self.meta_dict['band_to_index'] = self._produce_band_map(bnames)

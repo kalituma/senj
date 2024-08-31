@@ -59,15 +59,17 @@ def update_meta_dict(meta_dict:dict, raw:Union[Dataset, Product], module_type:Ra
 
 def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, module_type:RasterType, raster_path:str, update_meta_bounds:bool) -> Union[dict, None]:
 
+    # xml, dim, safe or tif can be in raster_path
+
     meta_dict = None
 
     if raster_path != '':
         ext = Path(raster_path).suffix
-        meta_path = raster_path.replace(ext, '.pkl')
+        pkl_meta_path = raster_path.replace(ext, '.pkl')
 
         # load if exists
-        if Path(meta_path).exists():
-            meta_dict = read_pickle(meta_path)
+        if Path(pkl_meta_path).exists():
+            meta_dict = read_pickle(pkl_meta_path)
             return meta_dict
 
     # parse from snap

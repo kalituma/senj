@@ -1,7 +1,0 @@
-
-read_gdal:
-  input:
-    path: '$PROJECT_PATH/test/tif/s2/gdal'
-  operations: ['read']
-  read:
-      module: 'gdal'

@@ -10,8 +10,10 @@ from core.util.snap import create_product_data
 
 def rename_bands(product:Product, band_names:list) -> Product:
     assert len(band_names) == len(product.getBandNames()), 'The number of band names should be the same as the source product'
+
     for new_bname, old_bname in zip(band_names, product.getBandNames()):
-        product.getBand(old_bname).setName(new_bname)
+        if new_bname != old_bname:
+            product.getBand(old_bname).setName(new_bname)
     return product
 
 def add_band_to_product(product, bands:dict):

@@ -2,7 +2,9 @@ from .geo_info import *
 from .band_name_index import *
 from .create_meta import *
 from .bigtiff import *
+from .rename_raster import *
 from .meta_raster import *
+from .load_image_paths import *
 from .read_raster import *
 from .update_raw import *
 from .convert_raster import *

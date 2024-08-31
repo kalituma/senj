@@ -1,7 +1,7 @@
 from typing import Union
 
 from core.raster import Raster, RasterType
-from core.raster.funcs import create_meta_dict, create_band_name_idx, set_raw_metadict
+from core.raster.funcs import create_meta_dict, init_bname_index_in_meta, set_raw_metadict
 from core.util import assert_bnames, ProductType
 from core.util.snap import merge as merge_gpf
 from core.util.gdal import merge as merge_gdal

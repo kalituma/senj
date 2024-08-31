@@ -41,6 +41,7 @@ root_4:
   read:
     module: 'gdal'
 
+
 # read
 read_1:
   <<: *parent
@@ -351,3 +352,21 @@ atmos_corr_4:
     det_bword_included: true
     det_bpattern: '*detector*'
 
+select_1:
+  <<: *parent
+  operations: [ 'select' ]
+  select:
+      bands: [ 1, 2, 3 ]
+      band_labels: [ 'B1', 'B2', 'B3' ]
+
+select_2:
+  <<: *parent
+  operations: [ 'select' ]
+  select:
+      band_labels: [ 'B1', 'B2', 'B3' ]
+
+select_3:
+  <<: *parent
+  operations: [ 'select' ]
+  select:
+      bands: [ 1, 2, 3 ]

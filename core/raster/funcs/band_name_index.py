@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union, Tuple
 from osgeo.gdal import Dataset
 from esa_snappy import Product
 
-from core.util import ProductType, assert_bnames
+from core.util import ProductType, assert_bnames, get_btoi_from_tif
 from core.raster import Raster, RasterType
 
 def check_bname_index_valid(raster:Raster, band_id_list:list[Union[str, int]]) -> bool:
@@ -33,24 +33,30 @@ def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return band_name, index
 
-def create_band_name_idx(meta_dict:dict, raw:Union[Dataset, Product], product_type:ProductType, module_type:RasterType) -> dict:
+def init_bname_index_in_meta(meta_dict:dict, raw:Union[Dataset, Product], product_type:ProductType, module_type:RasterType, band_to_index:dict) -> dict:
 
-    if 'band_to_index' not in meta_dict or 'index_to_band' not in meta_dict:
-        if product_type == ProductType.S1 or product_type == ProductType.S2 or ProductType.PS:
-            if module_type == RasterType.GDAL:
-                band_indices = list(range(1, raw.RasterCount + 1))
-                bnames = [f'band_{index}' for index in band_indices]
-            elif module_type == RasterType.SNAP:
-                bnames = list(raw.getBandNames())
+    if meta_dict:
+        if 'band_to_index' not in meta_dict or 'index_to_band' not in meta_dict:
+            if band_to_index:
+                meta_dict['band_to_index'] = {b: int(i) for b, i in band_to_index.items()}
+                meta_dict['index_to_band'] = {int(i): b for b, i in band_to_index.items()}
             else:
-                raise NotImplementedError(f'{module_type} is not implemented.')
+                if product_type == ProductType.S1 or product_type == ProductType.S2 or product_type == ProductType.PS:
+                    if module_type == RasterType.GDAL:
+                        band_indices = list(range(1, raw.RasterCount + 1))
+                        bnames = [f'band_{index}' for index in band_indices]
+                    elif module_type == RasterType.SNAP:
+                        bnames = list(raw.getBandNames())
+                    else:
+                        raise NotImplementedError(f'{module_type} is not implemented.')
+                    meta_dict['band_to_index'] = {b: i + 1 for i, b in enumerate(bnames)}
+                    meta_dict['index_to_band'] = {i + 1: b for i, b in enumerate(bnames)}
+                elif product_type == ProductType.WV:
+                    assert 'BAND_INFO' in meta_dict, f'BAND_INFO is not found in meta_dict'
+                    meta_dict['band_to_index'] = {band_name:band_info['index'] for band_name, band_info in meta_dict['BAND_INFO'].items()}
+                    meta_dict['index_to_band'] = {band_info['index']:band_name for band_name, band_info in meta_dict['BAND_INFO'].items()}
+                else:
+                    raise NotImplementedError(f'{product_type} is not implemented.')
 
-            meta_dict['band_to_index'] = {b: i + 1 for i, b in enumerate(bnames)}
-            meta_dict['index_to_band'] = {i + 1: b for i, b in enumerate(bnames)}
-
-        if product_type == ProductType.WV:
-            assert 'BAND_INFO' in meta_dict, f'BAND_INFO is not found in meta_dict'
-            meta_dict['band_to_index'] = {band_name:band_info['index'] for band_name, band_info in meta_dict['BAND_INFO'].items()}
-            meta_dict['index_to_band'] = {band_info['index']:band_name for band_name, band_info in meta_dict['BAND_INFO'].items()}
 
     return meta_dict

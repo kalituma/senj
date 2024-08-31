@@ -264,3 +264,10 @@ class TestParsingCerberus(unittest.TestCase):
                         elif cnt == 5:
                             self.assertTrue(error_map[cnt]['error_msg'] in str(error_ctx.exception))
                 cnt += 1
+
+    def test_parse_select(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'select' in success_key:
+                with self.subTest(success_key):
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)

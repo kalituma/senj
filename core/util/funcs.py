@@ -8,6 +8,10 @@ class PathType(Enum):
     DIR = auto()
     VAR = auto()
 
+def list_to_ordered_set(in_list:list) -> list:
+    indexed_set = set((x, i) for i, x in enumerate(in_list))
+    return [x for x, _ in sorted(indexed_set, key=lambda x: x[1])]
+
 def remove_list_elements(src_list:list[str], remove_list:list[str]) -> list[str]:
     ref_set = set(remove_list)
     return list(filter(lambda x: x not in ref_set, src_list))

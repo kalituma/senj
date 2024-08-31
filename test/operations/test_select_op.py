@@ -26,3 +26,18 @@ class TestReproject(unittest.TestCase):
             s1_raster = Read(module='gdal')(self.s1_tif_path, context)
             s1_raster = Select(bands=['B2', 'B3', 'B4'])(s1_raster, context)
             # Write(out_dir=out_dir, out_stem='select_gdal', out_ext='tif')(s1_raster, context)
+    def test_select_rename(self):
+        context = Context(None)
+
+        out_dir = os.path.join(self.test_data_root, 'target', 'test_out', 'select_op')
+        with self.subTest(msg='select using index'):
+            s2_raster = Read(module='snap')(self.s2_dim_path, context)
+            s2_raster = Select(bands=[2, 3, 4], band_labels=['a', 'b', 'c'])(s2_raster, context)
+            self.assertEqual(s2_raster.get_band_names(), ['a', 'b', 'c'])
+
+        with self.subTest(msg='select using gdal'):
+            s1_raster = Read(module='gdal')(self.s1_tif_path, context)
+            s1_raster = Select(band_labels=['a', 'b', 'c', 'aa', 'bb', 'cc'])(s1_raster, context)
+            self.assertEqual(s1_raster.get_band_names(), ['a', 'b', 'c', 'aa', 'bb', 'cc'])
+
+

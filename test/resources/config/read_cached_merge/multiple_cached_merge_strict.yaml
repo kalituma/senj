@@ -1,0 +1,34 @@
+read_gdal_s2:
+  input:
+    path: '$PROJECT_PATH/test/tif/s2/gdal'
+    pattern: '*.tif'
+    sort:
+      func: '!{sort_by_second_number}'
+  operations: ['read']
+  read:
+      module: 'snap'
+
+read_snap_s2:
+  input:
+    path: '$PROJECT_PATH/test/tif/s2/snap'
+    pattern: '*.tif'
+    sort:
+      func: '!{sort_by_second_number}'
+  operations: ['read']
+  read:
+      module: 'gdal'
+
+merge_s2:
+  input:
+    path: ['{{read_gdal_s2}}', '{{read_snap_s2}}']
+    operations: ['merge', 'select', 'write']
+    merge:
+      bands_list: [[], []]
+      master_module: 'gdal'
+    select:
+      bands: [1, 2, 3]
+    write:
+      out_dir: '$PROJECT_PATH/test/target/test_out/read_write_config/iterative'
+      out_stem: 'merged'
+      suffix: 'gdal_snap'
+      out_ext: 'tif'

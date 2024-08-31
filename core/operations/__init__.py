@@ -1,9 +1,6 @@
 from core.raster import RasterType
 
-MODULE_EXT_MAP = {
-    RasterType.GDAL : ['tif', 'xml'],
-    RasterType.SNAP : ['dim', 'tif', 'safe', 'xml']
-}
+
 from .parent import *
 
 from core.util.op.op_const import *
