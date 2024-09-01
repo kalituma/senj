@@ -10,7 +10,6 @@ from core.raster import RasterType
 T = TypeVar('T', bound='Raster')
 
 class Raster:
-
     def __init__(self, path:str=None, band_names:list[Union[str, int]]=None):
 
         self._module_type:RasterType = None

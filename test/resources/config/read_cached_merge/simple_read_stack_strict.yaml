@@ -25,7 +25,7 @@ merge_s2:
   select:
     band_labels: ['B2', 'B3', 'B4', 'B2_1', 'B3_1', 'B4_1']
   write:
-    out_dir: '$PROJECT_PATH/test/target/test_out/read_write_config/read_merged_write_config'
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/read_write_config/read_merged_write_config'
     out_stem: 'merged'
     suffix: 'gdal_snap'
     out_ext: 'tif'

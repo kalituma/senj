@@ -6,7 +6,7 @@ from typing import Union, List, Tuple, Callable
 
 from core import LAMBDA
 from core.util import PathType, read_yaml, get_files_recursive, query_dict, assert_bnames
-from core.config import LAMBDA_PATTERN, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, validate_input_path, \
+from core.config import LAMBDA_PATTERN, VAR_PATTERN, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, validate_input_path, \
     validate_processor_relation
 
 def op_dicts(op_names:list, args_list:list) -> list[dict]   :
@@ -47,7 +47,7 @@ def extract_pnodes_pops(all_config:dict):
     return p_nodes, p_ops, configs
 
 def replace_config_property(config, config_find_pattern, val_match_func:Callable,
-                            change_val_func:Callable=None, err_chk:Callable=None, val_func:Callable=None):
+                            change_val_func:Callable=lambda x:x, err_chk:Callable=None, val_func:Callable=lambda x:x):
     q_target = parse(config_find_pattern)
     for match in q_target.find(config):
         if isinstance(match.value, str) and val_match_func(match.value):
@@ -71,11 +71,11 @@ def replace_config_properties(config:dict) -> dict:
     def get_lambda_contructor(changed_value):
         return LAMBDA.__get_attr__(name=changed_value, attr_name='constructor')
 
-    def lambda_val_match(src_str, pattern):
+    def val_pattern_match(src_str, pattern):
         return re.match(pattern, src_str)
 
     # lambda
-    config = replace_config_property(config, '$..func', val_match_func=partial(lambda_val_match, pattern=LAMBDA_PATTERN),
+    config = replace_config_property(config, '$..func', val_match_func=partial(val_pattern_match, pattern=LAMBDA_PATTERN),
                                      change_val_func=remove_func_bracket, err_chk=lambda_exists, val_func=get_lambda_contructor)
 
     def band_list_none_match(target_list:list):
@@ -84,13 +84,11 @@ def replace_config_properties(config:dict) -> dict:
             return [idx for idx, row in enumerate(target_list) if row in [none_str, none_str.upper(), none_str.title()]]
         return None
 
-    # bands_list for stack op
+    # bands_list from stack op
     config = replace_config_property(config, '$..bands_list', val_match_func=band_list_none_match)
 
-    def link_var_match(src_str):
-        return '{{' in src_str and '}}' in src_str
-
-    config = replace_config_property(config, '$..meta_from', val_match_func=link_var_match)
+    # meta_from from stack op
+    config = replace_config_property(config, '$..meta_from', val_match_func=partial(val_pattern_match, pattern=VAR_PATTERN), change_val_func=lambda x: x.replace('{{', '').replace('}}', ''))
 
     return config
 
