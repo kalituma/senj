@@ -6,7 +6,8 @@ from typing import Union, List, Tuple, Callable
 
 from core import LAMBDA
 from core.util import PathType, read_yaml, get_files_recursive, query_dict, assert_bnames
-from core.config import LAMBDA_PATTERN, check_path_or_var, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, expand_var
+from core.config import LAMBDA_PATTERN, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, validate_input_path, \
+    validate_processor_relation
 
 def op_dicts(op_names:list, args_list:list) -> list[dict]   :
     out = list()
@@ -77,35 +78,23 @@ def replace_config_properties(config:dict) -> dict:
     config = replace_config_property(config, '$..func', val_match_func=partial(lambda_val_match, pattern=LAMBDA_PATTERN),
                                      change_val_func=remove_func_bracket, err_chk=lambda_exists, val_func=get_lambda_contructor)
 
-    def none_val_match(target_list:list):
+    def band_list_none_match(target_list:list):
         none_str = 'none'
         if none_str in target_list or none_str.upper() in target_list or none_str.title() in target_list:
             return [idx for idx, row in enumerate(target_list) if row in [none_str, none_str.upper(), none_str.title()]]
         return None
 
     # bands_list for stack op
-    config = replace_config_property(config, '$..bands_list', val_match_func=none_val_match)
+    config = replace_config_property(config, '$..bands_list', val_match_func=band_list_none_match)
+
+    def link_var_match(src_str):
+        return '{{' in src_str and '}}' in src_str
+
+    config = replace_config_property(config, '$..meta_from', val_match_func=link_var_match)
 
     return config
 
-def validate_input_path_recur(input_path:str) -> tuple[bool, PathType, str]:
 
-    # check input if it is a path or a variable
-    path_exist, path_type, new_path = check_path_or_var(input_path)
-
-    if not path_exist and (path_type == PathType.DIR or path_type == PathType.FILE):
-        raise ValueError(f'{input_path} does not exist')
-
-    return path_exist, path_type, new_path
-
-def validate_input_path(input_path:Union[str, list[str]]) -> list[tuple[bool, PathType, str]]:
-    result = []
-    if isinstance(input_path, list):
-        for input_value in input_path:
-            result.append(validate_input_path_recur(input_value))
-    else:
-        result.append(validate_input_path_recur(input_path))
-    return result
 
 def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dict, List[str], List[Tuple[str, str]], dict]:
 
@@ -116,12 +105,14 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
     # register process nodes
     p_nodes, p_ops, n_config = extract_pnodes_pops(all_config)
 
+    validate_processor_relation(n_config, proc_list=p_nodes)
+
     # loop only on top level
     for p_key, p_config in n_config.items():
 
         validate_config_func(p_key, p_config, schema_map)
 
-        # when close processing
+        # write operation will be only op closing process
         if 'write' in p_config['operations']:
             p_end.append(p_key)
 
@@ -150,7 +141,7 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
         op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)
 
-    # replace lambda var with function name
+    # replace var which represent lambda or any link used in any properties would be replaced here
     n_config = replace_config_properties(n_config)
 
     return n_config, p_nodes, p_init, p_end, p_link, p_ops

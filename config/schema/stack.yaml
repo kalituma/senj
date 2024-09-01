@@ -42,3 +42,7 @@ stack:
       type: 'string'
       required: true
       allowed: ['gdal', 'snap']
+
+    meta_from:
+      type: 'string'
+      required: false
