@@ -105,6 +105,9 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
 
     validate_processor_relation(n_config, proc_list=p_nodes)
 
+    # replace var which represent lambda or any link used in any properties would be replaced here
+    n_config = replace_config_properties(n_config)
+
     # loop only on top level
     for p_key, p_config in n_config.items():
 
@@ -138,8 +141,5 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
 
         op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)
-
-    # replace var which represent lambda or any link used in any properties would be replaced here
-    n_config = replace_config_properties(n_config)
 
     return n_config, p_nodes, p_init, p_end, p_link, p_ops

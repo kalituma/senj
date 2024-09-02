@@ -4,31 +4,26 @@ from esa_snappy import Product
 from pathlib import Path
 
 from core.util import ProductType
-from core.raster import RasterType
+from core.raster import RasterType, RasterMeta
 
 
 T = TypeVar('T', bound='Raster')
 
-class Raster:
+class Raster(RasterMeta):
     def __init__(self, path:str=None, band_names:list[Union[str, int]]=None):
+
+        super().__init__()
 
         self._module_type:RasterType = None
         self._path:str = path
         self._selected_bands:list[Union[str, int]] = band_names
 
         self._raw:Union[ProductType, Dataset] = None
-        self._meta_dict:dict = None
-
-        self._index_to_band:dict = None
-        self._band_to_index:dict = None
 
         self._bands_data:dict = None
         self._product_type:ProductType = ProductType.UNKNOWN
         self._is_band_cached:bool = False
-
-        self._warp_options:dict = None
-
-        self.op_history:list = []
+        self._raster_from:str = ''
 
         if not Path(path).exists():
             raise FileNotFoundError(f'{path} does not exist')
@@ -68,61 +63,23 @@ class Raster:
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
 
-    def _init_band_map_raw(self):
-        assert self._index_to_band is None and self._band_to_index is None, 'Band map should be initialized only once.'
-
-        # if band_to_index is None:
-        bnames = self.get_band_names()
-        # else:
-        # bnames = list(band_to_index.keys())
-
-        if self.meta_dict:
-            self.meta_dict['index_to_band'], self.meta_dict['band_to_index'] = self._produce_band_map(bnames)
-            self._copy_band_map_from_meta()
-        else:
-            self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
-
-    def update_band_map(self, bnames):
-        self._index_to_band, self._band_to_index = self._produce_band_map(bnames)
-    def update_band_map_to_meta(self, bnames):
-        self.meta_dict['index_to_band'], self.meta_dict['band_to_index'] = self._produce_band_map(bnames)
-
-    def _copy_band_map_from_meta(self):
-        self._index_to_band = self.meta_dict['index_to_band']
-        self._band_to_index = self.meta_dict['band_to_index']
-
-    def _produce_band_map(self, band_names:list[str]):
-        return {i+1: b for i, b in enumerate(band_names)}, {b: i+1 for i, b in enumerate(band_names)}
-
     def get_band_names(self) -> list[str]:
 
         # priority : 1. map 2. meta 3. raw
-        # before get band names by calling this function, meta_dict should be always updated.
+        # before getting band names by this function, meta_dict should be always updated.
 
         if self._index_to_band is not None and self._band_to_index is not None:
             return list(self._index_to_band.values())
 
         if self.module_type == RasterType.GDAL:
             band_indices = list(range(1, self.raw.RasterCount+1))
-            bnames = self._get_band_names_from_meta(band_indices)
+            bnames = self._get_band_names_from_meta(band_indices) # from meta if exists else create by index
         elif self.module_type == RasterType.SNAP:
             bnames = list(self.raw.getBandNames())
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
 
         return bnames
-
-    def _get_band_names_from_meta(self, indices:list) -> list[str]:
-        try:
-            return [self.meta_dict['index_to_band'][index-1] for index in indices]
-        except Exception as e:
-            return [f'band_{index}' for index in indices]
-
-    def index_to_band_name(self, indices:list[int]) -> list[str]:
-        return [self._index_to_band[i] for i in indices]
-
-    def band_name_to_index(self, band_names:list[str]) -> list[int]:
-        return [self._band_to_index[b] for b in band_names]
 
     def get_tie_point_grid_names(self) -> Union[list[str], None]:
         if self.module_type == RasterType.SNAP:
@@ -131,17 +88,13 @@ class Raster:
                 return grid_names
         return None
 
-    def add_history(self, history):
-        self.op_history.append(history)
-
     def del_bands_cache(self):
         self.bands = None
         self.is_band_cached = False
         self.selected_bands = None
 
     def close(self):
-        self.bands = None
-        self.meta_dict = None
+        super().close()
 
         if self.module_type == RasterType.GDAL:
             self.raw = None
@@ -166,10 +119,10 @@ class Raster:
     @property
     def selected_bands(self):
         return self._selected_bands
-
-    @selected_bands.setter
-    def selected_bands(self, bands):
-        self._selected_bands = bands
+    #
+    # @selected_bands.setter
+    # def selected_bands(self, bands):
+    #     self._selected_bands = bands
 
     @property
     def bands(self):
@@ -178,20 +131,6 @@ class Raster:
     @bands.setter
     def bands(self, bands):
         self._bands_data = bands
-
-    def get_cached_band_names(self) -> Union[list[str], None]:
-        if self._bands_data:
-            return list(self._bands_data)
-        else:
-            return None
-
-    @property
-    def meta_dict(self):
-        return self._meta_dict
-
-    @meta_dict.setter
-    def meta_dict(self, meta_dict):
-        self._meta_dict = meta_dict
 
     @property
     def path(self):
@@ -245,26 +184,19 @@ class Raster:
     def is_band_cached(self, is_cached):
         self._is_band_cached = is_cached
 
-    def update_index_bnames(self, bnames=None):
-        if self._index_to_band is None and self._band_to_index is None:
-            if self.meta_dict:
-                if 'index_to_band' in self.meta_dict and 'band_to_index' in self.meta_dict:
-                    self._copy_band_map_from_meta()
-                else:
-                    self._init_band_map_raw()
-            else:
-                if bnames is not None:
-                    self.update_band_map(bnames)
-                else:
-                    self._init_band_map_raw()
-        else:
-            if self._meta_dict is not None:
-                self._copy_band_map_from_meta()
-            else:
-                assert bnames is not None, 'bnames should be provided'
-                self.update_band_map(bnames)
+    @property
+    def raster_from(self):
+        return self._raster_from
 
-        return self
+    @raster_from.setter
+    def raster_from(self, from_proc):
+        self._raster_from = from_proc
+
+    def get_cached_band_names(self) -> Union[list[str], None]:
+        if self._bands_data:
+            return list(self._bands_data)
+        else:
+            return None
 
     def update_index_bnames_from_raw(self):
         if self.module_type == RasterType.SNAP:

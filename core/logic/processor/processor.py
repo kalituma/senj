@@ -72,8 +72,9 @@ class Processor(OperationManager):
         pass
 
     @abstractmethod
-    def postprocess(self, x):
-        pass
+    def postprocess(self, x:"Raster"):
+        x.raster_from = self.proc_name
+        return x
 
     def set_executor(self, executor:"ProcessingExecutor"):
         self.executor = executor

@@ -14,6 +14,7 @@ class OP_TYPE(Enum):
 
     @classmethod
     def from_str(cls, s):
+        s = s.lower()
         if s == 'gdal':
             return cls.GDAL
         elif s == 'snap':

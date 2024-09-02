@@ -35,7 +35,7 @@ class TestReadOp(unittest.TestCase):
         self.s2_tif_snap_path = os.path.join(self.test_data_root, 'tif', 's2', 'snap', 'out_0_B2_B3_B4_B_detector_footprint_B2_B_detector_footprint_B3_B_detector_footprint_B4.tif')
         self.s1_tif_gdal_path = os.path.join(self.test_data_root, 'tif', 's1', 'gdal', 'src_1', 'terrain_corrected_0.tif')
         self.s2_tif_gdal_path = os.path.join(self.test_data_root, 'tif', 's2', 'gdal', 'out_0_read.tif')
-        self.s2_without_meta = os.path.join(self.test_data_root, 's2merge_1_stack_subset.tif')
+        self.s2_without_meta = os.path.join(self.test_data_root, 'tif', 'no_meta', 'out_0_read.tif')
 
     def test_read_snap_sentinel(self):
         context = Context(None)
@@ -75,7 +75,7 @@ class TestReadOp(unittest.TestCase):
             self.assertTrue(isinstance(result_raster.raw, Dataset))
 
     def test_read_world_view(self):
-        context = Context()
+        context = Context(None)
         with self.subTest('read world view'):
             tif_raster = Read(module='snap', bands=['BAND_R', 'BAND_B'])(self.wv_tif_path, context)
             self.assertEqual(list(tif_raster.get_band_names()), ['BAND_R', 'BAND_B'])
@@ -99,7 +99,7 @@ class TestReadOp(unittest.TestCase):
             ge_gdal = ge_gdal_xml = None
 
     def test_read_planet_scope(self):
-        context = Context()
+        context = Context(None)
         with self.subTest('read planet scope'):
             tif_raster = Read(module='snap', bands=['band_1', 'band_3'])(self.ps_tif_path, context)
             self.assertEqual(list(tif_raster.get_band_names()), ['band_1', 'band_3'])
@@ -115,13 +115,13 @@ class TestReadOp(unittest.TestCase):
 
         with self.subTest('wrong module'):
             with self.assertRaises(ModuleError):
-                Read(module='jpg')(self.s1_tif_snap_path, Context())
+                Read(module='jpg')(self.s1_tif_snap_path, Context(None))
         with self.subTest('wrong module'):
             with self.assertRaises(ValueError):
-                Read(module='snap')('not_exist.tif', Context())
+                Read(module='snap')('not_exist.tif', Context(None))
 
     def test_read_gdal(self):
-        context = Context()
+        context = Context(None)
         with self.subTest('read snap tif'):
             Read(module='gdal')(self.s1_tif_snap_path, context)
 
@@ -141,7 +141,7 @@ class TestReadOp(unittest.TestCase):
 
 
     def test_read_gdal_fail(self):
-        context = Context()
+        context = Context(None)
         read_op = Read(module='gdal')
         targets = [self.s1_safe_grdh_path, self.s1_safe_slc_path, self.s2_safe_path, self.s1_dim_path]
         for target_path in targets:
@@ -159,7 +159,7 @@ class TestReadOp(unittest.TestCase):
 
         with self.subTest('try to open tif with band name included option'):
             with self.assertRaises(AssertionError):
-                Read(module='gdal', bands=[1])(self.s1_tif_snap_path, context, bname_word_included=True)
+                Read(module='gdal', bands=[1], bname_word_included=True)(self.s1_tif_snap_path, context)
 
     def test_read_each_product_type(self):
 
@@ -168,7 +168,7 @@ class TestReadOp(unittest.TestCase):
         ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
         ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
 
-        context = Context()
+        context = Context(None)
 
         with self.subTest('read s1 and s2 safe'):
             s1_safe = Read(module='snap')(self.s1_safe_grdh_path, context)
@@ -213,7 +213,7 @@ class TestReadOp(unittest.TestCase):
             self.assertEqual(ps_raster.product_type, ProductType.PS)
 
     def test_world_view_auto_merge(self):
-        context = Context()
+        context = Context(None)
         wv_path = '/home/airs_khw/mount/expand/data/etri/1.WV-2_20190404_강릉/014493935010_01_P001_MUL/19APR04021253-M2AS_R1C1-014493935010_01_P001.TIF'
         wv_meta_path = '/home/airs_khw/mount/expand/data/etri/1.WV-2_20190404_강릉/014493935010_01_P001_MUL/19APR04021253-M2AS-014493935010_01_P001.XML'
 
@@ -232,7 +232,7 @@ class TestReadOp(unittest.TestCase):
 
         with self.subTest('read wv tif starting with snap and then gdal'):
             import numpy as np
-            context = Context()
+            context = Context(None)
 
             wv_snap_raster = Read(module='snap')(wv_path, context)
             self.assertEqual(wv_snap_raster.product_type, ProductType.WV)
@@ -250,7 +250,7 @@ class TestReadOp(unittest.TestCase):
             self.assertEqual(wv_raster.path, wv_meta_path)
 
     def test_world_view_using_ge(self):
-        context = Context()
+        context = Context(None)
         ge_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS_R1C1-014493907010_01_P001.TIF'
         ge_meta_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/4.GE-1_20190407_강릉/014493907010_01_P001_MUL/19APR07023734-M2AS-014493907010_01_P001.XML'
 
@@ -287,7 +287,7 @@ class TestReadOp(unittest.TestCase):
     def test_planet(self):
         ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
         ps_meta_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_metadata_clip.xml'
-        context = Context()
+        context = Context(None)
 
         with self.subTest('read planet tif'):
             import numpy as np
@@ -325,7 +325,7 @@ class TestReadOp(unittest.TestCase):
     def test_select_band(self):
 
         bword = '*B1'
-        r = Read(module='SNAP', bword=bword, bname_word_included=True)(self.s2_dim_path, Context())
-        r_gdal = Read(module='GDAL', bword=bword, bname_word_included=True)(self.s2_dim_path, Context())
+        r = Read(module='SNAP', bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
+        r_gdal = Read(module='GDAL', bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
         self.assertTrue(compare_nested_dicts_with_arrays(r.meta_dict, r_gdal.meta_dict))
 

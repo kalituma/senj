@@ -38,6 +38,7 @@ class LinkProcessor(Processor):
                 break
 
     def postprocess(self, x, result_clone:bool=False):
+        x = super().postprocess(x)
         return x
 
     def set_executor(self, executor:"ProcessingExecutor"):
@@ -63,8 +64,6 @@ class LinkProcessor(Processor):
         else:
             # multiple type of op is meaning the only case the first op is stack operation already set with specific module type
             return self.apply_op_type(self.get_first_op_type())
-
-
 
 
     def __contains__(self, proc):

@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, TYPE_CHECKING
 from pathlib import Path
 
 from core.operations import READ_OP
@@ -8,6 +8,8 @@ from core.util.op import check_init_operation, OP_TYPE
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
 
+if TYPE_CHECKING:
+    from core.raster import Raster
 
 @PROCESSOR.reg(FILE_PROCESSOR)
 class FileProcessor(Processor):
@@ -48,7 +50,8 @@ class FileProcessor(Processor):
     def add_op(self, op):
         return super().add_op(op)
 
-    def postprocess(self, x, result_clone:bool=False):
+    def postprocess(self, x:"Raster", result_clone:bool=False):
+        x = super().postprocess(x)
         return x
 
     def get_first_op_type(self) -> OP_TYPE:

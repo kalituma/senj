@@ -20,11 +20,14 @@ class Stack(SelectOp):
         self._selected_bands_list = bands_list
         self._module = RasterType.from_str(master_module)
         self._meta_from = meta_from
-
+        self.op_type = OP_TYPE.from_str(master_module)
 
     def __call__(self, rasters:List["Raster"], *args, **kwargs):
 
         assert len(rasters) > 1, 'At least two rasters are required for stacking'
+        assert self._meta_from in [r.raster_from for r in rasters], f'meta_from({self._meta_from}) not found in rasters'
+
+        proc_raster_map = {r.raster_from: r for r in rasters}
 
         if self._selected_bands_list:
             assert len(rasters) == len(self._selected_bands_list), 'The number of rasters and selected bands must be the same'
@@ -43,6 +46,8 @@ class Stack(SelectOp):
                 rasters[i] = convert_raster(rasters[i], out_module=self._module)
 
         merged_raster = merge_raster_func(rasters, self._module)
+        merged_raster.meta_dict = proc_raster_map[self._meta_from].meta_dict.copy()
+        merged_raster.update_band_map_to_meta()
         merged_raster = self.post_process(merged_raster, *args, **kwargs)
 
         return merged_raster
