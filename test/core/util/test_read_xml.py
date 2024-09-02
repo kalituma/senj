@@ -28,7 +28,8 @@ class TestAtmosSubFuncs(unittest.TestCase):
         self.ps_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_data/10.PlanetScope_20190403_강릉/20190403_04_Radiance/files/20190403_005542_1_0f3c_3B_AnalyticMS_clip.tif'
 
     def test_read_xml_using_etree(self):
-        meta_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/senj/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE/annotation/s1b-iw1-slc-vh-20190807t213153-20190807t213218-017485-020e22-001.xml'
+        meta_path = os.path.join(self.test_root,
+                                 'safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE/annotation/s1b-iw1-slc-vh-20190807t213153-20190807t213218-017485-020e22-001.xml')
 
         root = etree.parse(meta_path).getroot()
         self.assertEqual(root.xpath('//missionId/text()')[0], 'S1B')

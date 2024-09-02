@@ -1,5 +1,5 @@
 import numpy as np
-from atmos.shared import closest_idx
+from core.atmos.shared import closest_idx
 
 def check_blackfill_skip(l1r_bands:dict, user_settings:dict):
 

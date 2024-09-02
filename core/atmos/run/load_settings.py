@@ -2,7 +2,7 @@ import os
 
 import core.atmos as atmos
 from core import ATMOS_SCRATCH_PATH
-from util import polygon_from_wkt
+from core.util import polygon_from_wkt
 
 def set_l2w_and_polygon(user_settings:dict) -> dict:
 

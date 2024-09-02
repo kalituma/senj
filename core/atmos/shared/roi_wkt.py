@@ -6,7 +6,7 @@
 
 import os
 from osgeo import ogr,osr,gdal
-from atmos.shared import polygon_wkt, limit_wkt
+from core.atmos.shared import polygon_wkt, limit_wkt
 
 def roi_wkt(roi):
 

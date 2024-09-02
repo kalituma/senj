@@ -1,5 +1,5 @@
 import core.atmos as atmos
-from atmos.shared import rsr_dict, rsr_hyper
+from core.atmos.shared import rsr_dict, rsr_hyper
 
 def load_rsrd(global_attrs:dict) -> tuple:
 

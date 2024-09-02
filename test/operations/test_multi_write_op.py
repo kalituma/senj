@@ -22,7 +22,7 @@ class TestMultiWriteOp(unittest.TestCase):
         s2_dim = os.path.join(data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
         s2_tif = os.path.join(data_root, 'tif', 's2', 'snap', 'out.tif')
 
-        context = Context()
+        context = Context(None)
         raster = Read(module='snap')(s2_dim, context)
         raster = Split(bands=[['B2', 'B3', 'B4', 'B_detector_footprint_B2', 'B_detector_footprint_B3', 'B_detector_footprint_B4']])(raster, context)
         print()
