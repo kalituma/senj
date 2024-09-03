@@ -1,34 +1,44 @@
 read_gdal_s2:
   input:
-    path: '$PROJECT_PATH/test/tif/s2/gdal'
+    path: '$PROJECT_PATH/data/test/tif/s2/gdal'
     pattern: '*.tif'
     sort:
       func: '!{sort_by_second_number}'
   operations: ['read']
   read:
-      module: 'snap'
+    module: 'snap'
 
 read_snap_s2:
   input:
-    path: '$PROJECT_PATH/test/tif/s2/snap'
+    path: '$PROJECT_PATH/data/test/tif/s2/snap'
     pattern: '*.tif'
     sort:
       func: '!{sort_by_second_number}'
   operations: ['read']
   read:
-      module: 'gdal'
+    module: 'gdal'
 
 merge_s2:
   input:
     path: ['{{read_gdal_s2}}', '{{read_snap_s2}}']
-    operations: ['merge', 'select', 'write']
-    merge:
-      bands_list: [[], []]
-      master_module: 'gdal'
-    select:
-      bands: [1, 2, 3]
-    write:
-      out_dir: '$PROJECT_PATH/test/target/test_out/read_write_config/iterative'
-      out_stem: 'merged'
-      suffix: 'gdal_snap'
-      out_ext: 'tif'
+  operations: ['stack', 'select']
+  stack:
+    bands_list: [[4,5,6], [4,5,6]]
+    master_module: 'gdal'
+  select:
+    bands: [2, 3, 4]
+
+nl_and_write:
+  input:
+    path: '{{merge_s2}}'
+  operations: ['nl_mean_denoising', 'write']
+  nl_mean_denoising:
+    bands: [1, 2]
+    h: 5
+    templateWindowSize: 5
+    searchWindowSize: 21
+  write:
+    out_dir: '$PROJECT_PATH/test/target/test_out/read_write_config/iterative'
+    out_stem: 'merged'
+    suffix: 'gdal_snap'
+    out_ext: 'tif'

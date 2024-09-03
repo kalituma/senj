@@ -17,7 +17,7 @@ DEFAULT_OUT_EXT = {
     RasterType.SNAP : 'dim'
 }
 
-@OPERATIONS.reg(name=WRITE_OP, no_arg_allowed=False)
+@OPERATIONS.reg(name=WRITE_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class Write(SelectOp):
     def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:List[Union[int,AnyStr]]=None, prefix:str= '', suffix:str= ''):

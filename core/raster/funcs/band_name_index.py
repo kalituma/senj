@@ -33,7 +33,7 @@ def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return band_name, index
 
-def init_bname_index_in_meta(meta_dict:dict, raw:Union[Dataset, Product], product_type:ProductType, module_type:RasterType, band_to_index:dict) -> dict:
+def init_bname_index_in_meta(meta_dict:dict, raw:Union[Dataset, Product], product_type:ProductType, module_type:RasterType, band_to_index:dict=None) -> dict:
 
     if meta_dict:
         if 'band_to_index' not in meta_dict or 'index_to_band' not in meta_dict:

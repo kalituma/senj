@@ -41,6 +41,15 @@ root_4:
   read:
     module: 'gdal'
 
+root_read_gdal_s2:
+  input:
+    path: '$PROJECT_PATH/data/test/tif/s2/gdal'
+    pattern: '*.tif'
+    sort:
+      func: '!{sort_by_second_number}'
+  operations: ['read']
+  read:
+    module: 'snap'
 
 # read
 read_1:

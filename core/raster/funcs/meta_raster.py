@@ -8,7 +8,6 @@ from core.util.gdal import get_band_grid_size_gdal, build_grid_meta_from_gdal
 
 def set_raw_metadict(raster:Raster, raw, product_type:ProductType, meta_dict:dict, selected_bands:list[Union[str, int]]=None):
     raster.raw = raw
-    raster.selected_bands = selected_bands
     raster.product_type = product_type
     raster.meta_dict = meta_dict
     return raster

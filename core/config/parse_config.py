@@ -9,6 +9,10 @@ from core.util import PathType, read_yaml, get_files_recursive, query_dict, asse
 from core.config import LAMBDA_PATTERN, VAR_PATTERN, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, validate_input_path, \
     validate_processor_relation
 
+
+def val_pattern_match(src_str, pattern):
+    return re.match(pattern, src_str)
+
 def op_dicts(op_names:list, args_list:list) -> list[dict]   :
     out = list()
     for op_name, args in zip(op_names, args_list):
@@ -63,16 +67,13 @@ def replace_config_property(config, config_find_pattern, val_match_func:Callable
                     match.value[index] = None
     return config
 
-def replace_config_properties(config:dict) -> dict:
+def replace_config_properties_after(config:dict) -> dict:
 
     def lambda_exists(changed_value, src_value):
         if not LAMBDA.__contains__(changed_value):
             raise ValueError(f'{src_value} is not a registered function')
     def get_lambda_contructor(changed_value):
         return LAMBDA.__get_attr__(name=changed_value, attr_name='constructor')
-
-    def val_pattern_match(src_str, pattern):
-        return re.match(pattern, src_str)
 
     # lambda
     config = replace_config_property(config, '$..func', val_match_func=partial(val_pattern_match, pattern=LAMBDA_PATTERN),
@@ -87,11 +88,14 @@ def replace_config_properties(config:dict) -> dict:
     # bands_list from stack op
     config = replace_config_property(config, '$..bands_list', val_match_func=band_list_none_match)
 
-    # meta_from from stack op
-    config = replace_config_property(config, '$..meta_from', val_match_func=partial(val_pattern_match, pattern=VAR_PATTERN), change_val_func=lambda x: x.replace('{{', '').replace('}}', ''))
-
     return config
 
+def replace_config_properties_before(config:dict) -> dict:
+    # meta_from from stack op
+    config = replace_config_property(config, '$..meta_from',
+                                     val_match_func=partial(val_pattern_match, pattern=VAR_PATTERN),
+                                     change_val_func=lambda x: x.replace('{{', '').replace('}}', ''))
+    return config
 
 
 def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dict, List[str], List[Tuple[str, str]], dict]:
@@ -106,7 +110,7 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
     validate_processor_relation(n_config, proc_list=p_nodes)
 
     # replace var which represent lambda or any link used in any properties would be replaced here
-    n_config = replace_config_properties(n_config)
+    n_config = replace_config_properties_before(n_config)
 
     # loop only on top level
     for p_key, p_config in n_config.items():
@@ -141,5 +145,7 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
 
         op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)
+
+    n_config = replace_config_properties_after(n_config)
 
     return n_config, p_nodes, p_init, p_end, p_link, p_ops

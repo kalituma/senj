@@ -1,12 +1,14 @@
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, Union, AnyStr
 
 from core import PROCESSOR
 from core.util.op import OP_TYPE
 from core.logic import LINK_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
+from core.raster import Raster
 
 if TYPE_CHECKING:
     from core.logic.executor import ProcessingExecutor
+
 
 @PROCESSOR.reg(LINK_PROCESSOR)
 class LinkProcessor(Processor):
@@ -37,8 +39,9 @@ class LinkProcessor(Processor):
             except StopIteration as e:
                 break
 
-    def postprocess(self, x, result_clone:bool=False):
-        x = super().postprocess(x)
+    def postprocess(self, x:Union[Raster, AnyStr], result_clone:bool=False):
+        if isinstance(x, Raster):
+            x = super().postprocess(x)
         return x
 
     def set_executor(self, executor:"ProcessingExecutor"):

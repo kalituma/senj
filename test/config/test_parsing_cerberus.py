@@ -18,7 +18,7 @@ class TestParsingCerberus(unittest.TestCase):
         root_keys = list(self.root_success_config.keys())
         for success_key in root_keys:
             if 'root' in success_key:
-                with self.subTest():
+                with self.subTest(success_key):
                     validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
 
     def test_parse_root_fail(self):

@@ -46,11 +46,11 @@ class GraphManager:
             self._reset()
             raise StopIteration
 
-    def _reset(self):
-        self.current_idx = 0
-
     def __iter__(self):
         return self
+
+    def _reset(self):
+        self.current_idx = 0
 
     def get_proc(self, idx):
         return self._get_proc_by_name(self.procs[idx])

@@ -15,7 +15,7 @@ class Select(SelectOp):
     def __init__(self, bands:List[Union[int, AnyStr]]=None, band_labels:List[AnyStr]=None):
         super().__init__(SELECT_OP)
         self._selected_bands = bands
-        self._labels = list_to_ordered_set(band_labels)
+        self._labels = list_to_ordered_set(band_labels) if band_labels else None
 
         if bands is None:
             assert band_labels is not None, 'bands or band_labels should be provided'

@@ -2,7 +2,7 @@ import os
 from typing import Union, Tuple, List, AnyStr
 from pathlib import Path
 
-from core.util import identify_product, parse_meta_xml, read_pickle, get_btoi_from_tif
+from core.util import identify_product, parse_meta_xml, read_pickle, get_btoi_from_tif, dict_to_ordered_list
 from core.util.identify import planet_test
 from core.util.gdal import load_raster_gdal, mosaic_tiles, read_gdal_bands_as_dict
 from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands, read_gpf_bands_as_dict
@@ -78,25 +78,33 @@ def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
         raise NotImplementedError(f'Module type({in_module}) is not implemented for the input process.')
 
     # read band names from tif header first
-    band_to_index = None
+    btoi_from_header = None
     if Path(path).suffix[1:].lower() == 'tif':
-        band_to_index = get_btoi_from_tif(path)
+        btoi_from_header = get_btoi_from_tif(path)
 
     # read and create meta_dict from pkl or xml files intact then update them with new names at tif header
     meta_dict = create_meta_dict(raw, product_type, in_module, path, update_meta_bounds=update_meta_bounds)
-    meta_dict = init_bname_index_in_meta(meta_dict, raw, product_type=product_type, module_type=empty_raster.module_type, band_to_index=band_to_index)
+    meta_dict = init_bname_index_in_meta(meta_dict, raw, product_type=product_type, module_type=empty_raster.module_type, band_to_index=btoi_from_header)
 
     # if meta_dict is not None, band_to_index will be None because when 'band_to_index' and 'index_to_band' saved in raster object should refer to metadict first
     if meta_dict:
-        band_to_index = None
+        btoi_from_header = None
 
     empty_raster = set_raw_metadict(empty_raster, raw=raw, meta_dict=meta_dict, product_type=product_type)
-    # meta_dict is not existed, so band_to_index will be used to update band map directly
-    empty_raster = empty_raster.update_index_bnames(band_to_index)
 
-    # new band names loaded from metadict and tif header should be reflected to product object using snap module
+    if meta_dict is None:
+        # meta_dict is not existed, so band_to_index will be used to update band map directly
+        empty_raster = empty_raster.update_index_bnames(btoi_from_header)
+    else:
+        empty_raster.copy_band_map_from_meta()
+
+    # new band names loaded from metadict and tif header should be reflected to product object if snap module is being used
     if empty_raster.module_type == RasterType.SNAP:
-        empty_raster.raw = rename_bands(empty_raster.raw, band_names=empty_raster.get_band_names())
+        if btoi_from_header is not None:
+            empty_raster.raw = rename_bands(empty_raster.raw, band_names=dict_to_ordered_list(btoi_from_header))
+        elif meta_dict is not None:
+            if 'band_to_index' in meta_dict and 'index_to_band' in meta_dict:
+                empty_raster.raw = rename_bands(empty_raster.raw, band_names=dict_to_ordered_list(meta_dict['band_to_index']))
 
     return empty_raster
 
@@ -120,13 +128,13 @@ def read_band_from_raw(raster:Raster, selected_name_or_id:list[Union[str, int]]=
     if add_to_cache:
         if raster.bands == None:
             raster.bands = bands
-            raster.selected_bands = new_selected_bands
+            # raster.selected_bands = new_selected_bands
         else:
             raster.bands.update(bands)
-            raster.selected_bands = sorted(set(raster.selected_bands + new_selected_bands))
+            # raster.selected_bands = sorted(set(raster.selected_bands + new_selected_bands))
     else:
         raster.bands = bands
-        raster.selected_bands = new_selected_bands
+        # raster.selected_bands = new_selected_bands
 
     raster.is_band_cached = True
 

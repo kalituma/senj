@@ -4,7 +4,7 @@ from functools import partial
 from core import SCHEMA_PATH
 from core.util import PathType, read_yaml
 from core.lambda_funcs import sort_by_name
-from core.config import extract_pnodes_pops, validate_input_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_config_properties, load_schema_map, parse_config
+from core.config import extract_pnodes_pops, validate_input_path, remove_var_bracket, remove_func_bracket, parse_sort, replace_config_properties_after, load_schema_map, parse_config
 from core.graph import build_graph_func
 
 class TestConfigParsing(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestConfigParsing(unittest.TestCase):
         self.assertEqual(remove_func_bracket('!{test}'), 'test')
 
     def test_lambda_var_to_func(self):
-        new_config = replace_config_properties(self.read_config['read_s2_4'].copy())
+        new_config = replace_config_properties_after(self.read_config['read_s2_4'].copy())
         self.assertEqual(new_config['input']['sort']['func'], sort_by_name)
 
     def test_parse_config(self):

@@ -20,4 +20,7 @@ def get_btoi_to_tif_meta(ds):
     band_to_index = ds.GetMetadata('band_to_index')
     if len(band_to_index) == 0:
         band_to_index = None
+    else:
+        band_to_index = {bname: int(b_idx) for bname, b_idx in band_to_index.items()}
+
     return band_to_index

@@ -1,0 +1,19 @@
+nl_mean_denoising:
+  type: 'dict'
+  required: True
+  schema:
+    bands:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+    h:
+      type: 'float'
+    templateWindowSize:
+      type: 'integer'
+    searchWindowSize:
+      type: 'integer'

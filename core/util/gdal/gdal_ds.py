@@ -1,3 +1,4 @@
+from typing import Union, Tuple, List
 import numpy as np
 from osgeo import gdal
 
@@ -47,15 +48,10 @@ def create_ds_with_arr(arr:np.ndarray, gdal_format,
     return mem_ds
 
 def create_ds_with_dict(raster_bands:dict[str], gdal_format,
-                        proj_wkt:str, transform:tuple,
-                        selected_band:list[str]=None, metadata=None,
+                        proj_wkt:str, transform:Union[Tuple, List], metadata=None,
                         out_path='', is_bigtiff=False, compress=False):
 
-    if selected_band:
-        s_bands = {bname : raster_bands[bname] for bname in selected_band}
-    else:
-        s_bands = raster_bands
-
+    s_bands = raster_bands
     first_band_key = list(s_bands.keys())[0]
     first_band = s_bands[first_band_key]['value']
     dtype = first_band.dtype.name

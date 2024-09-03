@@ -1,3 +1,5 @@
+from typing import Dict
+
 import re, os
 import numpy as np
 from pathlib import Path
@@ -8,8 +10,17 @@ class PathType(Enum):
     DIR = auto()
     VAR = auto()
 
+def get_contained_list_map(src_list:list, ref_list:list) -> Dict:
+    return {x:i for i, x in enumerate(src_list) if x in ref_list}
+
+def dict_to_ordered_list(in_dict:dict) -> list:
+    return [x for x, _ in sorted(in_dict.items(), key=lambda x: x[1])]
+
 def list_to_ordered_set(in_list:list) -> list:
     indexed_set = set((x, i) for i, x in enumerate(in_list))
+
+    assert len(in_list) == len(indexed_set), f'Labels list({in_list}) for select operation should have unique names'
+
     return [x for x, _ in sorted(indexed_set, key=lambda x: x[1])]
 
 def remove_list_elements(src_list:list[str], remove_list:list[str]) -> list[str]:

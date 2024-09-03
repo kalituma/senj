@@ -10,13 +10,13 @@ from core.raster import RasterType, RasterMeta
 T = TypeVar('T', bound='Raster')
 
 class Raster(RasterMeta):
-    def __init__(self, path:str=None, band_names:list[Union[str, int]]=None):
+    def __init__(self, path:str=None):
 
         super().__init__()
 
         self._module_type:RasterType = None
         self._path:str = path
-        self._selected_bands:list[Union[str, int]] = band_names
+        # self._selected_bands:list[Union[str, int]] = band_names
 
         self._raw:Union[ProductType, Dataset] = None
 
@@ -91,7 +91,6 @@ class Raster(RasterMeta):
     def del_bands_cache(self):
         self.bands = None
         self.is_band_cached = False
-        self.selected_bands = None
 
     def close(self):
         super().close()
@@ -116,9 +115,9 @@ class Raster(RasterMeta):
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
 
-    @property
-    def selected_bands(self):
-        return self._selected_bands
+    # @property
+    # def selected_bands(self):
+    #     return self._selected_bands
     #
     # @selected_bands.setter
     # def selected_bands(self, bands):
@@ -194,7 +193,7 @@ class Raster(RasterMeta):
 
     def get_cached_band_names(self) -> Union[list[str], None]:
         if self._bands_data:
-            return list(self._bands_data)
+            return list(self._bands_data.keys())
         else:
             return None
 

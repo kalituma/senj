@@ -32,7 +32,7 @@ def merge_raster_func(rasters:list[Raster], module_type:RasterType):
         raise NotImplementedError(f'Raster type {rasters[0].module_type} is not implemented')
 
     new_product_type = merge_product_types(rasters)
-    merged_raster = Raster.from_raster(rasters[0], path='', raw=merged, module_type=module_type, product_type=new_product_type, selected_bands=None)
+    merged_raster = Raster.from_raster(rasters[0], path='', raw=merged, module_type=module_type, product_type=new_product_type)
     merged_raster.update_band_map(band_name_list)
 
     return merged_raster

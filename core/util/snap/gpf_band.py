@@ -3,15 +3,25 @@ from tqdm import tqdm
 import re
 from esa_snappy import jpy, Product, Band, ProductUtils, ProductData, PixelPos
 
-from core.util import assert_bnames
+from core.util import assert_bnames, get_contained_list_map
 from core.util.errors import ContainedBandError
 from core.util.snap import create_product_data
 
 
 def rename_bands(product:Product, band_names:list) -> Product:
-    assert len(band_names) == len(product.getBandNames()), 'The number of band names should be the same as the source product'
+    product_bands = list(product.getBandNames())
 
-    for new_bname, old_bname in zip(band_names, product.getBandNames()):
+    # assert len(band_names) == len(product.getBandNames()), 'The number of band names should be the same as the source product'
+    if band_names == product_bands:
+        return product
+
+    contained_target_map = get_contained_list_map(product_bands, band_names)
+
+    for contained_band, target_index in contained_target_map.items():
+        product_bands[target_index] = f'{contained_band}_1'
+        product.getBand(contained_band).setName(f'{contained_band}_1')
+
+    for new_bname, old_bname in zip(band_names, product_bands):
         if new_bname != old_bname:
             product.getBand(old_bname).setName(new_bname)
     return product

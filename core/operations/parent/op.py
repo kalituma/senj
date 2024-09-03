@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Type, List, Union
+from typing import TYPE_CHECKING, Type, List, Union, AnyStr
 from core.util.op import OP_TYPE
 from core.util.errors import OPTypeNotAvailableError
 
@@ -44,7 +44,11 @@ class Op:
         return self._op_type
 
     @op_type.setter
-    def op_type(self, op_type:OP_TYPE):
+    def op_type(self, op_type:Union[OP_TYPE, AnyStr]):
+
+        if isinstance(op_type, str):
+            op_type = OP_TYPE.from_str(op_type)
+
         if op_type not in self.avail_types:
             raise OPTypeNotAvailableError(self.name, op_type, self.avail_types)
         self._op_type = op_type

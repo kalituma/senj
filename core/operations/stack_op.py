@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, List
-from typing import Union
-
+from typing import TYPE_CHECKING, List, Union
+from copy import deepcopy
+from logging import warn
 from core.util import assert_bnames
 
 from core.util.op import op_constraint, OP_TYPE
@@ -22,12 +22,23 @@ class Stack(SelectOp):
         self._meta_from = meta_from
         self.op_type = OP_TYPE.from_str(master_module)
 
+    def copy_meta(self, raster:"Raster", selected_meta:dict):
+
+        if selected_meta is not None:
+            raster.meta_dict = deepcopy(selected_meta)
+            raster.copy_band_map_to_meta()
+        else:
+            # todo: should warn if meta_dict is not available
+            pass
+
+        return raster
+
     def __call__(self, rasters:List["Raster"], *args, **kwargs):
 
         assert len(rasters) > 1, 'At least two rasters are required for stacking'
-        assert self._meta_from in [r.raster_from for r in rasters], f'meta_from({self._meta_from}) not found in rasters'
 
-        proc_raster_map = {r.raster_from: r for r in rasters}
+        if self._meta_from:
+            assert self._meta_from in [r.raster_from for r in rasters], f'meta_from({self._meta_from}) not found in rasters'
 
         if self._selected_bands_list:
             assert len(rasters) == len(self._selected_bands_list), 'The number of rasters and selected bands must be the same'
@@ -46,8 +57,11 @@ class Stack(SelectOp):
                 rasters[i] = convert_raster(rasters[i], out_module=self._module)
 
         merged_raster = merge_raster_func(rasters, self._module)
-        merged_raster.meta_dict = proc_raster_map[self._meta_from].meta_dict.copy()
-        merged_raster.update_band_map_to_meta()
+
+        if self._meta_from is not None:
+            proc_raster_map = {r.raster_from: r for r in rasters}
+            self.copy_meta(merged_raster, proc_raster_map[self._meta_from].meta_dict)
+
         merged_raster = self.post_process(merged_raster, *args, **kwargs)
 
         return merged_raster
