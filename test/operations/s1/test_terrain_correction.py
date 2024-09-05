@@ -26,7 +26,7 @@ class TestTerrainCorrection(unittest.TestCase):
             for dem_type in DemType:
                 raster = Read(module='snap')(self.s1_safe_grdh_path, context)
                 self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [25197, 19930])
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=dem_type)(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=dem_type)(raster, context)
                 self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [34776, 24366])
                 self.assertEqual(raster.get_band_names(), ['Amplitude_VV'])
 
@@ -35,14 +35,14 @@ class TestTerrainCorrection(unittest.TestCase):
         with self.subTest('try to do terrain correction with different pixel spacing'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [25197, 19930])
-            raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, pixelSpacingInMeter=5)(raster, context)
+            raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, pixel_spacing_meter=5)(raster, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [34776*2, 24366*2])
             self.assertEqual(raster.get_band_names(), ['Amplitude_VV'])
 
         with self.subTest('try to do terrain correction with pixel spacing in meter and degree'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [25197, 19930])
-            raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, pixelSpacingInMeter=10, pixelSpacingInDegree=0.0008983152)(raster, context)
+            raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, pixel_spacing_meter=10, pixel_spacing_degree=0.0008983152)(raster, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [3477, 2436]) # pixelspacing in degree is prior to meter
             self.assertEqual(list(raster.get_band_names()), ['Amplitude_VV'])
 
@@ -51,8 +51,8 @@ class TestTerrainCorrection(unittest.TestCase):
 
         target_dem_inter_type = InterpolType.NEAREST_NEIGHBOUR
         nearest_raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-        nearest_raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, pixelSpacingInDegree=0.008983152,
-                                           demResamplingMethod=target_dem_inter_type)(nearest_raster, context)
+        nearest_raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, pixel_spacing_degree=0.008983152,
+                                           dem_method=target_dem_inter_type)(nearest_raster, context)
         self.assertEqual([nearest_raster.raw.getSceneRasterWidth(), nearest_raster.raw.getSceneRasterHeight()],[347, 243])
         nearest_dict, _ = read_gpf_bands_as_dict(nearest_raster.raw)
 
@@ -62,8 +62,8 @@ class TestTerrainCorrection(unittest.TestCase):
                     continue
 
                 raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, pixelSpacingInDegree=0.008983152,
-                                           demResamplingMethod=dem_inter_type)(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, pixel_spacing_degree=0.008983152,
+                                           dem_method=dem_inter_type)(raster, context)
                 self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [347, 243])
                 self.assertEqual(list(raster.get_band_names()), ['Amplitude_VV'])
 
@@ -76,10 +76,10 @@ class TestTerrainCorrection(unittest.TestCase):
 
         target_dem_inter_type = InterpolType.NEAREST_NEIGHBOUR
         nearest_raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-        nearest_raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC,
-                                           pixelSpacingInDegree=0.008983152,
-                                           demResamplingMethod=target_dem_inter_type,
-                                           imgResamplingMethod=target_dem_inter_type)(nearest_raster, context)
+        nearest_raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC,
+                                           pixel_spacing_degree=0.008983152,
+                                           dem_method=target_dem_inter_type,
+                                           img_method=target_dem_inter_type)(nearest_raster, context)
         self.assertEqual([nearest_raster.raw.getSceneRasterWidth(), nearest_raster.raw.getSceneRasterHeight()],
                          [347, 243])
         nearest_dict, _ = read_gpf_bands_as_dict(nearest_raster.raw)
@@ -90,10 +90,10 @@ class TestTerrainCorrection(unittest.TestCase):
                     continue
 
                 raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC,
-                                           pixelSpacingInDegree=0.008983152,
-                                           demResamplingMethod=target_dem_inter_type,
-                                           imgResamplingMethod=img_inter_type)(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC,
+                                           pixel_spacing_degree=0.008983152,
+                                           dem_method=target_dem_inter_type,
+                                           img_method=img_inter_type)(raster, context)
                 self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [347, 243])
                 self.assertEqual(list(raster.get_band_names()), ['Amplitude_VV'])
 
@@ -104,11 +104,11 @@ class TestTerrainCorrection(unittest.TestCase):
         context = Context(None)
         with self.subTest('try to do terrain correction saving dem'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-            raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC,
-                                       pixelSpacingInDegree=0.008983152,
-                                       demResamplingMethod=InterpolType.BICUBIC_INTERPOLATION,
-                                       imgResamplingMethod=InterpolType.BICUBIC_INTERPOLATION,
-                                       saveDem=True)(raster, context)
+            raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC,
+                                       pixel_spacing_degree=0.008983152,
+                                       dem_method=InterpolType.BICUBIC_INTERPOLATION,
+                                       img_method=InterpolType.BICUBIC_INTERPOLATION,
+                                       save_dem=True)(raster, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [347, 243])
             self.assertEqual(list(raster.get_band_names()), ['Amplitude_VV', 'elevation'])
 
@@ -117,11 +117,11 @@ class TestTerrainCorrection(unittest.TestCase):
         context = Context(None)
         with self.subTest('try to do terrain correction with different map projection'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-            raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC,
-                                       pixelSpacingInDegree=0.008983152,
-                                       demResamplingMethod=InterpolType.BICUBIC_INTERPOLATION,
-                                       imgResamplingMethod=InterpolType.BICUBIC_INTERPOLATION,
-                                       mapProjection='epsg:32652')(raster, context)
+            raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC,
+                                       pixel_spacing_degree=0.008983152,
+                                       dem_method=InterpolType.BICUBIC_INTERPOLATION,
+                                       img_method=InterpolType.BICUBIC_INTERPOLATION,
+                                       map_projection='epsg:32652')(raster, context)
 
             utm_raster = Read(module='snap', bands=['Amplitude_VV'])(utm_raster_path, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [utm_raster.raw.getSceneRasterWidth(), utm_raster.raw.getSceneRasterHeight()])
@@ -136,46 +136,46 @@ class TestTerrainCorrection(unittest.TestCase):
         with self.subTest('try to do terrain correction with wrong band name'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             with self.assertRaises(AssertionError):
-                raster = TerrainCorrection(sourceBandNames=['wrong_band_name'], demName=DemType.SRTM_3SEC)(raster, context)
+                raster = TerrainCorrection(bands=['wrong_band_name'], dem_name=DemType.SRTM_3SEC)(raster, context)
 
         with self.subTest('try to do terrain correction with wrong dem name'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             with self.assertRaises(AssertionError):
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName='wrong_dem', pixelSpacingInDegree=0.008983152)(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name='wrong_dem', pixel_spacing_degree=0.008983152)(raster, context)
 
         with self.subTest('try to do terrain correction with wrong dem resampling method'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             with self.assertRaises(AssertionError):
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, demResamplingMethod='wrong_interpol')(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, dem_method='wrong_interpol')(raster, context)
 
         with self.subTest('try to do terrain correction with wrong img resampling method'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             with self.assertRaises(AssertionError):
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, imgResamplingMethod='wrong_interpol')(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, img_method='wrong_interpol')(raster, context)
 
         with self.subTest('try to do terrain correction with wrong projection'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             with self.assertRaises(AssertionError):
-                raster = TerrainCorrection(sourceBandNames=['Amplitude_VV'], demName=DemType.SRTM_3SEC, mapProjection='wrong_projection')(raster, context)
+                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=DemType.SRTM_3SEC, map_projection='wrong_projection')(raster, context)
 
         with self.subTest('do terrain correction with slc product'): # if slc product should be able to be corrected, topsar deburst should be done first
             raster = Read(module='snap')(self.s1_safe_slc_path, context)
             with self.assertRaises(RuntimeError):
-                raster = TerrainCorrection(sourceBandNames=['i_IW1_VH'], demName=DemType.SRTM_3SEC)(raster, context)
+                raster = TerrainCorrection(bands=['i_IW1_VH'], dem_name=DemType.SRTM_3SEC)(raster, context)
 
     def test_terrain_correction_fail(self):
         context = Context(None)
         with self.subTest('do terrain correction with the file format in wrong module'):
             raster = Read(module='gdal')(self.s1_tif, context)
             with self.assertRaises(ModuleError):
-                raster = TerrainCorrection(demName=DemType.SRTM_3SEC)(raster, context)
+                raster = TerrainCorrection(dem_name=DemType.SRTM_3SEC)(raster, context)
 
         with self.subTest('do terrain correction with already corrected file'):
             raster = Read(module='snap')(self.s1_tif, context)
             with self.assertRaises(RuntimeError):
-                raster = TerrainCorrection(demName=DemType.SRTM_3SEC)(raster, context)
+                raster = TerrainCorrection(dem_name=DemType.SRTM_3SEC)(raster, context)
 
         with self.subTest('do terrain correction with the file format in wrong product type'):
             raster = Read(module='snap')(self.s2_dim_path, context)
             with self.assertRaises(ProductTypeError):
-                raster = TerrainCorrection(demName=DemType.SRTM_3SEC)(raster, context)
+                raster = TerrainCorrection(dem_name=DemType.SRTM_3SEC)(raster, context)

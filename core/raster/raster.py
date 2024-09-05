@@ -103,7 +103,8 @@ class Raster(RasterMeta):
         self.is_band_cached = False
 
     def cached_bands_have_same_shape(self):
-        return all([self.bands[band]['value'].shape == self.bands[self.selected_bands[0]]['value'].shape for band in self.selected_bands])
+        cached_band_names = list(self.bands.keys())
+        return all([self.bands[band_name]['value'].shape == self.bands[cached_band_names[0]]['value'].shape for band_name in cached_band_names])
 
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'

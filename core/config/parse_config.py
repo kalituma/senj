@@ -124,13 +124,13 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
         input_path = p_config['input']['path']
         check_result = validate_input_path(input_path)
 
-        for idx, (path_exist, path_type, new_path) in enumerate(check_result):
+        for idx, (path_exist, path_type, expanded_path) in enumerate(check_result):
             if path_exist:
-                p_config['input']['path'] = new_path
+                p_config['input']['path'] = expanded_path
                 p_init[p_key] = path_type
 
             if path_type == PathType.VAR:
-                p_link.append((remove_var_bracket(input_path[idx]), p_key))
+                p_link.append((remove_var_bracket(expanded_path), p_key))
 
         # register operations using proc key
         if p_key in p_init:

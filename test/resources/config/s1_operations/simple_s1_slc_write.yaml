@@ -1,0 +1,32 @@
+read_slc:
+  input:
+    path: '$PROJECT_PATH/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
+  operations: ['read', 'apply_orbit', 'calibrate', 'topsar_deburst', 'terrain_correction', 'convert', 'write']
+  read:
+      module: 'snap'
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: 3
+    continue_on_fail: true
+  calibrate:
+    polarisations: ['VV', 'VH']
+    output_sigma: true
+    output_beta: false
+    output_gamma: false
+    output_in_db: false
+    output_in_complex: false
+  topsar_deburst:
+    polarisations: ['VV', 'VH']
+  terrain_correction:
+    dem_name: 'SRTM_3SEC'
+    pixel_spacing_meter: 10.0
+    dem_method: 'BILINEAR_INTERPOLATION'
+    img_method: 'BILINEAR_INTERPOLATION'
+    save_dem: true
+    map_projection: 'EPSG:5186'
+  convert:
+    to_module: 'gdal'
+  write:
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/s1_subset_write'
+    out_stem: 'slc'
+    out_ext: 'tif'

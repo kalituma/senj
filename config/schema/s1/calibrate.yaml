@@ -1,19 +1,19 @@
 calibrate:
   type: 'dict'
   schema:
-    selected_polarisations:
+    polarisations:
       type: 'list'
       schema:
         type: 'string'
         allowed: ['VV', 'VH', 'HH', 'HV']
-    output_sigma_band:
+    output_sigma:
       type: 'boolean'
-    output_beta_band:
+    output_beta:
       type: 'boolean'
-    output_gamma_band:
+    output_gamma:
       type: 'boolean'
-    output_image_db:
+    output_in_db:
       type: 'boolean'
-    output_image_complex:
+    output_in_complex:
       type: 'boolean'
 

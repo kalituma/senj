@@ -1,11 +1,13 @@
 dem: &dem
-  - 'SRTM 3Sec'
-  - 'SRTM 1Sec HGT'
-  - 'ASTER 1Sec GDEM'
+  - 'SRTM_3SEC'
+  - 'SRTM_1SEC_HGT'
+  - 'SRTM_1SEC_GRD'
+  - 'ASTER_1SEC'
   - 'ACE30'
-  - 'ACE2_5Min'
+  - 'ACE2_5'
   - 'GETASSE30'
-  - 'Copernicus 30m Global DEM'
+  - 'COPERNICUS_30'
+  - 'COPERNICUS_90'
 
 resample_method: &resample_method
   - 'NEAREST_NEIGHBOR'
@@ -30,10 +32,10 @@ terrain_correction:
       type: 'float'
     pixel_spacing_degree:
       type: 'float'
-    dem_resampling_method:
+    dem_method:
       type: 'string'
       allowed: *resample_method
-    img_resampling_method:
+    img_method:
       type: 'string'
       allowed: *resample_method
     save_dem:

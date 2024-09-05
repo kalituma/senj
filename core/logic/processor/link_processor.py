@@ -30,12 +30,28 @@ class LinkProcessor(Processor):
         else:
             gens = [single_executor.execute() for single_executor in self.proc_list]
 
+        def safe_next(gen):
+            try:
+                return next(gen), False
+            except StopIteration:
+                return None, True
+
         while True:
             try:
                 if len(self.proc_list) == 1:
-                    yield from gens
+                    yield next(gens)
                 else:
-                    yield [next(gen) for gen in gens]
+                    results = []
+                    any_stopped = False
+                    for proc_gen in gens:
+                        result, stopped = safe_next(proc_gen)
+                        any_stopped = any_stopped or stopped
+                        results.append(result)
+
+                    if any_stopped:
+                        break
+
+                    yield results
             except StopIteration as e:
                 break
 

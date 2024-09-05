@@ -73,19 +73,22 @@ def _convert_to_gpf(target_raster:Raster, cached_bands:dict) -> Raster:
 
     return target_raster
 
-def _convert_to_gdal(target_obj:Raster, cache_bands:dict) -> Raster:
+def _convert_to_gdal(raster:Raster, cache_bands:dict) -> Raster:
 
-    assert target_obj.is_band_cached, 'bands should be loaded in the cache before converting to GDAL'
+    assert raster.is_band_cached, 'bands should be loaded in the cache before converting to GDAL'
 
     band_name_list = list(cache_bands.keys())
 
-    if target_obj.module_type == RasterType.SNAP:
-        wkt = find_proj_from_band(target_obj.raw.getBand(band_name_list[0]))
-        gt = find_gt_from_band(target_obj.raw.getBand(band_name_list[0]))
-        target_obj.raw = create_ds_with_dict(cache_bands, gdal_format='MEM', proj_wkt=wkt, transform=gt, metadata=None, out_path='')
+    if raster.module_type == RasterType.SNAP:
+        wkt = find_proj_from_band(raster.raw.getBand(band_name_list[0]))
+        gt = find_gt_from_band(raster.raw.getBand(band_name_list[0]))
+        raster.raw, btoi = create_ds_with_dict(cache_bands, gdal_format='MEM', proj_wkt=wkt, transform=gt, metadata=None, out_path='')
+        if btoi != raster.band_to_index:
+            raster.update_index_bnames(btoi)
+            raster.copy_band_map_to_meta()
     else:
         raise NotImplementedError('another type to GDAL is not implemented')
 
-    return target_obj
+    return raster
 
 

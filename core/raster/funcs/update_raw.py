@@ -52,7 +52,10 @@ def update_raw_from_cache(raster_obj:Raster):
             gt = raster_obj.raw.GetGeoTransform()
             metadata = raster_obj.raw.GetMetadata()
             raster_obj.raw = None
-            raster_obj.raw = create_ds_with_dict(raster_obj.bands, 'MEM', proj_wkt=proj, transform=gt, metadata=metadata, out_path='')
+            raster_obj.raw, btoi = create_ds_with_dict(raster_obj.bands, 'MEM', proj_wkt=proj, transform=gt, metadata=metadata, out_path='')
+            if btoi != raster_obj.band_to_index:
+                raster_obj.update_index_bnames(btoi)
+                raster_obj.copy_band_map_to_meta()
         else:
             raise NotImplementedError(f'Raster type {module_type} is not implemented')
 

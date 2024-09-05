@@ -14,6 +14,15 @@ class RasterMeta(ABC):
     def meta_dict(self, meta_dict):
         self._meta_dict = meta_dict
 
+    @property
+    def index_to_band(self):
+        return self._index_to_band
+
+    @property
+    def band_to_index(self):
+        return self._band_to_index
+
+
     @abstractmethod
     def get_band_names(self):
         pass

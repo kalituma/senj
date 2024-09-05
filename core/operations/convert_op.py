@@ -17,7 +17,6 @@ class Convert(Op):
     def __init__(self, to_module:str):
         super().__init__(CONVERT_OP)
         self._module:RasterType = RasterType.from_str(to_module.lower())
-        self.op_type = OP_TYPE.from_str(to_module)
 
     def __call__(self, raster_obj:"Raster", context:"Context", *args, **kwargs) -> "Raster":
 

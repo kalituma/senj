@@ -25,11 +25,6 @@ class TestMergeConfigExecution(unittest.TestCase):
                 for x in gen:
                     out_path.append(x)
 
-        for path in out_path:
-            result_raster = Read(module='snap')(path)
-            print()
-
-
 
     def test_read_merge_config_simple(self):
         config_path = f'{self.resource_root}/config/read_cached_merge/simple_read_stack_strict.yaml'

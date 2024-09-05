@@ -379,3 +379,17 @@ select_3:
   operations: [ 'select' ]
   select:
       bands: [ 1, 2, 3 ]
+
+nl_denoise_1:
+  <<: *parent
+  operations: [ 'nl_denoise' ]
+  nl_denoise:
+    bands: [ 1, 2, 3 ]
+    h: 10
+    templateWindowSize: 7
+    searchWindowSize: 21
+
+nl_denoise_2:
+  <<: *parent
+  operations: [ 'nl_denoise' ]
+  nl_denoise:

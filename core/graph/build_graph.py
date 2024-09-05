@@ -33,13 +33,13 @@ def build_graph_func(p_nodes:list[str], p_init:dict[str, "PathType"], p_end:list
             prev_op_name = op_name
 
     # add process and operation links
-    for before_node, after_node in p_link:
-        graph.add_edge(before_node, after_node, RELATION=LINK)
-        before_op_map = { attr['INDEX']:neighbor for neighbor, attr in graph.adj[before_node].items() if attr['RELATION'] == INCLUDE}
-        after_op_map = { attr['INDEX']:neighbor for neighbor, attr in graph.adj[after_node].items() if attr['RELATION'] == INCLUDE}
-        before_last_key = list(before_op_map.keys())[-1]
-        after_first_key = list(before_op_map.keys())[0]
+    for start_node, end_node in p_link:
+        graph.add_edge(start_node, end_node, RELATION=LINK)
+        start_op_map = { attr['INDEX']:neighbor for neighbor, attr in graph.adj[start_node].items() if attr['RELATION'] == INCLUDE}
+        end_op_map = { attr['INDEX']:neighbor for neighbor, attr in graph.adj[end_node].items() if attr['RELATION'] == INCLUDE}
+        s_op_last_key = list(start_op_map.keys())[-1]
+        e_op_first_key = list(end_op_map.keys())[0]
 
-        graph.add_edge(before_op_map[before_last_key], after_op_map[after_first_key], RELATION=LINK)
+        graph.add_edge(start_op_map[s_op_last_key], end_op_map[e_op_first_key], RELATION=LINK)
 
     return graph

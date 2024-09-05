@@ -271,3 +271,10 @@ class TestParsingCerberus(unittest.TestCase):
             if 'select' in success_key:
                 with self.subTest(success_key):
                     validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)
+
+    def test_nl_denoising(self):
+        root_keys = list(self.root_success_config.keys())
+        for success_key in root_keys:
+            if 'nl_denoise' in success_key:
+                with self.subTest(success_key):
+                    validate_config_func(success_key, self.root_success_config[success_key], self.schema_map)

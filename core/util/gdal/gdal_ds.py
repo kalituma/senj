@@ -63,6 +63,7 @@ def create_ds_with_dict(raster_bands:dict[str], gdal_format,
                        metadata=metadata, out_path=out_path,
                        is_bigtiff=is_bigtiff, compress=compress)
 
+    btoi_for_ds = {}
     for b_idx, (band_name, band_elem_dict) in zip(range(1, band_num+1), s_bands.items()):
         b = mem_ds.GetRasterBand(b_idx)
         if band_elem_dict['no_data'] is not None:
@@ -70,9 +71,10 @@ def create_ds_with_dict(raster_bands:dict[str], gdal_format,
         else:
             b.SetNoDataValue(0)
         b.WriteArray(band_elem_dict['value'])
+        btoi_for_ds[band_name] = b_idx
 
     mem_ds.FlushCache()
-    return mem_ds
+    return mem_ds, btoi_for_ds
 
 def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=None, is_bigtiff=False, compress=False):
     if not out_path:

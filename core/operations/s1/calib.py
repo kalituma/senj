@@ -16,16 +16,16 @@ if TYPE_CHECKING:
 @op_constraint(avail_op_types=[OP_TYPE.SNAP])
 class Calibrate(ParamOp, SnappyOp):
 
-    def __init__(self, selectedPolarisations:list[str]=None, outputSigmaBand=True, outputBetaBand:bool=False, outputGammaBand:bool=False,
-                 outputImageScaleInDb=False, outputImageInComplex:bool=False):
+    def __init__(self, polarisations:list[str]=None, output_sigma=True, output_beta:bool=False, output_gamma:bool=False,
+                 output_in_db=False, output_in_complex:bool=False):
         
         super().__init__(CALIBRATE_OP)
-        self.add_param(selectedPolarisations=selectedPolarisations,
-                       outputSigmaBand=outputSigmaBand,
-                       outputBetaBand=outputBetaBand,
-                       outputGammaBand=outputGammaBand,
-                       outputImageScaleInDb=outputImageScaleInDb,
-                       outputImageInComplex=outputImageInComplex)
+        self.add_param(selectedPolarisations=polarisations,
+                       outputSigmaBand=output_sigma,
+                       outputBetaBand=output_beta,
+                       outputGammaBand=output_gamma,
+                       outputImageScaleInDb=output_in_db,
+                       outputImageInComplex=output_in_complex)
 
     @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1], ext=['safe'])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):

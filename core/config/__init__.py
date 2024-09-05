@@ -1,4 +1,3 @@
-from .config_const import *
 from .parse_str import *
 from .config_validators import *
 from .validate_relation import *

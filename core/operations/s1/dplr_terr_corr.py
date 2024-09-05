@@ -14,23 +14,23 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=TERR_CORR_OP, conf_no_arg_allowed=True)
 @op_constraint(avail_op_types=[OP_TYPE.SNAP])
 class TerrainCorrection(ParamOp, SnappyOp):
-    def __init__(self, sourceBandNames:list[str]=None, demName:DemType=DemType.SRTM_3SEC,
-                 pixelSpacingInMeter:float=0.0, pixelSpacingInDegree: float=0.0,
-                 demResamplingMethod:InterpolType=InterpolType.BICUBIC_INTERPOLATION,
-                 imgResamplingMethod:InterpolType=InterpolType.BICUBIC_INTERPOLATION,
-                 saveDem: bool=False, mapProjection:str="WGS84(DD)"):
+    def __init__(self, bands:list[str]=None, dem_name:str='SRTM_3SEC',
+                 pixel_spacing_meter:float=0.0, pixel_spacing_degree: float=0.0,
+                 dem_method:str='BICUBIC_INTERPOLATION',
+                 img_method:str='BICUBIC_INTERPOLATION',
+                 save_dem: bool=False, map_projection:str= "WGS84(DD)"):
 
         super().__init__(TERR_CORR_OP)
 
-        assert str(demName) in [dem.value for dem in DemType], f"demName must be one of {DemType}"
-        assert str(demResamplingMethod) in [inter.value for inter in InterpolType], f"demResamplingMethod must be one of {InterpolType}"
-        assert str(imgResamplingMethod) in [inter.value for inter in InterpolType], f"imgResamplingMethod must be one of {InterpolType}"
-        assert mapProjection == "WGS84(DD)" or 'epsg' in mapProjection.lower(), "mapProjection must be in WGS84(DD) or EPSG format"
+        assert dem_name in [dem.name for dem in DemType], f"demName must be one of {DemType}"
+        assert dem_method in [inter.name for inter in InterpolType], f"demResamplingMethod must be one of {InterpolType}"
+        assert img_method in [inter.name for inter in InterpolType], f"imgResamplingMethod must be one of {InterpolType}"
+        assert map_projection == "WGS84(DD)" or 'epsg' in map_projection.lower(), "mapProjection must be in WGS84(DD) or EPSG format"
 
-        self.add_param(sourceBandNames=sourceBandNames, demName=str(demName), saveDem=saveDem,
-                       pixelSpacingInMeter=pixelSpacingInMeter, pixelSpacingInDegree=pixelSpacingInDegree,
-                       demResamplingMethod=str(demResamplingMethod), imgResamplingMethod=str(imgResamplingMethod),
-                       mapProjection=mapProjection)
+        self.add_param(sourceBandNames=bands, demName=str(DemType[dem_name]), saveDem=save_dem,
+                       pixelSpacingInMeter=pixel_spacing_meter, pixelSpacingInDegree=pixel_spacing_degree,
+                       demResamplingMethod=str(InterpolType[dem_method]), imgResamplingMethod=str(InterpolType[img_method]),
+                       mapProjection=map_projection)
     @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 

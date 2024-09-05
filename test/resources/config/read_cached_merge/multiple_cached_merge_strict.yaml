@@ -38,7 +38,7 @@ nl_and_write:
     templateWindowSize: 5
     searchWindowSize: 21
   write:
-    out_dir: '$PROJECT_PATH/test/target/test_out/read_write_config/iterative'
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/read_write_config/iterative'
     out_stem: 'merged'
     suffix: 'gdal_snap'
     out_ext: 'tif'

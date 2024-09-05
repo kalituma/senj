@@ -33,7 +33,7 @@ class TestThermalNoise(unittest.TestCase):
         out_dir = os.path.join(self.data_root, 'target', 'test_out', 's1_thermal_op')
         with self.subTest('try to open and remove thermal noise from s1 grdh product with polarisations'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-            raster = ThermalNoiseRemoval(selectedPolarisations=['VV'])(raster, context)
+            raster = ThermalNoiseRemoval(polarisations=['VV'])(raster, context)
             # out_path = Write(out_dir=out_dir, out_stem='s1', suffix='thermal_noise_removal', out_ext='dim')(raster)
             self.assertEqual(raster.get_band_names(), ['Intensity_VV'])
 

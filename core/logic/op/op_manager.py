@@ -50,7 +50,7 @@ class OperationManager():
             if op.op_type == OP_TYPE.NOTSET:
                 op.op_type = prev_op_type
             elif op.op_type == OP_TYPE.CONVERT:
-                prev_op_type = not prev_op_type
+                prev_op_type = ~prev_op_type
             else:
                 # in case of being changed by stack operation
                 prev_op_type = op.op_type

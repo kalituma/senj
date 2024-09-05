@@ -50,8 +50,8 @@ class TestConstraint(unittest.TestCase):
 
         with self.subTest('try to open and calibrate with pols'):
             raster = Read(module='snap')(self.s1_safe_slc_path, context)
-            raster = Calibrate(selectedPolarisations=['VV'])(raster, context)
+            raster = Calibrate(polarisations=['VV'])(raster, context)
 
         with self.subTest('try to open and calibrate and image scale in db'):
             raster = Read(module='snap')(self.s1_safe_slc_path, context)
-            raster = Calibrate(selectedPolarisations=['VV'], outputImageInComplex=True, outputImageScaleInDb=True)(raster, context)
+            raster = Calibrate(polarisations=['VV'], output_in_complex=True, output_in_db=True)(raster, context)
