@@ -30,8 +30,10 @@ def validate_config_func(p_key:str, root_config:dict, schema_map:dict, allow_unk
         try:
             op_config_dict = dict_with_key(op_name, root_config[op_name])
             check_root_schema(op_config_dict, schema_map[op_name], key=op_name, allow_unknown=allow_unknown)
-        except (KeyError, NullValueError) as e:
+        except KeyError as e:
             if OPERATIONS.__get_attr__(op_name, 'conf_no_arg_allowed'):
                 continue
             else:
                 raise e
+        except Exception as e:
+            raise e

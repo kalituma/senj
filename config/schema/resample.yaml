@@ -1,0 +1,16 @@
+resample:
+  type: 'dict'
+  required: True
+  schema:
+    epsg:
+      type: 'integer'
+      required: false
+      min: 1
+    pixel_size:
+      type: 'number'
+      required: false
+      min: 0.0
+    resampling_method:
+      type: 'string'
+      required: false
+      allowed: ['nearest', 'bilinear', 'bicubic', 'cubicspline', 'lanczos']

@@ -1,10 +1,7 @@
 dem: &dem
   - 'SRTM_3SEC'
   - 'SRTM_1SEC_HGT'
-  - 'SRTM_1SEC_GRD'
-  - 'ASTER_1SEC'
   - 'ACE30'
-  - 'ACE2_5'
   - 'GETASSE30'
   - 'COPERNICUS_30'
   - 'COPERNICUS_90'

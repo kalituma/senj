@@ -46,3 +46,8 @@ stack:
     meta_from:
       type: 'string'
       required: false
+
+    geo_err:
+      type: 'number'
+      required: false
+      default: 0.0001

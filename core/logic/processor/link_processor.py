@@ -73,16 +73,16 @@ class LinkProcessor(Processor):
             raise ValueError('First operation type is not set yet.')
         return self.ops[0].op_type
 
-    def apply_op_type_from_root_proc(self) -> OP_TYPE:
+    def set_op_type_from_root_proc(self) -> OP_TYPE:
         prev_op_types = []
         for proc in self.proc_list:
-            prev_op_types.append(proc.apply_op_type_from_root_proc())
+            prev_op_types.append(proc.set_op_type_from_root_proc())
 
         if len(set(prev_op_types)) == 1:
-            return self.apply_op_type(prev_op_types[0])
+            return self.apply_op_type_to_ops(prev_op_types[0])
         else:
             # multiple type of op is meaning the only case the first op is stack operation already set with specific module type
-            return self.apply_op_type(self.get_first_op_type())
+            return self.apply_op_type_to_ops(self.get_first_op_type())
 
 
     def __contains__(self, proc):

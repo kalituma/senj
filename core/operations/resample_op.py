@@ -15,7 +15,7 @@ ALL_RESAMPLING_METHODS = GDAL_RESAMPLING_METHODS
 @OPERATIONS.reg(name=RESAMPLE_OP, no_arg_allowed=False)
 @op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class Resample(ParamOp):
-    def __init__(self, epsg:int=4326, pixel_size:float=None, resampling_method:str='nearest'):
+    def __init__(self, epsg:int=4326, pixel_size:float=None, resampling_method:str= 'nearest'):
         super().__init__(RESAMPLE_OP)
 
         assert resampling_method in ALL_RESAMPLING_METHODS, f'resampling_method should be one of {ALL_RESAMPLING_METHODS}'

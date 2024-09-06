@@ -32,10 +32,7 @@ class DemType(Enum):
     COPERNICUS_90 = "Copernicus 90m Global DEM"
     SRTM_3SEC = "SRTM 3Sec"
     SRTM_1SEC_HGT = "SRTM 1Sec HGT"
-    SRTM_1SEC_GRD = "SRTM 1Sec Grid"
-    ASTER_1SEC = "ASTER 1Sec GDEM"
     ACE30 = "ACE30"
-    ACE2_5 = "ACE2_5Min"
     GETASSE30 = "GETASSE30"
 
     def __str__(self):

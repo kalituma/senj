@@ -1,3 +1,4 @@
+import numpy as np
 from typing import TYPE_CHECKING, List, Union, AnyStr
 
 from core import OPERATIONS
@@ -36,15 +37,15 @@ class Read(SelectOp):
         if in_ext not in MODULE_EXT_MAP[self._module.__str__()]:
             raise ExtensionNotSupportedError(self._module, MODULE_EXT_MAP[self._module.__str__()], in_ext)
 
-        result = Raster(path)
-        result = load_raster(result, self._module)
+        raster = Raster(path)
+        raster = load_raster(raster, self._module)
 
         if self._bname_word_included:
             assert self._bword, 'bword should be provided for bname_word_included'
             # assert self._module == RasterType.SNAP, 'bname_word_included is only available for SNAP module'
-            self._selected_bands_or_indices = find_bands_contains_word(result, self._bword)
+            self._selected_bands_or_indices = find_bands_contains_word(raster, self._bword)
 
-        result = self.pre_process(result, selected_bands_or_indices=self._selected_bands_or_indices, band_select=True) # select bands after
-        result = self.post_process(result, context)
+        raster = self.pre_process(raster, selected_bands_or_indices=self._selected_bands_or_indices, band_select=True) # select bands after
+        raster = self.post_process(raster, context)
 
-        return result
+        return raster

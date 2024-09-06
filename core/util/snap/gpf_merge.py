@@ -1,5 +1,5 @@
 from typing import Union
-from esa_snappy import Product, GPF, HashMap, jpy
+from esa_snappy import Product, GPF, HashMap, jpy, PixelPos, GeoPos
 from copy import deepcopy
 
 def get_merged_len_gpf(products:list[Product]):
@@ -19,7 +19,7 @@ def change_valid_mask_expression(product:Product):
             band.setValidPixelExpression(new_band_valid_exp)
     return product
 
-def merge(products:list[Product]):
+def merge(products:list[Product], geo_err:float):
 
     total_len = get_merged_len_gpf(products)
     node_desc = jpy.get_type("org.esa.snap.core.gpf.common.MergeOp$NodeDescriptor")
@@ -48,6 +48,8 @@ def merge(products:list[Product]):
             included_bands[total_idx] = nd
             total_idx += 1
 
+    jfloat = jpy.get_type('java.lang.Float')
+    merge_params.put('geographicError', jfloat(geo_err))
     merge_params.put('includes', included_bands)
     merge_result = GPF.createProduct('Merge', merge_params, src_products)
     merge_result = change_valid_mask_expression(merge_result)

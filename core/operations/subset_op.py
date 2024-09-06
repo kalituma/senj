@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=SUBSET_OP, no_arg_allowed=False)
 @op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
 class Subset(ParamOp):
-    def __init__(self, bounds:list[float], copyMetadata:bool=True):
+    def __init__(self, bounds:list[float], copy_meta:bool=True):
         super().__init__(SUBSET_OP)
 
-        self.add_param(copyMetadata=copyMetadata)
+        self.add_param(copyMetadata=copy_meta)
         assert len(bounds) == 4, 'bounds should have 4(min_x, max_y, max_x, min_y) elements'
 
         # self._selected_bands = bands

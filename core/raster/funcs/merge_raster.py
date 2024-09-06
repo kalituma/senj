@@ -12,7 +12,7 @@ def merge_product_types(rasters:list[Raster]):
         return ProductType.UNKNOWN
     return product_types[0]
 
-def merge_raster_func(rasters:list[Raster], module_type:RasterType):
+def merge_raster_func(rasters:list[Raster], module_type:RasterType, geo_err:float):
 
     raw_list = [r.raw for r in rasters]
 
@@ -26,7 +26,7 @@ def merge_raster_func(rasters:list[Raster], module_type:RasterType):
                 ds_name = f'slaveDs{i}'
             band_name_list += [f'{ds_name}${b}' for b in r.get_band_names()]
     elif module_type == RasterType.SNAP:
-        merged = merge_gpf(raw_list)
+        merged = merge_gpf(raw_list, geo_err)
         band_name_list = list(merged.getBandNames())
     else:
         raise NotImplementedError(f'Raster type {rasters[0].module_type} is not implemented')

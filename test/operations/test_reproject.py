@@ -19,12 +19,12 @@ class TestReproject(unittest.TestCase):
         with self.subTest(msg='reproject using snap'):
             read_op = Read(module='snap')
             snap_raster = read_op(self.s1_tif_path, context)
-            resample_op = Resample(epsg=5186, resampling_method='bicubic')
+            resample_op = Resample(epsg=5186, pixel_size=11.277, resampling_method='bicubic')
             resample_op.op_type = 'snap'
             snap_raster = resample_op(snap_raster, None)
             Write(out_dir=out_dir, out_stem='reproject_snap', out_ext='tif')(snap_raster, context)
             self.assertEqual(get_epsg(snap_raster), 5186)
-            self.assertTrue(np.isclose(get_res(snap_raster), 11.277412045225674))
+            self.assertTrue(np.isclose(get_res(snap_raster), 11.277))
 
         with self.subTest(msg='reproject using snap'):
             read_op = Read(module='snap')
@@ -35,6 +35,18 @@ class TestReproject(unittest.TestCase):
             Write(out_dir=out_dir, out_stem='resample_snap', out_ext='tif')(snap_raster, context)
             self.assertEqual(get_epsg(snap_raster), 4326)
             self.assertTrue(np.isclose(get_res(snap_raster), 0.0002))
+    def test_resample(self):
+        context = Context(None)
+        out_dir = os.path.join(self.test_data_root, 'target', 'test_out', 'reproejct_op')
+        with self.subTest(msg='reproject using snap'):
+            read_op = Read(module='snap')
+            snap_raster = read_op(self.s1_tif_path, context)
+            resample_op = Resample(pixel_size=0.00008, resampling_method='bicubic')
+            resample_op.op_type = 'snap'
+            snap_raster = resample_op(snap_raster, None)
+            Write(out_dir=out_dir, out_stem='resample_snap', out_ext='tif')(snap_raster, context)
+            self.assertEqual(get_epsg(snap_raster), 4326)
+            self.assertTrue(np.isclose(get_res(snap_raster), 0.00008))
 
     def test_reproject_gdal(self):
         context = Context(None)

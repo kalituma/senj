@@ -1,0 +1,77 @@
+read_slc:
+  input:
+    path: '$PROJECT_PATH/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
+  operations: ['read', 'apply_orbit', 'calibrate', 'topsar_deburst', 'terrain_correction', 'subset']
+  read:
+      module: 'snap'
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: 3
+    continue_on_fail: true
+  calibrate:
+    polarisations: ['VV', 'VH']
+    output_sigma: true
+    output_beta: false
+    output_gamma: false
+    output_in_db: false
+    output_in_complex: false
+  topsar_deburst:
+    polarisations: ['VV', 'VH']
+  terrain_correction:
+    dem_name: 'SRTM_3SEC'
+    pixel_spacing_meter: 10.0
+    dem_method: 'BILINEAR_INTERPOLATION'
+    img_method: 'BILINEAR_INTERPOLATION'
+    save_dem: false
+#    map_projection: 'EPSG:5186'
+  subset:
+    bounds: [ 127.70, 35.9, 128.2, 35.5 ]
+    copy_meta: true
+
+read_grdh:
+  input:
+    path: '$PROJECT_PATH/data/test/safe/s1/S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE'
+  operations: ['read', 'apply_orbit', 'calibrate', 'terrain_correction', 'subset']
+  read:
+    module: 'snap'
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: 3
+    continue_on_fail: false
+  calibrate:
+    polarisations: ['VV', 'VH']
+    output_sigma: true
+    output_beta: false
+    output_gamma: false
+    output_in_db: false
+    output_in_complex: false
+  terrain_correction:
+    dem_name: 'SRTM_3SEC'
+    pixel_spacing_meter: 10.0
+    dem_method: 'BILINEAR_INTERPOLATION'
+    img_method: 'BILINEAR_INTERPOLATION'
+#    map_projection: 'EPSG:5186'
+    save_dem: false
+  subset:
+    bounds: [ 127.70, 35.9, 128.2, 35.5 ]
+    copy_meta: true
+
+concat_and_write:
+  input:
+    path: [ '{{read_slc}}', '{{read_grdh}}' ]
+  operations: ['stack', 'resample', 'write']
+  stack:
+    bands_list: [ [ 'Sigma0_VH' ], [ 'Sigma0_VH' ] ]
+    master_module: 'snap'
+    geo_err: 0.0001
+  resample:
+    epsg: 5186
+    pixel_size: 10.0
+    resampling_method: 'bilinear'
+  write:
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/s1_subset_write'
+    out_stem: 'slc_grdh_5186'
+    suffix: 'stacked_subset'
+    out_ext: 'tif'
+
+

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, AnyStr, Union
 from enum import Enum
 
 

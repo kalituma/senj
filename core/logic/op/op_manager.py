@@ -41,10 +41,11 @@ class OperationManager():
         return op_map
 
     @abstractmethod
-    def apply_op_type_from_root_proc(self) -> OP_TYPE:
+    def set_op_type_from_root_proc(self) -> OP_TYPE:
         pass
 
-    def apply_op_type(self, in_op_type:OP_TYPE):
+    def \
+            apply_op_type_to_ops(self, in_op_type:OP_TYPE):
         prev_op_type = in_op_type
         for op in self._ops:
             if op.op_type == OP_TYPE.NOTSET:

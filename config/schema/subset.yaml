@@ -10,5 +10,7 @@ subset:
       schema:
         type: 'number'
         required: True
-    epsg:
-      type: 'integer'
+    copy_meta:
+      type: 'boolean'
+      required: false
+      default: true

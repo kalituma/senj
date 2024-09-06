@@ -25,6 +25,18 @@ class TestS1UsingSnap(unittest.TestCase):
 
         return out_path
 
-    def test_s1_using_snap(self):
-        config_path = f'{self.resource_root}/config/s1_operations/simple_s1_subset_write.yaml'
+    def test_s1_slc_using_snap(self):
+        config_path = f'{self.resource_root}/config/s1_operations/simple_s1_slc_write.yaml'
+        self.executeGraph(config_path)
+
+    def test_s1_grdh_using_snap(self):
+        config_path = f'{self.resource_root}/config/s1_operations/simple_s1_grdh_write.yaml'
+        self.executeGraph(config_path)
+
+    def test_s1_slc_grdh_stack(self):
+        config_path = f'{self.resource_root}/config/s1_operations/s1_slc_grdh_stack_subset.yaml'
+        self.executeGraph(config_path)
+
+    def test_grdh_list(self):
+        config_path = f'{self.resource_root}/config/s1_operations/multiple_s1_grdh_write.yaml'
         self.executeGraph(config_path)
