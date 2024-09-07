@@ -4,7 +4,7 @@ from core import OPERATIONS
 from core.operations import ParamOp, SnappyOp, THERM_NOISE_OP
 
 from core.util import ProductType, assert_bnames
-from core.util.op import call_constraint, OP_TYPE, op_constraint
+from core.util.op import call_constraint, MODULE_TYPE, op_constraint
 from core.raster import Raster, RasterType
 from core.util.snap import get_polarization, thermal_noise_removal
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=THERM_NOISE_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_op_types=[OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
 class ThermalNoiseRemoval(ParamOp, SnappyOp):
     def __init__(self, polarisations:list[str]=None):
         super().__init__(THERM_NOISE_OP)

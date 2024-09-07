@@ -1,13 +1,15 @@
 from typing import TYPE_CHECKING, Type, Union, AnyStr
 
 from core import PROCESSOR
-from core.util.op import OP_TYPE
+from core.util.op import MODULE_TYPE
 from core.logic import LINK_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
 from core.raster import Raster
 
 if TYPE_CHECKING:
     from core.logic.executor import ProcessingExecutor
+    from core.util.op import CHAIN_KEY
+
 
 
 @PROCESSOR.reg(LINK_PROCESSOR)
@@ -18,6 +20,9 @@ class LinkProcessor(Processor):
             self.proc_list = []
         else:
             self.proc_list = processors
+
+    def __contains__(self, proc):
+        return proc in self.proc_list
 
     def add_linked_process(self, linked_proc:Type[Processor]):
         self.proc_list.append(linked_proc)
@@ -68,22 +73,32 @@ class LinkProcessor(Processor):
             if isinstance(single_process, Processor):
                 single_process.set_executor(executor)
 
-    def get_first_op_type(self) -> OP_TYPE:
-        if self.ops[0].op_type == OP_TYPE.NOTSET:
+    def get_first_op_type(self) -> MODULE_TYPE:
+        if self.ops[0].module_type == MODULE_TYPE.NOTSET:
             raise ValueError('First operation type is not set yet.')
-        return self.ops[0].op_type
+        return self.ops[0].module_type
 
-    def set_op_type_from_root_proc(self) -> OP_TYPE:
+    def set_all_op_types(self) -> MODULE_TYPE:
         prev_op_types = []
         for proc in self.proc_list:
-            prev_op_types.append(proc.set_op_type_from_root_proc())
+            prev_op_types.append(proc.set_all_op_types())
 
         if len(set(prev_op_types)) == 1:
-            return self.apply_op_type_to_ops(prev_op_types[0])
+            return self.apply_module_type_to_ops(prev_op_types[0])
         else:
             # multiple type of op is meaning the only case the first op is stack operation already set with specific module type
-            return self.apply_op_type_to_ops(self.get_first_op_type())
+            return self.apply_module_type_to_ops(self.get_first_op_type())
 
+    def chaining(self):
+        proc_prev_ops = []
+        proc_prev_chain_keys = []
 
-    def __contains__(self, proc):
-        return proc in self.proc_list
+        for proc in self.proc_list:
+            prev_op, prev_chain_key = proc.chaining()
+            proc_prev_chain_keys.append(prev_chain_key)
+            proc_prev_ops.append(prev_op)
+
+        prev_op = proc_prev_ops[0]
+        prev_chain_key = proc_prev_chain_keys[0]
+
+        return super().chaining(prev_op, prev_chain_key)

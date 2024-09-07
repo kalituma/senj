@@ -20,7 +20,7 @@ class TestReproject(unittest.TestCase):
             read_op = Read(module='snap')
             snap_raster = read_op(self.s1_tif_path, context)
             resample_op = Resample(epsg=5186, pixel_size=11.277, resampling_method='bicubic')
-            resample_op.op_type = 'snap'
+            resample_op.module_type = 'snap'
             snap_raster = resample_op(snap_raster, None)
             Write(out_dir=out_dir, out_stem='reproject_snap', out_ext='tif')(snap_raster, context)
             self.assertEqual(get_epsg(snap_raster), 5186)
@@ -30,7 +30,7 @@ class TestReproject(unittest.TestCase):
             read_op = Read(module='snap')
             snap_raster = read_op(self.s1_tif_path, context)
             resample_op = Resample(resampling_method='nearest', pixel_size=0.0002)
-            resample_op.op_type = 'snap'
+            resample_op.module_type = 'snap'
             snap_raster = resample_op(snap_raster, None)
             Write(out_dir=out_dir, out_stem='resample_snap', out_ext='tif')(snap_raster, context)
             self.assertEqual(get_epsg(snap_raster), 4326)
@@ -42,7 +42,7 @@ class TestReproject(unittest.TestCase):
             read_op = Read(module='snap')
             snap_raster = read_op(self.s1_tif_path, context)
             resample_op = Resample(pixel_size=0.00008, resampling_method='bicubic')
-            resample_op.op_type = 'snap'
+            resample_op.module_type = 'snap'
             snap_raster = resample_op(snap_raster, None)
             Write(out_dir=out_dir, out_stem='resample_snap', out_ext='tif')(snap_raster, context)
             self.assertEqual(get_epsg(snap_raster), 4326)
@@ -55,7 +55,7 @@ class TestReproject(unittest.TestCase):
             read_op = Read(module='gdal')
             gdal_raster = read_op(self.s1_tif_path, context)
             resample_op = Resample(epsg=5186, resampling_method='bicubic')
-            resample_op.op_type = 'gdal'
+            resample_op.module_type = 'gdal'
             gdal_raster = resample_op(gdal_raster, None)
             # Write(out_dir=out_dir, out_stem='reproject_gdal', out_ext='tif')(gdal_raster, context)
             self.assertEqual(get_epsg(gdal_raster), 5186)
@@ -65,7 +65,7 @@ class TestReproject(unittest.TestCase):
             read_op = Read(module='gdal')
             gdal_raster = read_op(self.s1_tif_path, context)
             resample_op = Resample(resampling_method='cubicspline', pixel_size=0.0002)
-            resample_op.op_type = 'gdal'
+            resample_op.module_type = 'gdal'
             gdal_raster = resample_op(gdal_raster, None)
             Write(out_dir=out_dir, out_stem='resample_gdal', out_ext='tif')(gdal_raster, context)
             self.assertEqual(get_epsg(gdal_raster), 4326)

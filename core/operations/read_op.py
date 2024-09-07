@@ -7,7 +7,7 @@ from core.operations import READ_OP
 from core.operations.parent import SelectOp
 
 from core.util import check_input_ext
-from core.util.op import op_constraint, OP_TYPE
+from core.util.op import op_constraint, MODULE_TYPE
 from core.util.errors import ExtensionNotSupportedError
 from core.util import assert_bnames
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=READ_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class Read(SelectOp):
     def __init__(self, module:str, bands:List[Union[int,AnyStr]]=None, bword:str='*', bname_word_included:bool=False):
         super().__init__(READ_OP)
@@ -26,7 +26,7 @@ class Read(SelectOp):
         self._bname_word_included = bname_word_included
         self._bword = bword
         self._selected_bands_or_indices = bands
-        self.op_type = OP_TYPE.from_str(module)
+        self.module_type = MODULE_TYPE.from_str(module)
 
     def __call__(self, path:str, context:"Context", *args, **kwargs) -> Raster:
 

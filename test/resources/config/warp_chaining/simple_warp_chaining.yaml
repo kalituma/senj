@@ -1,0 +1,22 @@
+read_and_warp:
+  input:
+    path: '$PROJECT_PATH/data/test/tif/s2/gdal/out_0_read.tif'
+  operations: ['read', 'resample', 'subset']
+  read:
+    module: 'gdal'
+  resample:
+    epsg: 4326
+    pixel_size: 0.0008
+  subset:
+    bounds: [ 128.2332, 34.9645, 128.3584, 34.8387 ]
+    bounds_epsg: 4326
+
+write_process:
+  input:
+    path: '{{read_and_warp}}'
+  operations: ['write']
+  write:
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/warp_chaining'
+    out_stem: 'out_0_read'
+    suffix: 'subset_warp'
+    out_ext: 'tif'

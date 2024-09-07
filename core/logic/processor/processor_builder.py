@@ -64,7 +64,8 @@ class ProcessorBuilder(ContextManager):
 
     def build_executor(self):
         for end_point in self._end_points:
-            end_point.set_op_type_from_root_proc()
+            end_point.set_all_op_types()
+            end_point.chaining()
             end_point.set_executor(self._executor)
 
     def build(self) -> list[Type["Processor"]]:

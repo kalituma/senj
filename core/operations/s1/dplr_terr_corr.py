@@ -4,7 +4,7 @@ from core import OPERATIONS
 from core.operations import ParamOp, SnappyOp
 from core.operations import TERR_CORR_OP
 from core.util import assert_bnames, ProductType
-from core.util.op import  call_constraint, OP_TYPE, op_constraint
+from core.util.op import  call_constraint, MODULE_TYPE, op_constraint
 from core.raster import Raster, RasterType
 from core.util.snap import DemType, InterpolType, terrain_correction_func
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=TERR_CORR_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_op_types=[OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
 class TerrainCorrection(ParamOp, SnappyOp):
     def __init__(self, bands:list[str]=None, dem_name:str='SRTM_3SEC',
                  pixel_spacing_meter:float=0.0, pixel_spacing_degree: float=0.0,

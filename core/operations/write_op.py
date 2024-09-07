@@ -5,7 +5,7 @@ from core import OPERATIONS
 
 from core.util import expand_var
 from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
-from core.util.op import OP_TYPE, op_constraint
+from core.util.op import MODULE_TYPE, op_constraint
 from core.operations import SelectOp
 from core.operations import WRITE_OP
 from core.raster import RasterType, Raster, EXT_MAP
@@ -18,7 +18,7 @@ DEFAULT_OUT_EXT = {
 }
 
 @OPERATIONS.reg(name=WRITE_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class Write(SelectOp):
     def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:List[Union[int,AnyStr]]=None, prefix:str= '', suffix:str= ''):
         super().__init__(WRITE_OP)

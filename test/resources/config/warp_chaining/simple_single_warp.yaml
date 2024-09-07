@@ -1,0 +1,16 @@
+read_and_warp:
+  input:
+    path: '$PROJECT_PATH/data/test/dim/s1/src_2/terrain_corrected_0.dim'
+  operations: ['read', 'convert', 'subset', 'write']
+  read:
+    module: 'snap'
+  convert:
+    to_module: 'gdal'
+  subset:
+    bounds: [ 126.85, 36.20, 127.1, 36.08 ]
+    bounds_epsg: 4326
+  write:
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/warp_chaining'
+    out_stem: 'simple_single_warp'
+    suffix: 'convert_subset'
+    out_ext: 'tif'

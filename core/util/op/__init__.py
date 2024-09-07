@@ -1,3 +1,4 @@
-from .op_type import *
+from .module_type import *
+from .chain_key import *
 from .op_decorator import *
 from .op_const import *

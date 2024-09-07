@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List, AnyStr, Union
 from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, SELECT_OP
 from core.util import list_to_ordered_set
-from core.util.op import OP_TYPE, op_constraint
+from core.util.op import MODULE_TYPE, op_constraint
 from core.raster.funcs import rename_raster_bands
 
 if TYPE_CHECKING:
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=SELECT_OP, no_arg_allowed=False)
-@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class Select(SelectOp):
     def __init__(self, bands:List[Union[int, AnyStr]]=None, band_labels:List[AnyStr]=None):
         super().__init__(SELECT_OP)

@@ -21,9 +21,9 @@ def check_init_operation(*init_ops:Tuple[AnyStr]):
         return func_wrapper
     return decorator
 
-def op_constraint(avail_op_types:list, must_after:Type["Op"]=None):
+def op_constraint(avail_module_types:list, must_after:Type["Op"]=None):
     def decorator(cls):
-        setattr(cls, 'avail_types', avail_op_types)
+        setattr(cls, 'avail_types', avail_module_types)
         setattr(cls, 'must_after', must_after)
         return cls
     return decorator

@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from core import OPERATIONS
 from core.util import ProductType
-from core.util.op import call_constraint, op_constraint, OP_TYPE
+from core.util.op import call_constraint, op_constraint, MODULE_TYPE
 from core.operations import APPLYORBIT_OP
 from core.operations.parent import ParamOp, SnappyOp
 from core.raster import Raster, RasterType
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=APPLYORBIT_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_op_types=[OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
 class ApplyOrbit(ParamOp, SnappyOp):
     def __init__(self, orbit_type:str='SENTINEL_PRECISE', poly_degree:int=3, continue_on_fail:bool=False):
         super().__init__(APPLYORBIT_OP)

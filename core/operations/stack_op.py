@@ -3,7 +3,7 @@ from copy import deepcopy
 from logging import warn
 from core.util import assert_bnames
 
-from core.util.op import op_constraint, OP_TYPE
+from core.util.op import op_constraint, MODULE_TYPE
 from core.raster import merge_raster_func, RasterType
 from core.raster.funcs import convert_raster, get_band_name_and_index
 from core.operations.parent import SelectOp
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from core.raster import Raster
 
 @OPERATIONS.reg(name=STACK_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_op_types=[OP_TYPE.GDAL, OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class Stack(SelectOp):
     def __init__(self, bands_list:List[List[Union[str, int]]]=None, master_module:str=None, meta_from:str=None, geo_err:float=1e-5):
         super().__init__(STACK_OP)
@@ -21,7 +21,7 @@ class Stack(SelectOp):
         self._module = RasterType.from_str(master_module)
         self._meta_from = meta_from
         self._geo_err = geo_err
-        self.op_type = OP_TYPE.from_str(master_module)
+        self.module_type = MODULE_TYPE.from_str(master_module)
 
     def copy_meta(self, raster:"Raster", selected_meta:dict):
 

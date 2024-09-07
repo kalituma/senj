@@ -1,14 +1,14 @@
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Type
 
-from core.util.op import OP_TYPE
+from core.operations.parent import ChainableOp
+from core.util.op import MODULE_TYPE
 
 if TYPE_CHECKING:
     from core.operations.parent import Op
+    from core.util.op import CHAIN_KEY
 
-
-
-class OperationManager():
+class OperationManager:
     def __init__(self):
         self._ops: list[Type["Op"]] = []
 
@@ -40,19 +40,46 @@ class OperationManager():
 
         return op_map
 
-    @abstractmethod
-    def set_op_type_from_root_proc(self) -> OP_TYPE:
-        pass
-
-    def \
-            apply_op_type_to_ops(self, in_op_type:OP_TYPE):
-        prev_op_type = in_op_type
+    def apply_module_type_to_ops(self, in_module_type:MODULE_TYPE):
+        prev_module_type = in_module_type
         for op in self._ops:
-            if op.op_type == OP_TYPE.NOTSET:
-                op.op_type = prev_op_type
-            elif op.op_type == OP_TYPE.CONVERT:
-                prev_op_type = ~prev_op_type
+            if op.module_type == MODULE_TYPE.NOTSET:
+                op.module_type = prev_module_type
+            elif op.module_type == MODULE_TYPE.CONVERT:
+                prev_module_type = ~prev_module_type
             else:
                 # in case of being changed by stack operation
-                prev_op_type = op.op_type
-        return prev_op_type
+                prev_module_type = op.module_type
+        return prev_module_type
+
+    @abstractmethod
+    def set_all_op_types(self) -> MODULE_TYPE:
+        pass
+
+    @abstractmethod
+    def chaining(self, prev_op:Type["Op"]=None, prev_chain_key:"CHAIN_KEY"=None):
+
+        for op in self._ops:
+            if isinstance(op, ChainableOp):
+                cur_chain_key = op.chain_key
+
+                if prev_op is None:
+                    op.init_flag = True
+                else:
+                    if prev_chain_key == cur_chain_key:
+                        op.init_flag = False
+                    else:
+                        op.init_flag = True
+                        prev_op.end_flag = True
+
+                prev_op = op
+                prev_chain_key = cur_chain_key
+
+            else:
+                if prev_op is not None:
+                    prev_op.end_flag = True
+
+                prev_op = None
+                prev_chain_key = None
+
+        return prev_op, prev_chain_key

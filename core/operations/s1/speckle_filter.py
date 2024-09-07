@@ -4,7 +4,7 @@ from core.operations import SPECKLE_FILTER_OP
 from core.operations import ParamOp, SnappyOp
 
 from core.util import assert_bnames, ProductType
-from core.util.op import  call_constraint, op_constraint, OP_TYPE
+from core.util.op import  call_constraint, op_constraint, MODULE_TYPE
 
 from core.raster import Raster, RasterType
 from core.util.snap import LEE_SIGMA, SIGMA_90, SIZE_3x3, SIZE_7x7, speckle_filter
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=SPECKLE_FILTER_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_op_types=[OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
 class SpeckleFilter(ParamOp, SnappyOp):
     def __init__(self, bands:list[str]=None, filter:str=LEE_SIGMA, damping_factor=2, filter_size:tuple=(3, 3), number_looks:int=1,
                  window_size:str=SIZE_7x7, target_window_size:str=SIZE_3x3, sigma:str=SIGMA_90, an_size=50):

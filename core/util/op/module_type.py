@@ -6,7 +6,7 @@ GDAL_OPS = ['gdal']
 # gdal -> cached -> gdal
 # snap -> convert -> gdal
 # gdal -> convert -> snap
-class OP_TYPE(Enum):
+class MODULE_TYPE(Enum):
     NOTSET = 'none'
     GDAL = 'gdal'
     SNAP = 'snap'

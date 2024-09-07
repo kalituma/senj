@@ -4,7 +4,7 @@ from core.operations import CALIBRATE_OP
 from core.operations.parent import ParamOp, SnappyOp
 from core.util import assert_bnames, ProductType
 
-from core.util.op import op_constraint, OP_TYPE, call_constraint
+from core.util.op import op_constraint, MODULE_TYPE, call_constraint
 from core.util.snap import calibrate, get_polarization
 from core.raster import Raster, RasterType
 from core.raster.funcs import create_meta_dict, init_bname_index_in_meta, set_raw_metadict
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=CALIBRATE_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_op_types=[OP_TYPE.SNAP])
+@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
 class Calibrate(ParamOp, SnappyOp):
 
     def __init__(self, polarisations:list[str]=None, output_sigma=True, output_beta:bool=False, output_gamma:bool=False,

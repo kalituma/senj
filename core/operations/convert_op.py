@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
-from core.util.op import op_constraint, OP_TYPE
+from core.util.op import op_constraint, MODULE_TYPE
 from core.operations import CONVERT_OP
 from core.operations.parent import Op
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=CONVERT_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_op_types=[OP_TYPE.CONVERT])
+@op_constraint(avail_module_types=[MODULE_TYPE.CONVERT])
 class Convert(Op):
     def __init__(self, to_module:str):
         super().__init__(CONVERT_OP)

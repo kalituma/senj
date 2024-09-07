@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from multiprocessing import Manager, Lock
 
 if TYPE_CHECKING:
     from core.graph import GraphManager
@@ -36,3 +35,6 @@ class Context:
 
     def set(self, key, value):
         self.cache[key] = value
+
+    def delete(self, key):
+        del self.cache[key]
