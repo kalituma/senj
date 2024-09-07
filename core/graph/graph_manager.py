@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from dataclasses import dataclass
 
+from core.util.logger import Logger
 from core.config import parse_config
 from core.graph import PINIT, PEND, PR, LINK, build_graph_func, get_procs, get_ops_args_from_graph, get_successors_by_relation
 
@@ -16,16 +17,23 @@ class ProcessingSource:
 class GraphManager:
     def __init__(self, config:dict, schema_map:dict):
 
+        self.logger = Logger.get_logger()
+
+        self.logger.log('info', '------------------------------------------------------ Building graph manager')
         # validate and parse
         n_config, procs, proc_init, proc_end, proc_link, ops_args = parse_config(config, schema_map)
+        self.logger.log('debug', f'processor_links : {proc_link}')
+        self.logger.log('info', f'processors : {procs}, end processors : {proc_end}')
 
         self.config:dict = n_config
         self._graph:"DiGraph" = build_graph_func(procs, proc_init, proc_end, proc_link, ops_args)
+        # self.logger.log_graph('debug', self._graph)
+
         self._procs:list[str] = get_procs(self._graph, lambda attr: attr['NODE_TYPE'] == PR)
         self._ops:list[tuple] = [get_ops_args_from_graph(self._graph, proc) for proc in self.procs]
         self._proc_op_map:dict[str] = self._build_proc_op_map()
         self.current_idx:int = 0
-
+        self.logger.log('info', '------------------------------------------------------ Graph manager built')
     @property
     def procs(self):
         return self._procs

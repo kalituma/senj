@@ -31,12 +31,15 @@ def add_band_to_product(product, bands:dict):
     for band_name, band_elem_dict in bands.items():
         band_arr = band_elem_dict['value']
         arr_dtype = band_arr.dtype.name
-        bnum_pattern = '[a-z]+'
-        arr_dtype = re.search(bnum_pattern, arr_dtype).group()
+        # bnum_pattern = '[a-z]+'
+        # arr_dtype = re.search(bnum_pattern, arr_dtype).group()
 
         if 'uint' in arr_dtype:
             band_arr = band_arr.astype('int16')
             arr_dtype = 'int16'
+
+        # if 'float' in arr_dtype:
+        #     arr_dtype = 'float32'
 
         p_dtype = ProductData.getType(arr_dtype)
         raster_data = create_product_data(band_arr, arr_dtype)

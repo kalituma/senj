@@ -200,8 +200,9 @@ class Raster(RasterMeta):
 
     def update_index_bnames_from_raw(self):
         if self.module_type == RasterType.SNAP:
-            bnames = self.raw.getBandNames()
+            bnames = list(self.raw.getBandNames())
             self.update_band_map(bnames)
-            self.update_band_map_to_meta(bnames)
+            if self.meta_dict:
+                self.update_band_map_to_meta(bnames)
 
         return self

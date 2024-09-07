@@ -3,7 +3,7 @@ from pathlib import Path
 from core.util import assert_bnames
 
 from core.raster import RasterType, Raster, raster_type
-from core.util.snap import find_proj_from_band, create_product, add_band_to_product, find_gt_from_band, copy_product, find_geocoding_from_wkt
+from core.util.snap import find_proj_from_band, create_product, add_band_to_product, find_gt_from_band, copy_product, find_geocoding_from_wkt, find_proj_from_product
 from core.util.gdal import create_ds_with_dict, copy_ds
 from core.raster.funcs import read_band_from_raw, set_raw_metadict, update_meta_band_map, get_band_name_and_index
 
@@ -61,6 +61,8 @@ def _convert_to_gpf(target_raster:Raster, cached_bands:dict) -> Raster:
 
     if target_raster.module_type == RasterType.GDAL:
         product_name = Path(target_raster.path).stem
+        if product_name == '':
+            product_name = 'converted_product'
         width, height = target_raster.raw.RasterXSize, target_raster.raw.RasterYSize
         product = create_product(product_name, file_format='dim', width=width, height=height)
         geocoding = find_geocoding_from_wkt(target_raster.raw.GetProjection(), target_raster.raw.GetGeoTransform(),
@@ -80,6 +82,7 @@ def _convert_to_gdal(raster:Raster, cache_bands:dict) -> Raster:
     band_name_list = list(cache_bands.keys())
 
     if raster.module_type == RasterType.SNAP:
+
         wkt = find_proj_from_band(raster.raw.getBand(band_name_list[0]))
         gt = find_gt_from_band(raster.raw.getBand(band_name_list[0]))
         raster.raw, btoi = create_ds_with_dict(cache_bands, gdal_format='MEM', proj_wkt=wkt, transform=gt, metadata=None, out_path='')

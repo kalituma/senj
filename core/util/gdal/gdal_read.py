@@ -20,6 +20,7 @@ def read_gdal_bands(ds, selected_bands:list[int]=None) -> tuple[list, np.ndarray
 
     arr = ds.ReadAsArray(band_list=selected_bands)
     nodata_vals = [ds.GetRasterBand(i).GetNoDataValue() for i in selected_bands]
+    nodata_vals = [0 if val is None else val for val in nodata_vals]
     return nodata_vals, arr
 
 def read_gdal_bands_as_dict(ds, all_band_names:list[str], selected_index:list[int]=None) -> Tuple[dict, list[str]]:

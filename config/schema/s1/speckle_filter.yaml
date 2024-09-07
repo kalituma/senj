@@ -1,5 +1,4 @@
-target_filter_sizes: &filter_str
-  - '3x3'
+window_sizes: &window_size_str
   - '5x5'
   - '7x7'
   - '9x9'
@@ -8,6 +7,10 @@ target_filter_sizes: &filter_str
   - '15x15'
   - '17x17'
   - '21x21'
+
+target_windoow_sizes: &target_window_size_str
+  - '3x3'
+  - '5x5'
 
 speckle_filter:
   type: dict
@@ -30,11 +33,11 @@ speckle_filter:
     number_looks:
       type: 'integer'
     window_size:
-      type: 'integer'
-      allowed: [3,5,7,9,11,13,15,17,21]
+      type: string
+      allowed: *window_size_str
     target_window_size:
       type: string
-      allowed: *filter_str
+      allowed: *target_window_size_str
     sigma:
       type: 'float'
       allowed: [0.5,0.6,0.7,0.8,0.9]

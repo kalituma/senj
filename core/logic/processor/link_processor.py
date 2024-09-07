@@ -98,7 +98,5 @@ class LinkProcessor(Processor):
             proc_prev_chain_keys.append(prev_chain_key)
             proc_prev_ops.append(prev_op)
 
-        prev_op = proc_prev_ops[0]
-        prev_chain_key = proc_prev_chain_keys[0]
-
-        return super().chaining(prev_op, prev_chain_key)
+        for prev_op, prev_chain_key in zip(proc_prev_ops, proc_prev_chain_keys):
+            super().chaining(prev_op, prev_chain_key)

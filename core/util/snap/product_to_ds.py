@@ -1,5 +1,6 @@
 import numpy as np
 from esa_snappy import Product, jpy, PixelPos, Band, CrsGeoCoding
+from core.util import epsg_to_wkt
 
 def find_epsg_from_product(product:Product) -> int:
     CRS = jpy.get_type('org.geotools.referencing.CRS')
@@ -14,6 +15,8 @@ def find_proj_from_band(band:Band) -> str:
 
     band_geocoding = band.getGeoCoding()
     wkt = Product.findModelCRS(band_geocoding).toWKT()
+    if '(DD)' in wkt:
+        wkt = epsg_to_wkt(4326)
     return wkt
 
 def find_boundary_from_product(product:Product) -> dict:

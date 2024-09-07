@@ -17,6 +17,8 @@ def create_product_data(band_arr, arr_dtype:str):
     pdata = ProductData.createInstance(ProductData.getType(arr_dtype), width * height)
     if arr_dtype == 'int16':
         arr_dtype = 'short'
+    if arr_dtype == 'float32':
+        arr_dtype = 'float'
     bjarr = jpy.array(arr_dtype, band_arr.flatten())
     pdata.setElems(bjarr)
 
