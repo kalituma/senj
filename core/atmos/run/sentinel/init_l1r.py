@@ -1,5 +1,6 @@
 from core.util import tiles_interp, grid_extend, projection_geo
 from core.util.gdal import warp_to
+from core.util.logger import Logger
 import numpy as np
 
 def init_l1r(width:int, height:int, geo_info:dict,

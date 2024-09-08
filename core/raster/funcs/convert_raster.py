@@ -49,6 +49,7 @@ def convert_raster(raster_obj:Raster, out_module:RasterType) -> Raster:
     if out_module == RasterType.SNAP:
         raster_obj = _convert_to_gpf(raster_obj, cached_bands=raster_obj.bands) # Product
     elif out_module == RasterType.GDAL:
+        assert raster_obj.cached_bands_have_same_shape(), 'All converted bands should have the same shape'
         raster_obj = _convert_to_gdal(raster_obj, cache_bands=raster_obj.bands) # MEM dataset
     else:
         raise NotImplementedError(f'Raster type {out_module.__str__()} is not implemented')

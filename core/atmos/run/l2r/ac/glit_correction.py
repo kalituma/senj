@@ -371,7 +371,7 @@ def correct_glint(l1r:dict, rsrd:dict, xnew, ynew, segment_data, ttot_all:dict, 
                 del T_cur
 
                 ## get current band Fresnel reflectance
-                Rf_sen_cur = atmos.ac.sky_refl(omega, n_w=refri_sen[band_slot[1:]])
+                Rf_sen_cur = atmos.ac.sky_refl(omega, n_w=refri_sen[band_slot[1:].lower()])
 
                 ## get gc factors for this band
                 if gc_user is None:

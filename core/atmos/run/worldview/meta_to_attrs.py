@@ -1,7 +1,7 @@
 import numpy as np
 import dateutil.parser
 
-from core.util import distance_se
+from core.util import distance_se, Logger
 from core.atmos.shared import get_waves_mu_and_f0, load_rsr
 
 def get_angles_from_meta(mean_sun_azimuth, mean_sat_azimuth,
@@ -35,9 +35,9 @@ def meta_dict_to_global_attrs(meta_dict:dict, user_settings:dict, atmosphericall
                 gains[band] = {'gain': float(user_settings['gains_toa'][bi]),
                                'offset': float(user_settings['offsets_toa'][bi])}
         else:
-            print(f"Use of gains requested, but provided number of gain ({user_settings['gains_toa']}) or \
+            Logger.get_logger().log('info', f"Use of gains requested, but provided number of gain ({user_settings['gains_toa']}) or \
                                  offset ({user_settings['offsets_toa']}) values does not match number of bands in RSR ({len(rsr_bands)})")
-            print(f'Provide gains in band order: {",".join(rsr_bands)}')
+            Logger.get_logger().log('info', f'Provide gains in band order: {",".join(rsr_bands)}')
 
     global_attrs = {
         'sensor': meta_dict['sensor'], 'satellite': meta_dict['satellite'],

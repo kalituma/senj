@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-
 from PIL import Image
 
 import core.atmos as atmos
+from core.util import Logger
 
 def create_map(im, lon, lat, scene_mask, rgb_used, font, title_base:str, cpar, pscale, points, xsb, ysb, xsbl, ysbl, sclabel,
                user_settings:dict, out_dir:str, out_file_stem:str, ro_type:str):
@@ -235,7 +235,8 @@ def create_map(im, lon, lat, scene_mask, rgb_used, font, title_base:str, cpar, p
                 cbar.ax._visible = False
 
         plt.savefig(ofile, dpi=dpi, bbox_inches='tight', facecolor='white')
-            # if setu['verbosity'] > 1: print('Wrote {}'.format(ofile))
+            # if setu['verbosity'] > 1:
+        Logger.get_logger().log('info', 'Wrote {}'.format(ofile))
         plt.close()
 
 def write_map(band_dict:dict, out_settings:dict, out_file_stem:str, out_dir:str, global_attrs:dict=None, plot_datasets:list[str]=[]):
@@ -339,8 +340,8 @@ def write_map(band_dict:dict, out_settings:dict, out_file_stem:str, out_dir:str,
     if scalebar:
         scale_pos = scalebar_position
         if scalebar_position not in ['UR', 'UL', 'LL', 'LR']:
-            print('Map scalebar position {} not recognised.')
-            print(f'Using default map_scalebar_position={scale_pos}.')
+            Logger.get_logger().log('info', 'Map scalebar position {} not recognised.')
+            Logger.get_logger().log('info', f'Using default map_scalebar_position={scale_pos}.')
             user_settings['map_scalebar_position'] = 'UL'
         posv = {'U': 0.85, 'L': 0.10}
         posh = {'R': 0.95, 'L': 0.05}
@@ -444,7 +445,7 @@ def write_map(band_dict:dict, out_settings:dict, out_file_stem:str, out_dir:str,
         ## other parameters
         else:
             if cparl not in pslot_name_map:
-                print(f'{cpar} not exists.')
+                Logger.get_logger().log('info', f'{cpar} not exists.')
                 continue
             ds = [bname for slot, bname in pslot_name_map.items() if cparl == slot][0]
             ## read data

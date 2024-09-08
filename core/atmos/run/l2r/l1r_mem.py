@@ -1,6 +1,8 @@
 import numpy as np
 import skimage.measure
 
+from core.util import Logger
+
 def _calcuate_var_means(var_mem, use_revlut:bool, per_pixel_geometry:bool,
                         var_mean:dict, l1r:dict, var_list:list, l1r_band_list:list):
 
@@ -35,11 +37,11 @@ def _tiling(var_mem:dict, var_list:list[str], per_pixel_geometry:bool, tile_dime
     ni = np.ceil(global_attrs['data_dimensions'][0] / tile_dimensions[0]).astype(int)
     nj = np.ceil(global_attrs['data_dimensions'][1] / tile_dimensions[1]).astype(int)
     if ni <= 1 or nj <= 1:
-        # print(f'Scene too small for tiling ({ni}x{nj} tiles of {user_settings["dsf_tile_dimensions"][0]}x{user_settings["dsf_tile_dimensions"][1]} pixels), using fixed processing')
+        Logger.get_logger().log('info', f'Scene too small for tiling ({ni}x{nj} tiles of {tile_dimensions[0]}x{tile_dimensions[1]} pixels), using fixed processing')
         method_changed = True
     else:
         ntiles = ni * nj
-        # print('Processing with {} tiles ({}x{} tiles of {}x{} pixels)'.format(ntiles, ni, nj,user_settings['dsf_tile_dimensions'][0],user_settings['dsf_tile_dimensions'][1]))
+        Logger.get_logger().log('info', f'Processing with {ntiles} tiles ({ni}x{nj} tiles of {tile_dimensions[0]}x{tile_dimensions[1]} pixels)')
 
         ## compute tile dimensions
         for ti in range(ni):
@@ -92,13 +94,13 @@ def _segmenting(var_mem, var_list, rhot_bands:dict, min_segment_size:int):
         seg_sub = np.where((segment_mask == segment) & (finite_mask))
         # if len(seg_sub[0]) == 0: continue
         if len(seg_sub[0]) < max(1, min_segment_size):
-            # print('Skipping segment of {} pixels'.format(len(seg_sub[0])))
+            Logger.get_logger().log('info', f'Skipping segment of {len(seg_sub[0])} pixels')
             continue
         segment_data[segment] = {'segment': segment, 'sub': seg_sub}
 
     if len(segment_data) <= 1:
-        # print('Image segmentation only found {} segments'.format(len(segment_data)))
-        # print('Proceeding with dsf_aot_estimate=fixed')
+        Logger.get_logger().log('info', f'Image segmentation only found {len(segment_data)} segments')
+        Logger.get_logger().log('info', 'Proceeding with dsf_aot_estimate=fixed')
         method_changed = True
     else:
         ## convert geometry and ancillary data
@@ -160,7 +162,7 @@ def build_l1r_mem(l1r:dict, var_mean:dict, var_list:list[str], l1r_band_list:lis
         for ds in var_list:
             if len(np.atleast_1d(var_mem[ds])) != 1:
                 continue
-            # print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]} pixels for resolved processing')
+            Logger.get_logger().log('info', f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]} pixels for resolved processing')
             var_mem[ds] = np.repeat(var_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
     return var_mem, tiles, segment_data, use_revlut, per_pixel_geometry

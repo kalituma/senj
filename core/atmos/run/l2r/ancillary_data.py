@@ -2,6 +2,7 @@ import numpy as np
 import scipy.ndimage, scipy.interpolate
 
 from core.atmos.ac.ancillary import get
+from core.util import Logger
 
 def load_ancillary_data(l1r:dict, l1r_band_list:list, global_attrs:dict, user_settings:dict) -> dict:
 
@@ -25,7 +26,7 @@ def load_ancillary_data(l1r:dict, l1r_band_list:list, global_attrs:dict, user_se
             clon = global_attrs['lon']
             clat = global_attrs['lat']
 
-        # print(f'Getting ancillary data for {global_attrs["isodate"]} {clon:.3f}E {clat:.3f}N')
+        Logger.get_logger().log('info', f'Getting ancillary data for {global_attrs["isodate"]} {clon:.3f}E {clat:.3f}N')
         # load ancillary data at center location : ['uoz', 'uwv', 'z_wind', 'm_wind', 'pressure']
         anc = get(global_attrs['isodate'], clon, clat, verbosity=1)
 

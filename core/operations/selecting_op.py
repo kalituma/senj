@@ -23,6 +23,7 @@ class Select(SelectOp):
             assert bands is not None, 'bands or band_labels should be provided'
 
     def __call__(self, raster:"Raster", context:"Context", *args):
+
         if self._selected_bands:
             raster = self.pre_process(raster, selected_bands_or_indices=self._selected_bands, band_select=True)
             self._selected_bands = raster.get_band_names()
@@ -34,4 +35,5 @@ class Select(SelectOp):
             raster = rename_raster_bands(raster, self._selected_bands, self._labels)
 
         raster = self.post_process(raster, context)
+
         return raster

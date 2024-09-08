@@ -2,10 +2,11 @@ import numpy as np
 import scipy.ndimage, scipy.interpolate
 
 import core.atmos as atmos
+from core.util import Logger
 
 def band_data_fixed(band_data:np.ndarray, band_sub:np.ndarray, percentile, intercept_pixels, dsf_spectrum_option):
 
-    # band_data_copy = band_data * 1.0
+    band_data_copy = band_data * 1.0
     if dsf_spectrum_option == 'darkest':
         band_data = np.array((np.nanpercentile(band_data[band_sub], 0)))
     if dsf_spectrum_option == 'percentile':
@@ -14,11 +15,11 @@ def band_data_fixed(band_data:np.ndarray, band_sub:np.ndarray, percentile, inter
         band_data = atmos.shared.intercept(band_data[band_sub], intercept_pixels)
     band_data.shape += (1, 1)  ## make 1,1 dimensions
     gk = '_mean'
-    # dark_pixel_location = np.where(band_data_copy <= band_data)
-    # if len(dark_pixel_location[0]) != 0:
-    #     dark_pixel_location_x = dark_pixel_location[0][0]
-    #     dark_pixel_location_y = dark_pixel_location[1][0]
-    # print(dark_pixel_location_x, dark_pixel_location_y)
+    dark_pixel_location = np.where(band_data_copy <= band_data)
+    if len(dark_pixel_location[0]) != 0:
+        dark_pixel_location_x = dark_pixel_location[0][0]
+        dark_pixel_location_y = dark_pixel_location[1][0]
+    Logger.get_logger().log(f'Dark pixel location: {dark_pixel_location_x}, {dark_pixel_location_y}')
     # print(band_data)
     # if not use_revlut:
     #    gk='_mean'

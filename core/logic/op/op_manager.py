@@ -30,7 +30,7 @@ class OperationManager:
         op_count = {}
 
         for op in self._ops:
-            tmp_op_name = op.name.split('_')[-1]
+            tmp_op_name = op.name.split(':')[-1]
             if op not in op_map:
                 op_map[tmp_op_name] = op
                 op_count[tmp_op_name] = 1

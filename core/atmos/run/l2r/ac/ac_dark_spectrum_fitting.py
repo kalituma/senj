@@ -2,7 +2,7 @@ import numpy as np
 import scipy.ndimage, scipy.interpolate
 
 import core.atmos as atmos
-from core.util import rsr_convolute_nd
+from core.util import rsr_convolute_nd, Logger
 from core.atmos.shared import bname_to_slotnum
 from core.atmos.run.l2r.ac.aot_band import calculate_aot_bands
 
@@ -49,14 +49,14 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
             if lut_name == fixed_aot:
                 aot_lut = np.array(l_i)
                 aot_lut.shape += (1, 1)  ## make 1,1 dimensions
-        # if aot_lut is None:
-        #     print(f'LUT {fixed_aot} not recognised')
+        if aot_lut is None:
+            Logger.get_logger().log('error', f'LUT {fixed_aot} not recognised')
 
         aot_sel = np.array(float(fixed_aot))
         aot_sel.shape += (1, 1)  ## make 1,1 dimensions
         aot_sel_lut = lut_mod_names[aot_lut[0][0]]
         aot_sel_par = None
-        # print(f'User specified aot {aot_sel[0][0]} and model {aot_sel_lut}')
+        Logger.get_logger().log('info', f'User specified aot {aot_sel[0][0]} and model {aot_sel_lut}')
 
         ## geometry key '' if using resolved, otherwise '_mean' or '_tiled'
         gk = '' if use_rev_lut else '_mean'
@@ -64,7 +64,7 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
     ## image derived aot
     else:
         if spectrum_option not in ['darkest', 'percentile', 'intercept']:
-            # print('dsf_spectrum_option {} not configured, falling back to darkest'.format(spectrum_option))
+            Logger.get_logger().log('error', f'dsf_spectrum_option {spectrum_option} not configured, falling back to darkest')
             user_settings['dsf_spectrum_option'] = 'darkest'
 
         ## run through bands to get aot
@@ -103,7 +103,8 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
 
             ## get minimum or average aot
             if aot_compute in ['mean', 'median']:
-                # print(f'Using dsf_aot_compute = {user_settings["dsf_aot_compute"]}')
+                Logger.get_logger().log('info', f'Using dsf_aot_compute = {user_settings["dsf_aot_compute"]}')
+
                 ## stack n lowest bands
                 for ai in range(nbands):
                     if ai == 0:
@@ -118,8 +119,8 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
                     aot_stack[lut_name]['aot'] = np.nanmean(tmp_aot, axis=2)
                 if aot_compute == 'median':
                     aot_stack[lut_name]['aot'] = np.nanmedian(tmp_aot, axis=2)
-                # if aot_estimate_method == 'fixed':
-                    # print(f'Using dsf_aot_compute = {user_settings["dsf_aot_compute"]} {lut_name} aot = {float(aot_stack[lut_name]["aot"].flatten()):.3f}')
+                if aot_estimate_method == 'fixed':
+                    Logger.get_logger().log('info', f'Using dsf_aot_compute = {user_settings["dsf_aot_compute"]} {lut_name} aot = {float(aot_stack[lut_name]["aot"].flatten()):.3f}')
                 tmp_aot = None
             else:
                 aot_stack[lut_name]['aot'] = aot_stack[lut_name]['all'][ax, ay, tmp[ax, ay, 0]]  # np.nanmin(aot_stack[lut]['all'], axis=2)
@@ -159,14 +160,14 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
             ## remove sorted indices
             tmp = None
         ## select model based on min rmsd for 2 bands
-        # print(f'Choosing best fitting model: {user_settings["dsf_model_selection"]} ({user_settings["dsf_nbands"]} bands)')
+        Logger.get_logger().log('info', f'Choosing best fitting model: {user_settings["dsf_model_selection"]} ({user_settings["dsf_nbands"]} bands)')
 
         ## run through model results, get rhod and rhop for n lowest bands
         for l_i, lut_name in enumerate(lut_mod_names):
             ## select model based on minimum rmsd between n best fitting bands
             if model_selection_method == 'min_drmsd':
 
-                # print(f'Computing RMSD for model {lut_name}')
+                Logger.get_logger().log('info', f'Computing RMSD for model {lut_name}')
                 rhop_f = np.zeros((aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit), dtype=np.float32) + np.nan
                 rhod_f = np.zeros((aot_stack[lut_name]['b1'].shape[0], aot_stack[lut_name]['b1'].shape[1], nbands_fit),dtype=np.float32) + np.nan
 
@@ -238,8 +239,8 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
 
                 ## rmsd for current bands
                 cur_sel_par = np.sqrt(np.nanmean(np.square((rhod_f - rhop_f)), axis=2))  # band_data - lut value for aot to trans
-                # if (aot_estimate_method == 'fixed'):
-                #     print(f'Computing RMSD for model {lut_name}: {cur_sel_par[0][0]:.4e}')
+                if (aot_estimate_method == 'fixed'):
+                    Logger.get_logger().log('info', f'Computing RMSD for model {lut_name}: {cur_sel_par[0][0]:.4e}')
 
             ## end select with min RMSD
 
@@ -271,21 +272,21 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
         rhod_f = None
         rhod_p = None
 
-    # if aot_estimate_method == 'fixed' and aot_sel_par is not None:
-    #     print(f'Selected model {aot_sel_lut}: aot {aot_sel[0][0]:.3f}, RMSD {aot_sel_par[0][0]:.2e}')
+    if aot_estimate_method == 'fixed' and aot_sel_par is not None:
+        Logger.get_logger().log('info', f'Selected model {aot_sel_lut}: aot {aot_sel[0][0]:.3f}, RMSD {aot_sel_par[0][0]:.2e}')
 
     ## check variable aot, use most common LUT
     if aot_estimate_method != 'fixed' and most_common_model:
-        # print('Selecting most common model for processing.')
-        # n_aot = len(np.where(aot_lut != -1)[0])  # 0 = mod_1, 1 = mod2, -1 = null
+        Logger.get_logger().log('info', 'Selecting most common model for processing.')
+        n_aot = len(np.where(aot_lut != -1)[0])  # 0 = mod_1, 1 = mod2, -1 = null
         n_sel = 0
         for l_i, lut_name in enumerate(lut_mod_names):
             sub = np.where(aot_lut == l_i)  # get indices where mod type is equal with current mod number
             n_cur = len(sub[0])
-            # if n_cur == 0:
-            #     print(f'{lut_name}: {0:.1f}%')
-            # else:
-            #     print(f'{lut_name}: {100 * n_cur / n_aot:.1f}%: mean aot of subset = {np.nanmean(aot_sel[sub]):.2f}')
+            if n_cur == 0:
+                Logger.get_logger().log('info', f'{lut_name}: {0:.1f}%')
+            else:
+                Logger.get_logger().log('info', f'{lut_name}: {100 * n_cur / n_aot:.1f}%: mean aot of subset = {np.nanmean(aot_sel[sub]):.2f}')
             if n_cur >= n_sel:
                 n_sel = n_cur
                 li_sel = l_i
@@ -294,7 +295,7 @@ def apply_dsf(band_table:dict, var_mem:dict, lut_table:dict, rsrd:dict, lut_mod_
         aot_lut[:] = li_sel
         aot_sel[:] = aot_stack[aot_sel_lut]['aot'][:] * 1.0
         aot_sel_par[:] = np.nan  # to do
-        # print(f'Selected {aot_sel_lut}, mean aot = {np.nanmean(aot_sel):.2f}')
+        Logger.get_logger().log('info', f'Selected {aot_sel_lut}, mean aot = {np.nanmean(aot_sel):.2f}')
     ### end dark_spectrum_fitting
 
     return aot_lut, aot_sel, aot_stack, aot_sel_par, aot_sel_bands, gk

@@ -1,5 +1,6 @@
 import numpy as np
 import json
+from core.util import Logger
 
 def get_l1r_band(bands:dict, band_indices:dict, tif_meta:dict, f0_dict:dict, sensor:str,
                  se_distance:float, mus:float, waves_names:dict, waves_mu:dict, value_conversion:dict,
@@ -28,7 +29,8 @@ def get_l1r_band(bands:dict, band_indices:dict, tif_meta:dict, f0_dict:dict, sen
                 d = d.astype(float) * prop['reflectance_coefficients'][bi]
                 d[nodata] = np.nan
             else:
-                # print('Using fixed 0.01 factor to convert Skysat DN to TOA radiance')
+
+                Logger.get_logger().log('info','Using fixed 0.01 factor to convert Skysat DN to TOA radiance')
                 ## convert to toa radiance & mask
                 d = d.astype(float) * 0.01
 
@@ -52,7 +54,8 @@ def get_l1r_band(bands:dict, band_indices:dict, tif_meta:dict, f0_dict:dict, sen
         if gains and gains_dict is not None:
             l1r_band_attr['toa_gain'] = gains_dict[band_slot]
             d *= l1r_band_attr['toa_gain']
-            # if verbosity > 1: print('Converting bands: Applied TOA gain {} to {}'.format(ds_att['toa_gain'], ds))
+            # if verbosity > 1:
+            Logger.get_logger().log('info','Converting bands: Applied TOA gain {} to {}'.format(l1r_band_attr['toa_gain'], ds))
 
         if percentiles_compute:
             l1r_band_attr['percentiles'] = percentiles

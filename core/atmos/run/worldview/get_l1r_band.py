@@ -1,4 +1,5 @@
 import numpy as np
+from core.util import Logger
 
 def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_b, waves_names, waves_mu,
                  percentiles_compute, percentiles,
@@ -11,9 +12,9 @@ def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_
         d = band['value'].copy()
         cf = float(band_info[band_name]['ABSCALFACTOR']) / float(band_info[band_name]['EFFECTIVEBANDWIDTH'])
 
-        # if cf <= 0:
-        #     print('Warning DN scaling factor is <0, this will give bad TOA radiances/reflectances.')
-        #     if 'RADIOMETRICENHANCEMENT' in meta:
+        if cf <= 0:
+            Logger.get_logger().log('info', 'Warning DN scaling factor is <0, this will give bad TOA radiances/reflectances.')
+            # if 'RADIOMETRICENHANCEMENT' in meta:
         #         print('Data has been enhanced by the provider: {}'.format(meta['RADIOMETRICENHANCEMENT']))
 
         ## track mask
@@ -27,13 +28,13 @@ def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_
         ## convert to float and scale to TOA reflectance
         d = d.astype(np.float32) * cf
         if gains != None and gains_parameter == 'radiance':
-            # print('Applying gain {} and offset {} to TOA radiance for band {}'.format(gains[band]['gain'],gains[band]['offset'],band))
+            Logger.get_logger().log('info', 'Applying gain {} and offset {} to TOA radiance for band {}'.format(gains[band]['gain'],gains[band]['offset'],band))
             d = gains[band_slot]['gain'] * d + gains[band_slot]['offset']
 
         d *= (np.pi * se_distance ** 2) / (f0_b[band_slot] / 10. * mus)
 
         if gains != None and gains_parameter == 'reflectance':
-            # print('Applying gain {} and offset {} to TOA reflectance for band {}'.format(gains[band]['gain'],gains[band]['offset'], band))
+            Logger.get_logger().log('info', 'Applying gain {} and offset {} to TOA reflectance for band {}'.format(gains[band]['gain'],gains[band]['offset'], band))
             d = gains[band_slot]['gain'] * d + gains[band_slot]['offset']
 
         ## apply mask

@@ -2,6 +2,7 @@ import numpy as np
 import scipy.ndimage
 from typing import Callable
 
+from core.util.funcs import check_in_any_case
 from core.util.gdal import warp_to
 
 def get_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dict, warp_option_for_angle:tuple,
@@ -27,7 +28,7 @@ def get_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dic
     out = {}
     for band_name, band in bands.items():
         band_slot = band['slot']
-        b_slot_id = band_slot[1:]
+        b_slot_id = band_slot[1:].lower()
         band_value = band['value']
         b_res = int(band_info['Resolution'][band_slot])
 

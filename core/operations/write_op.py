@@ -33,6 +33,8 @@ class Write(SelectOp):
 
     def __call__(self, raster:Raster, *args):
 
+        self.log(f'Writing raster to "{self._out_dir}" with stem "{self._out_stem}" and extension "{self._out_ext}"')
+
         if self._out_ext == '':
             self._out_ext = DEFAULT_OUT_EXT[raster.module_type]
         else:
@@ -61,6 +63,7 @@ class Write(SelectOp):
         write_raster(result, output_path)
 
         self.post_process(result, None)
+        self.log(f'Result is written to "{output_path}"')
         raster = None
 
         return output_path

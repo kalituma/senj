@@ -1,8 +1,10 @@
 from typing import Union, TYPE_CHECKING
 
-from core.util import glob_match
+from core.util import glob_match, Logger
 # from core.atmos.run import load_bands
 from core.atmos.run.sentinel import get_l1r_band, build_det_grid, meta_dict_to_l1r_meta, l1r_meta_to_global_attrs, init_l1r
+
+
 
 if TYPE_CHECKING:
     from core.raster import Raster
@@ -22,6 +24,7 @@ def get_geo_info_from_meta(meta, geom_res, prefix=""):
 def build_sentinel_l1r(target_raster: "Raster", det_names:list[str], det_dict:dict,
                        user_settings:dict, percentiles_compute=True, percentiles=(0, 1, 5, 10, 25, 50, 75, 90, 95, 99, 100)):
 
+    Logger.get_logger().log('info', 'Building Sentinel-2 L1R')
     l1r_meta = meta_dict_to_l1r_meta(target_raster)
 
     # det_sizes = { det_name : l1r_meta['size_meta_per_band'][det_name] for det_name in det_names}
@@ -47,6 +50,8 @@ def build_sentinel_l1r(target_raster: "Raster", det_names:list[str], det_dict:di
 
     in_width, in_height = l1r_meta['granule_meta']['GRIDS'][f'{det_res}']['NCOLS'], l1r_meta['granule_meta']['GRIDS'][f'{det_res}']['NROWS']
     geo_info = get_geo_info_from_meta(l1r_meta['granule_meta'], det_res)
+
+    Logger.get_logger().log('info', 'Initializing L1R')
     l1r = init_l1r(width=in_width, height=in_height, geo_info=geo_info, det_band=det_band,
                    granule_meta=l1r_meta['granule_meta'], geometry_type=geometry_type,
                    warp_option=warp_option_for_angle, index_to_band=global_attrs['index_to_band'],
@@ -56,5 +61,6 @@ def build_sentinel_l1r(target_raster: "Raster", det_names:list[str], det_dict:di
                                 global_attrs=global_attrs, warp_option_for_angle=warp_option_for_angle,
                                 percentiles_compute=percentiles_compute, percentiles=percentiles,
                                 geo_info_func=get_geo_info_from_meta)
+    Logger.get_logger().log('info', f'l1r bands : {list(l1r["bands"].keys())}')
 
     return l1r, global_attrs

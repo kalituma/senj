@@ -2,6 +2,7 @@ import numpy as np
 
 from core.atmos.dem import dem_lonlat
 from core.atmos.ac import pressure_elevation
+from core.util import Logger
 
 def get_dem_pressure(l1r:dict, l1r_band_list:list, global_attrs:dict, user_settings:dict, data_mem:dict):
 
@@ -36,7 +37,7 @@ def get_dem_pressure(l1r:dict, l1r_band_list:list, global_attrs:dict, user_setti
             data_mem['dem'] = dem.astype(np.float32)
             data_mem['dem_pressure'] = dem_pressure
     else:
-        print(f'Could not determine elevation from {dem_source} DEM data')
+        Logger.get_logger().log('info', f'Could not determine elevation from {dem_source} DEM data')
 
     dem = None
     dem_pressure = None

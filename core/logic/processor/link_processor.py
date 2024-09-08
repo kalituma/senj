@@ -10,8 +10,6 @@ if TYPE_CHECKING:
     from core.logic.executor import ProcessingExecutor
     from core.util.op import CHAIN_KEY
 
-
-
 @PROCESSOR.reg(LINK_PROCESSOR)
 class LinkProcessor(Processor):
     def __init__(self, proc_name:str='', processors:list[Type[Processor]]=None, splittable:bool=False):

@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, AnyStr, Union
 from enum import Enum
 
-
+from core.util.logger import Logger
 from core.logic.op import OperationManager
 
 if TYPE_CHECKING:
@@ -35,6 +35,7 @@ class Processor(OperationManager):
         self._proc_type: ProcessorType = proc_type
         self._splittable:bool = splittable
         self.executor:"ProcessingExecutor" = None
+        self._logger = Logger.get_logger()
 
 
     @property
@@ -85,5 +86,6 @@ class Processor(OperationManager):
         else:
             raise ValueError('Executor is not set')
 
-
+    def log(self, msg:str, level='info'):
+        self._logger.log(level, f'({self.__class__.__name__}) {msg}')
 

@@ -151,6 +151,9 @@ def calculate_aot_bands(band_table:dict, l1r_band_list:list, rsrd:dict, var_mem:
     aot_dict = {}
     dsf_rhod = {}
 
+    ## geometry key '' if using resolved, otherwise '_mean' or '_tiled'
+    gk = ''
+
     for bi, (band_slot, b_v) in enumerate(band_table.items()):
         if band_slot in bandslot_exclude:
             continue
@@ -180,9 +183,6 @@ def calculate_aot_bands(band_table:dict, l1r_band_list:list, rsrd:dict, var_mem:
             estimated_data = percentile_filter(estimated_data, mask, filter_box, filter_percentile)
         b_finite_mask = np.where(valid)
         del valid, mask
-
-        ## geometry key '' if using resolved, otherwise '_mean' or '_tiled'
-        gk = ''
 
         ## fixed path reflectance
         if aot_estimate_method == 'fixed':

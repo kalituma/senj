@@ -1,6 +1,7 @@
 import numpy as np
 
 import core.atmos as atmos
+from core.util import Logger
 
 def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_names, lut_table, ro_type,
                  user_settings: dict, global_attrs: dict):
@@ -54,13 +55,13 @@ def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_na
     if (exp_b1 is None) or (exp_b2 is None):
         raise ValueError('Stopped: EXP bands not found in L1R bands')
 
-    # print(f'Selected bands {exp_b1} and {exp_b2} for EXP processing')
+    Logger.get_logger().log('info', f'Selected bands {exp_b1} and {exp_b2} for EXP processing')
     if (band_table[exp_b1]['att']['rhot_ds'] not in l1r_band_list) | (band_table[exp_b2]['att']['rhot_ds'] not in l1r_band_list):
-        # print(f'Selected bands are not available in {user_settings["inputfile"]}')
+        Logger.get_logger().log('info', f'Selected bands are not available in {user_settings["inputfile"]}')
         if (band_table[exp_b1]['att']['rhot_ds'] not in l1r_band_list):
-            print(f'EXP B1: {band_table[exp_b1]["att"]["rhot_ds"]}')
+            Logger.get_logger().log('info', f'EXP B1: {band_table[exp_b1]["att"]["rhot_ds"]}')
         if (band_table[exp_b2]['att']['rhot_ds'] not in l1r_band_list):
-            print(f'EXP B2: {band_table[exp_b2]["att"]["rhot_ds"]}')
+            Logger.get_logger().log('info', f'EXP B2: {band_table[exp_b2]["att"]["rhot_ds"]}')
         return ()
 
     ## determine processing option
@@ -143,7 +144,7 @@ def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_na
                 exp_alpha = simspec['ave'][ssi0] / simspec['ave'][ssi1]
         else:
             exp_alpha = float(alpha)
-        # print(f'Alpha: {exp_alpha:.2f}')
+        Logger.get_logger().log('info', f'Alpha: {exp_alpha:.2f}')
 
         ## first estimate of rhow to find clear waters
         exp_c1 = (exp_alpha / tr_b2) / (exp_alpha * exp_gamma - exp_initial_epsilon)
@@ -155,14 +156,14 @@ def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_na
         rhow_short = None
 
     elif exp_option == 'NIR/SWIR':
-        # print('Using NIR/SWIR EXP')
+        Logger.get_logger().log('info', 'Using NIR/SWIR EXP')
         exp_fixed_epsilon = True
         ## additional masking for epsilon
         mask2 = (exp_d2 < ((exp_d1 + 0.005) * 1.5)) &  (exp_d2 > ((exp_d1 - 0.005) * 0.8)) &  ((exp_d2 + 0.005) / exp_d1 > 0.8)
         epsilon[mask2] = np.nan
         mask2 = None
     elif exp_option == 'SWIR':
-        # print('Using SWIR EXP')
+        Logger.get_logger().log('info', 'Using SWIR EXP')
         if fixed_aerosol_reflectance:
             exp_fixed_epsilon = True
 
@@ -186,13 +187,13 @@ def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_na
     fixed_rhoam = fixed_aerosol_reflectance
     if fixed_rhoam:
         rhoam = np.nanpercentile(rhoam, fixed_aerosol_reflectance_percentile)
-        # print(f'{user_settings["exp_fixed_aerosol_reflectance_percentile"]:.0f}th percentile rhoam ({long_wv} nm): {rhoam:.5f}')
+        Logger.get_logger().log('info', f'{fixed_aerosol_reflectance_percentile:.0f}th percentile rhoam ({long_wv} nm): {rhoam:.5f}')
 
-    # print('EXP band 1', user_settings['exp_wave1'], exp_b1, band_ds[exp_b1]['att']['rhot_ds'])
-    # print('EXP band 2', user_settings['exp_wave2'], exp_b2, band_ds[exp_b2]['att']['rhot_ds'])
+    Logger.get_logger().log('info', 'EXP band 1', user_settings['exp_wave1'], exp_b1, band_table[exp_b1]['att']['rhot_ds'])
+    Logger.get_logger().log('info', 'EXP band 2', user_settings['exp_wave2'], exp_b2, band_table[exp_b2]['att']['rhot_ds'])
 
-    # if exp_fixed_epsilon:
-    #     print(f'Epsilon: {epsilon:.2f}')
+    if exp_fixed_epsilon:
+        Logger.get_logger().log('info', f'Fixed epsilon: {epsilon:.2f}')
 
     ## output data
     if output_intermediate:
@@ -201,6 +202,5 @@ def apply_ac_exp(band_table:dict, l1r_band_list, var_mem, rsrd: dict, lut_mod_na
         if not fixed_rhoam:
             global_attrs['rhoam'] = rhoam
     ## end exponential
-
 
     return rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam, global_attrs

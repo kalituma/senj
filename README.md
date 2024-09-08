@@ -4,5 +4,6 @@
 
 - For your information, atmos package is being developed based on acolite source codes (https://github.com/acolite/acolite).
 
-- being developed by kalituma at AIRS lab., PKNU
+- being developed by kalituma and Curious_Coldbrew at AIRS lab., PKNU
+
 - I'm sorry about the lack of documentation and any information about this project. I will update it soon.

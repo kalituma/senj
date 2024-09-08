@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 from core.atmos.shared import bname_to_slotnum
-from core.util import rsr_convolute_nd, tiles_interp
+from core.util import rsr_convolute_nd, tiles_interp, Logger
 
 
 def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dict, var_mem:dict, l1r_band_list:list,
@@ -52,15 +52,16 @@ def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dic
     for bi, (b_slot, b_dict) in enumerate(band_table.items()):
         b_num = bname_to_slotnum(b_slot)
         if ('rhot_ds' not in b_dict['att']) or ('tt_gas' not in b_dict['att']):
-            # print(f'Band {band_slot} at {b_v["att"]["wave_name"]} nm not in bands dataset')
+
+            Logger.get_logger().log('info', f'Band {b_slot} at {b_dict["att"]["wave_name"]} nm not in bands dataset')
             continue
         if b_dict['att']['rhot_ds'] not in l1r_band_list:
-            # print(f'Band {band_slot} at {b_v["att"]["wave_name"]} nm not in available rhot datasets')
+            Logger.get_logger().log('info', f'Band {b_slot} at {b_dict["att"]["wave_name"]} nm not in available rhot datasets')
             continue  ## skip if we don't have rhot for a band that is in the RSR file
 
         ## temporary fix
         if b_dict['att']['wave_mu'] < 0.345:
-            print(f'Band {b_slot} at {b_dict["att"]["wave_name"]} nm wavelength < 345 nm')
+            Logger.get_logger().log('info',f'Band {b_slot} at {b_dict["att"]["wave_name"]} nm wavelength < 345 nm')
             continue  ## skip if below LUT range
 
         # rhot_name = b_dict['att']['rhot_ds']  # dsi
@@ -70,7 +71,9 @@ def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dic
         ## store rhot in output file
 
         if b_dict['att']['tt_gas'] < min_tgas_rho:
-            # print(f'Band {band_slot} at {b_v["att"]["wave_name"]} nm has tgas < min_tgas_rho ({b_v["att"]["tt_gas"]:.2f} < {user_settings["min_tgas_rho"]:.2f})')
+
+            Logger.get_logger().log('info',
+                                    f'Band {b_slot} at {b_dict["att"]["wave_name"]} nm has tgas < min_tgas_rho ({b_dict["att"]["tt_gas"]:.2f} < {user_settings["min_tgas_rho"]:.2f})')
             continue
 
         ## apply cirrus correction
@@ -81,7 +84,8 @@ def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dic
             corrected_b_data -= (rho_cirrus * g)
 
         t0 = time.time()
-        # print('Computing surface reflectance', band_slot, b_v['att']['wave_name'], f'{b_v["att"]["tt_gas"]:.3f}')
+        Logger.get_logger().log('info',
+                                f'Computing surface reflectance: {b_slot}, {b_dict["att"]["wave_name"]}, gas : {b_dict["att"]["tt_gas"]:.3f}')
 
         # ds_att = b_v['att']
         b_dict['att']['wavelength'] = b_dict['att']['wave_nm']
@@ -133,7 +137,8 @@ def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dic
 
             ## create full scene parameters for tiled processing
             if aot_estimate == 'tiled' and use_revlut:
-                # print('Interpolating tiles for rhorc')
+
+                Logger.get_logger().log('info', 'Interpolating tiles for rhorc')
                 rorayl_cur = tiles_interp(rorayl_cur, xnew, ynew,
                                           target_mask=(valid_mask if slicing else None),
                                           target_mask_full=True,
@@ -186,6 +191,6 @@ def correct_surface_reflectance(xnew:np.ndarray, ynew:np.ndarray, band_table:dic
 
         del corrected_b_data
 
-        # print(f'{global_attrs["sensor"]}/{band_slot} took {(time.time() - t0):.1f}s ({"RevLUT" if use_revlut else "StdLUT"})')
+        Logger.get_logger().log('info',f'{global_attrs["sensor"]}/{b_slot} took {(time.time() - t0):.1f}s ({"RevLUT" if use_revlut else "StdLUT"})')
 
     return l2r, l2r_band_list, rhos_to_band_name, gk_vza, gk_raa

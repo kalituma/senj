@@ -2,8 +2,8 @@ from typing import Callable, Union, TYPE_CHECKING, AnyStr
 from pathlib import Path
 
 from core.operations import READ_OP
-
 from core import PROCESSOR
+from core.util.logger import print_log_attrs
 from core.util.op import check_init_operation, MODULE_TYPE
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
@@ -20,6 +20,8 @@ class FileProcessor(Processor):
 
         if sort is not None:
             self.sort_func:Callable = sort['func']
+
+        # print_log_attrs(self, 'debug')
 
     def preprocess(self):
         target_path = Path(self.root)

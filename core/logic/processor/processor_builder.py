@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Type, List
 
-from core.util.logger import Logger
+from core.util.logger import Logger, print_log_attrs
 from core import PROCESSOR, OPERATIONS
 from core.logic import FILE_PROCESSOR, LINK_PROCESSOR, Context, ContextManager
 from core.logic.executor import ProcessingExecutor
@@ -71,12 +71,18 @@ class ProcessorBuilder(ContextManager):
             end_point.set_executor(self._executor)
 
     def build(self) -> list[Type["Processor"]]:
-        self._logger.log('info', '------------------------------------------------------ init to build processor')
+        self._logger.log('info', '------------------------------------------------------ start to build processor')
+        tmp_proc_list = []
         for graph_elem in self._context._graph_manager:
-            self.build_processor(proc_name=graph_elem.name)
+            tmp_proc_list.append(self.build_processor(proc_name=graph_elem.name))
             self.build_operations(proc_name=graph_elem.name, ops=graph_elem.ops) # check available op types
+            # print_log_attrs(tmp_processor, 'debug')
 
         self.connect_link() # set op type based on read module
+
+        for proc in tmp_proc_list:
+            print_log_attrs(proc, 'debug')
+
         self.build_executor()
         self._logger.log('info', '------------------------------------------------------ finished building processor')
 

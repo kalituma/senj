@@ -86,3 +86,9 @@ def check_input_ext(path):
 
 def expand_var(path:str) -> str:
     return os.path.expandvars(path)
+
+def check_in_any_case(src_str:str, band_target_list:list) -> bool:
+    src_str = src_str.lower()
+    target_list = band_target_list.copy()
+    target_list = [target.lower() for target in target_list]
+    return src_str in target_list

@@ -1,22 +1,24 @@
 read_slc:
   input:
     path: '$PROJECT_PATH/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
-  operations: ['read', 'apply_orbit', 'calibrate', 'topsar_deburst', 'terrain_correction', 'subset']
+  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'topsar_deburst', 'terrain_correction', 'subset']
   read:
       module: 'snap'
   apply_orbit:
     orbit_type: 'SENTINEL_PRECISE'
     poly_degree: 3
     continue_on_fail: true
+  thermal_noise_removal:
+    polarisations: [ 'VH' ]
   calibrate:
-    polarisations: ['VV', 'VH']
+    polarisations: ['VH']
     output_sigma: true
     output_beta: false
     output_gamma: false
     output_in_db: false
     output_in_complex: false
   topsar_deburst:
-    polarisations: ['VV', 'VH']
+    polarisations: ['VH']
   terrain_correction:
     dem_name: 'SRTM_3SEC'
     pixel_spacing_meter: 10.0
@@ -39,7 +41,7 @@ read_grdh:
     poly_degree: 3
     continue_on_fail: false
   calibrate:
-    polarisations: ['VV', 'VH']
+    polarisations: ['VH']
     output_sigma: true
     output_beta: false
     output_gamma: false
@@ -71,7 +73,7 @@ concat_and_write:
   write:
     out_dir: '$PROJECT_PATH/data/test/target/test_out/s1_subset_write'
     out_stem: 'slc_grdh_5186'
-    suffix: 'stacked_subset'
+    suffix: 'thermal_corrected'
     out_ext: 'tif'
 
 

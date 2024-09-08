@@ -1,6 +1,6 @@
 from core.util import assert_bnames, remove_list_elements
 from core.util.gdal import read_gdal_bands_as_dict, create_ds_with_dict
-from core.util.snap import copy_cached_to_raw_gpf, read_gpf_bands_as_dict
+from core.util.snap import copy_cached_to_raw_gpf, read_gpf_bands_as_dict, del_bands_from_product
 from core.raster import Raster, RasterType
 from core.raster.funcs import read_band_from_raw
 
@@ -31,34 +31,44 @@ def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
 
     return raster_obj
 
-def update_raw_from_cache(raster_obj:Raster):
+def update_raw_from_cache(raster:Raster, clear=False):
     # raw to cache
-    if raster_obj.is_band_cached:
-        cached_bands = raster_obj.get_cached_band_names()
-        not_cached_bands = remove_list_elements(raster_obj.get_band_names(), remove_list=cached_bands)
+    if raster.is_band_cached:
+        cached_bands = raster.get_cached_band_names()
+        not_cached_bands = remove_list_elements(raster.get_band_names(), remove_list=cached_bands)
 
-        module_type = raster_obj.module_type
+        module_type = raster.module_type
 
         if module_type == RasterType.SNAP:
-            raster_obj.raw = copy_cached_to_raw_gpf(raster_obj.raw, cached_band=raster_obj.bands)
+            if clear:
+                raster.raw = del_bands_from_product(raster.raw, raster.get_band_names())
+            else:
+                raster.raw = del_bands_from_product(raster.raw, cached_bands)
+
+            raster.raw = copy_cached_to_raw_gpf(raster.raw, cached_band=raster.bands)
+
+            if raster.get_band_names() != list(raster.raw.getBandNames()):
+                raster.update_band_map_to_meta(list(raster.raw.getBandNames()))
+                raster.copy_band_map_from_meta()
 
         elif module_type == RasterType.GDAL:
-            assert raster_obj.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
+            assert raster.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
 
-            if len(not_cached_bands) > 0:
-                raster_obj = read_band_from_raw(raster_obj, selected_name_or_id=not_cached_bands, add_to_cache=True)
+            if not clear:
+                if len(not_cached_bands) > 0:
+                    raster = read_band_from_raw(raster, selected_name_or_id=not_cached_bands, add_to_cache=True)
 
-            proj = raster_obj.raw.GetProjection()
-            gt = raster_obj.raw.GetGeoTransform()
-            metadata = raster_obj.raw.GetMetadata()
-            raster_obj.raw = None
-            raster_obj.raw, btoi = create_ds_with_dict(raster_obj.bands, 'MEM', proj_wkt=proj, transform=gt, metadata=metadata, out_path='')
-            if btoi != raster_obj.band_to_index:
-                raster_obj.update_index_bnames(btoi)
-                raster_obj.copy_band_map_to_meta()
+            proj = raster.raw.GetProjection()
+            gt = raster.raw.GetGeoTransform()
+            metadata = raster.raw.GetMetadata()
+            raster.raw = None
+            raster.raw, btoi = create_ds_with_dict(raster.bands, 'MEM', proj_wkt=proj, transform=gt, metadata=metadata, out_path='')
+            if btoi != raster.band_to_index:
+                raster.update_index_bnames(btoi)
+                raster.copy_band_map_to_meta()
         else:
             raise NotImplementedError(f'Raster type {module_type} is not implemented')
 
-    raster_obj.del_bands_cache()
+    raster.del_bands_cache()
 
-    return raster_obj
+    return raster

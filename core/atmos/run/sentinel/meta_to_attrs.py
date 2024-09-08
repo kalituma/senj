@@ -6,7 +6,6 @@ import core.atmos as atmos
 from core.atmos.shared import get_waves_mu_and_f0, load_rsr, get_gains, get_offsets
 from core.atmos.run.sentinel import get_sensor_type, projection_from_granule_meta
 
-
 def get_angles_from_meta(granule_meta:dict):
     sza = granule_meta['SUN']['Mean_Zenith']
     saa = granule_meta['SUN']['Mean_Azimuth']

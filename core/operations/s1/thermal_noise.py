@@ -18,7 +18,7 @@ class ThermalNoiseRemoval(ParamOp, SnappyOp):
         super().__init__(THERM_NOISE_OP)
         self. add_param(selectedPolarisations=polarisations)
 
-    @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1])
+    @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1], ext=['safe'])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
         pols = get_polarization(raster.meta_dict)

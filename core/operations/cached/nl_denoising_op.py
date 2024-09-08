@@ -31,8 +31,8 @@ class NLMeanDenoising(CachedOp):
         raster = self.pre_process(raster, bands_to_load=selected_name_or_id, context=context)
 
         for key in raster.bands.keys():
-            raster[key]['value'] = nonlocal_mean_denoising(raster[key]['value'], h=self.h,
-                                                           templateWindowSize=self.templateWindowSize, searchWindowSize=self.searchWindowSize, norm_func=percentile_norm)
-        raster = self.post_process(raster, context)
+            raster[key]['value'] = nonlocal_mean_denoising(raster[key]['value'], h=self.h, templateWindowSize=self.templateWindowSize,
+                                                           searchWindowSize=self.searchWindowSize, norm_func=percentile_norm, no_data=raster[key]['no_data'])
+        raster = self.post_process(raster, context, clear=True)
 
         return raster

@@ -1,0 +1,37 @@
+read_and_atmos:
+  input:
+    path: '$PROJECT_PATH/data/test/dim/s2/snap/subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim'
+  operations: ['read', 'atmos_corr', 'convert']
+  read:
+    module: 'snap'
+  atmos_corr:
+    bands: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ]
+    band_slots: [ 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B10', 'B11', 'B12' ]
+    write_map: true
+    map_dir: '$PROJECT_PATH/data/test/target/test_out/s2_atmos_corr'
+    map_stem: 's2_atmos_corr'
+    det_bnames: [ 'B_detector_footprint_B1', 'B_detector_footprint_B2', 'B_detector_footprint_B3',
+                  'B_detector_footprint_B4', 'B_detector_footprint_B5', 'B_detector_footprint_B6',
+                  'B_detector_footprint_B7', 'B_detector_footprint_B8', 'B_detector_footprint_B8A',
+                  'B_detector_footprint_B9', 'B_detector_footprint_B10', 'B_detector_footprint_B11',
+                  'B_detector_footprint_B12' ]
+  convert:
+    to_module: 'gdal'
+
+resample_and_write:
+  input:
+    path: '{{read_and_atmos}}'
+  operations: ['resample', 'nl_mean_denoising', 'write']
+  resample:
+    epsg: 4326
+    pixel_size: 0.0008
+
+  nl_mean_denoising:
+    bands: ['B1', 'B2']
+    h: 5
+    templateWindowSize: 5
+    searchWindowSize: 21
+  write:
+    out_dir: '$PROJECT_PATH/data/test/target/test_out/s2_atmos_corr'
+    out_stem: 's2_atmos_corr_resampled_denoised'
+    out_ext: 'tif'

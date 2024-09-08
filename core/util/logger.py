@@ -8,6 +8,12 @@ logger_level_map = {
     'critical': logging.CRITICAL
 }
 
+
+def print_log_attrs(self, level):
+    for attr in self.__dict__:
+        if attr not in ['_listeners', '_counter', '_logger', '__len__']:
+            self._logger.log(level, f'({self.__class__.__name__}) {attr} : {getattr(self, attr)}')
+
 class Logger:
     _instance = None
 
@@ -38,6 +44,7 @@ class Logger:
         self.logger.addHandler(console_handler)
 
     def log(self, level, msg):
+        level = level.lower()
         log_method = getattr(self.logger, level)
         log_method(msg)
 

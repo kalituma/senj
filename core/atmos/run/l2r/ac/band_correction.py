@@ -1,5 +1,6 @@
 import numpy as np
-from core.util import rsr_convolute_nd, tiles_interp
+from core.util import rsr_convolute_nd, tiles_interp, Logger
+
 
 def exp_correction(b_dict, b_data, b_num,
                    lut_table, ro_type, rhoam, xi, exp_lut, short_wv, long_wv, epsilon, mask, fixed_epsilon, fixed_rhoam):
@@ -143,7 +144,7 @@ def dsf_correction(b_dict, b_data, b_slot:str, b_num:str, xnew:np.ndarray, ynew:
 
     ## interpolate tiled processing to full scene
     if aot_estimate == 'tiled':
-        # print('Interpolating tiles')
+        Logger.get_logger().log('info', 'Interpolating tiles')
         romix = tiles_interp(romix, xnew, ynew,
                              target_mask=(valid_mask if slicing else None),
                              target_mask_full=True, smooth=tile_smoothing,

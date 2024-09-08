@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 from datetime import datetime
 
-from core.util import ProductType
+from core.util import ProductType, Logger
+
 
 import core.atmos as atmos
 from core.atmos.setting import parse
@@ -26,10 +27,12 @@ def apply_atmos(target_raster: "Raster", product_type:ProductType, target_band_n
 
     time_start = datetime.now()
     atmos.settings['run']['runid'] = time_start.strftime('%Y%m%d_%H%M%S')
+    Logger.get_logger().log('info', f'atmos correction runid: {atmos.settings["run"]["runid"]}')
     set_earthdata_login_to_env(atmos.settings['run'])
 
     user_settings = load_user_settings(sensor=target_raster.meta_dict['sensor'])
 
+    Logger.get_logger().log('info', f'Applying atmospheric correction to {product_type} raster')
     if product_type == ProductType.S2:
         l1r, l1r_global_attrs = build_sentinel_l1r(target_raster, det_names=det_names, det_dict=det_dict, user_settings=user_settings)
     elif product_type == ProductType.WV:

@@ -31,4 +31,5 @@ class ApplyOrbit(ParamOp, SnappyOp):
         raster.meta_dict = meta_dict
 
         raster = self.post_process(raster, context)
+
         return raster

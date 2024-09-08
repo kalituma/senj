@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 from core import atmos
-from core.util import tiles_interp
+from core.util import tiles_interp, Logger
 from core.atmos.setting import parse
 
 from core.atmos.run.l2r import check_blackfill_skip, load_rsrd, load_ancillary_data, \
@@ -12,6 +12,8 @@ from core.atmos.run.l2r.ac import apply_dsf, apply_ac_exp, correct_cirrus, corre
     correct_glint, correct_glint_alt
 
 def apply_l2r(l1r:dict, global_attrs:dict):
+
+    Logger.get_logger().log('info', f'Start to build L2R for {global_attrs["sensor"]}')
 
     var_mem = {}
     l2r = {}
@@ -71,11 +73,13 @@ def apply_l2r(l1r:dict, global_attrs:dict):
 
     ## dem pressure
     if user_settings['dem_pressure']:
-        # print(f'Extracting {user_settings["dem_source"]} DEM data')
+        Logger.get_logger().logger('info', f'Extracting {user_settings["dem_source"]} DEM data')
         var_mem, l1r_band_list, global_attrs = get_dem_pressure(l1r, l1r_band_list, global_attrs, user_settings, var_mem)
 
-    # print(f'default uoz: {user_settings["uoz_default"]:.2f} uwv: {user_settings["uwv_default"]:.2f} pressure: {user_settings["pressure_default"]:.2f}')
-    # print(f'current uoz: {global_attrs["uoz"]:.2f} uwv: {global_attrs["uwv"]:.2f} pressure: {global_attrs["pressure"]:.2f}')
+    Logger.get_logger().log('info',
+                            f'default uoz: {user_settings["uoz_default"]:.2f} uwv: {user_settings["uwv_default"]:.2f} pressure: {user_settings["pressure_default"]:.2f}')
+    Logger.get_logger().log('info',
+                            f'current uoz: {global_attrs["uoz"]:.2f} uwv: {global_attrs["uwv"]:.2f} pressure: {global_attrs["pressure"]:.2f}')
 
     ## which LUT data to read
     ro_type, global_attrs = select_lut_type(global_attrs, user_settings)
@@ -105,12 +109,13 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     elif user_settings['aerosol_correction'] == 'exponential':
         ac_opt = 'exp'
     else:
-        # print(f'Option aerosol_correction {user_settings["aerosol_correction"]} not configured')
+        Logger.get_logger().log('info', f'Option aerosol_correction {user_settings["aerosol_correction"]} not configured')
         ac_opt = 'dsf'
-    # print(f'Using {ac_opt.upper()} atmospheric correction')
+
+    Logger.get_logger().log('info', f'Using {ac_opt.upper()} atmospheric correction')
 
     if user_settings['resolved_geometry'] and is_hyper:
-        # print('Resolved geometry for hyperspectral sensors currently not supported')
+        Logger.get_logger().log('info', 'Resolved geometry for hyperspectral sensors currently not supported')
         user_settings['resolved_geometry'] = False
 
     # prepare granule and environmental vars(sza, vza, raa, pressure, wind) and means of them in specific type(tile, segment, ...)
@@ -119,7 +124,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     del var_mean
 
     t0 = time.time()
-    # print(f'Loading LUTs {user_settings["luts"]}')
+    Logger.get_logger().log('info', f'Loading LUTs {user_settings["luts"]}')
 
     ## load reverse lut romix -> aot
     rev_lut_table = None
@@ -133,7 +138,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
     lut_table = atmos.aerlut.import_luts(add_rsky=True, par=(ro_type if ro_type == 'romix+rsurf' else 'romix+rsky_t'), sensor=None if is_hyper else global_attrs['sensor'], rsky_lut_name=user_settings['dsf_interface_lut'],
                                          base_luts=user_settings['luts'], pressures=user_settings['luts_pressures'], reduce_dimensions=user_settings['luts_reduce_dimensions'])
     lut_mod_names = list(lut_table.keys())
-    # print(f'Loading LUTs took {(time.time() - t0):.1f} s')
+    Logger.get_logger().log('info', f'Loaded LUTs {user_settings["luts"]} in {(time.time() - t0):.1f} s')
 
     ttot_all = {}
     gk = ''
@@ -208,7 +213,7 @@ def apply_l2r(l1r:dict, global_attrs:dict):
             if len(np.atleast_1d(var_mem[ds])) != 1:
                 continue
 
-            # print(f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]}')
+            Logger.get_logger().log('info', f'Reshaping {ds} to {global_attrs["data_dimensions"][0]}x{global_attrs["data_dimensions"][1]}')
             var_mem[ds] = np.repeat(var_mem[ds], global_attrs['data_elements']).reshape(global_attrs['data_dimensions'])
 
     rho_cirrus = None

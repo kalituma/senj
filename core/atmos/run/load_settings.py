@@ -2,7 +2,7 @@ import os
 
 import core.atmos as atmos
 from core import ATMOS_SCRATCH_PATH
-from core.util import polygon_from_wkt
+from core.util import polygon_from_wkt, Logger
 
 def set_l2w_and_polygon(user_settings:dict) -> dict:
 
@@ -24,8 +24,8 @@ def set_l2w_and_polygon(user_settings:dict) -> dict:
                     user_settings['polygon_old'] = '{}'.format(user_settings['polygon'])
                     user_settings['polygon'] = '{}'.format(polygon_new)
                 except:
-                    print('Provided polygon is not a valid WKT polygon')
-                    print(user_settings['polygon'])
+                    Logger.get_logger().log('info', 'Provided polygon is not a valid WKT polygon')
+                    Logger.get_logger().log('info', user_settings['polygon'])
                     user_settings['polygon'] = None
                     pass
 
