@@ -41,38 +41,3 @@ def warp_gdal(ds:Dataset, snap_params: dict) -> Dataset:
 
     return output_ds
 
-def build_reprojection_params(from_srs:int, to_srs:int, build=False, **kwargs) -> Union[dict, WarpOptions]:
-    from_srs_wkt = epsg_to_wkt(from_srs)
-    to_srs_wkt = epsg_to_wkt(to_srs)
-
-    warp_options = dict(
-        **kwargs,
-        srcSRS=from_srs_wkt,
-        dstSRS=to_srs_wkt
-    )
-
-    return _build_params(warp_options, build)
-
-def build_resample_params(res:float, resample_alg:str, build=False, **kwargs) -> Union[dict, WarpOptions]:
-
-    resampleAlg = RESAMPLING_METHODS[resample_alg]
-
-    warp_options = dict(
-        **kwargs,
-        xRes=res,
-        yRes=res,
-        resampleAlg=resampleAlg
-    )
-    return _build_params(warp_options, build)
-
-def build_subset_params(bounds:list[float], bounds_srs:int, build=False, **kwargs) -> Union[dict, WarpOptions]:
-
-    from_srs_wkt = epsg_to_wkt(bounds_srs)
-
-    warp_options = dict(
-        **kwargs,
-        outputBounds=bounds,
-        outputBoundsSRS=from_srs_wkt
-    )
-
-    return _build_params(warp_options, build)

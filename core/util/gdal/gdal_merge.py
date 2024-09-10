@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 import numpy as np
 from typing import Union, TYPE_CHECKING
 
@@ -5,7 +7,7 @@ from osgeo_utils.gdal_merge import names_to_fileinfos
 from osgeo import gdal
 
 from core.util import assert_ds_equal
-from core.util.gdal import read_gdal_bands, create_ds_with_arr
+from core.util.gdal import read_gdal_bands, create_ds_with_arr, file_info
 
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset
@@ -44,9 +46,47 @@ def merge(datasets:list["Dataset"]):
 
     return merged_ds
 
-def mosaic_tiles(tile_paths:list[str]) -> "Dataset":
+def ds_to_fileinfos(datasets:list["Dataset"]) -> list[file_info]:
+    file_infos = []
 
+    for ds in datasets:
+        fi = file_info()
+        fi.init_from_ds(ds)
+        file_infos.append(fi)
+
+    return file_infos
+
+# def init_from_ds(ds:"Dataset") -> file_info:
+#     fi = file_info()
+#     fi.filename = ds.GetDescription()
+#     fi.bands = ds.RasterCount
+#     fi.xsize = ds.RasterXSize
+#     fi.ysize = ds.RasterYSize
+#     fi.band_type = ds.GetRasterBand(1).DataType
+#     fi.projection = ds.GetProjection()
+#     fi.geotransform = ds.GetGeoTransform()
+#     fi.ulx = fi.geotransform[0]
+#     fi.uly = fi.geotransform[3]
+#     fi.lrx = fi.ulx + fi.geotransform[1] * fi.xsize
+#     fi.lry = fi.uly + fi.geotransform[5] * fi.ysize
+#
+#     ct = ds.GetRasterBand(1).GetRasterColorTable()
+#     if ct is not None:
+#         fi.ct = ct.Clone()
+#     else:
+#         fi.ct = None
+#
+#     return fi
+
+def mosaic_by_file_paths(tile_paths:list[str]) -> "Dataset":
     file_infos = names_to_fileinfos(tile_paths)
+    return mosaic_tiles(file_infos)
+
+def mosaic_by_ds(datasets:list["Dataset"]) -> "Dataset":
+    file_infos = ds_to_fileinfos(datasets)
+    return mosaic_tiles(file_infos)
+
+def mosaic_tiles(file_infos:list[file_info]) -> "Dataset":
 
     ulx = file_infos[0].ulx
     uly = file_infos[0].uly

@@ -31,8 +31,8 @@ class Subset(ParamOp, WarpOp):
             transform = make_transform(bounds_epsg, 4326)
             ul_y, ul_x, _ = transform.TransformPoint(self._bounds[0], self._bounds[1])
             lr_y, lr_x, _ = transform.TransformPoint(self._bounds[2], self._bounds[3])
-            self._bounds_wkt = region_to_wkt(bounds)
             self._bounds = [ul_x, ul_y, lr_x, lr_y]
+            self._bounds_wkt = region_to_wkt(self._bounds)
         self.add_param(geoRegion=self._bounds_wkt)
 
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):

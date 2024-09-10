@@ -6,6 +6,7 @@ MULTI_WRITE_OP = 'multi_write'
 
 #dim
 STACK_OP = 'stack'
+MOSAIC_OP = 'mosaic'
 SUBSET_OP = 'subset'
 SPLIT_OP = 'split'
 RESAMPLE_OP = 'resample'

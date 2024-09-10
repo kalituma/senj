@@ -1,6 +1,6 @@
 import os
 from osgeo.gdal import Dataset
-from core.util.gdal import read_tif, mosaic_tiles
+from core.util.gdal import read_tif
 
 def load_raster_gdal(paths:list[str]) -> list[Dataset]:
 

@@ -98,7 +98,7 @@ def replace_config_properties_before(config:dict) -> dict:
     return config
 
 
-def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dict, List[str], List[Tuple[str, str]], dict]:
+def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dict, List[str], List[Tuple[str, str]], dict, dict]:
 
     p_init = {}
     p_end = []
@@ -112,6 +112,8 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
     # replace var which represent lambda or any link used in any properties would be replaced here
     n_config = replace_config_properties_before(n_config)
 
+    var_link_map = {}
+
     # loop only on top level
     for p_key, p_config in n_config.items():
 
@@ -123,14 +125,19 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
 
         input_path = p_config['input']['path']
         check_result = validate_input_path(input_path)
-
+        concat_order = []
+        input_paths = []
         for idx, (path_exist, path_type, expanded_path) in enumerate(check_result):
             if path_exist:
-                p_config['input']['path'] = expanded_path
+                input_paths.append(expanded_path)
                 p_init[p_key] = path_type
 
             if path_type == PathType.VAR:
-                p_link.append((remove_var_bracket(expanded_path), p_key))
+                linked_proc_name = remove_var_bracket(expanded_path)
+                p_link.append((linked_proc_name, p_key))
+                concat_order.append(linked_proc_name)
+
+        p_config['input']['path'] = input_paths
 
         # register operations using proc key
         if p_key in p_init:
@@ -145,7 +152,9 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
 
         op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)
+        if len(concat_order) > 0:
+            var_link_map[p_key] = concat_order
 
     n_config = replace_config_properties_after(n_config)
 
-    return n_config, p_nodes, p_init, p_end, p_link, p_ops
+    return n_config, p_nodes, p_init, p_end, p_link, p_ops, var_link_map

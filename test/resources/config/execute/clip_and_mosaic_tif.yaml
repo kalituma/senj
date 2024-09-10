@@ -1,0 +1,13 @@
+tif_read:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/S2/tif/S2A_MSIL1C_20230509T020651.0.tif'
+  operations: ['read']
+  read:
+    module: 'gdal'
+
+tif_read_2:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/S2/tif/S2A_MSIL1C_20230509T020651.1.tif'
+  operations: ['read']
+  read:
+    module: 'gdal'

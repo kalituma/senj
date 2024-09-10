@@ -1,0 +1,47 @@
+bounds: &bounds [430149,3869773,440436,3857906]
+
+read_blue:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/NO_META'
+    pattern: '*.BLUE.*.tif'
+  operations: ['read', 'subset']
+  read:
+    module: 'gdal'
+  subset:
+    bounds: *bounds
+    bounds_epsg: 32652
+
+read_red:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/NO_META'
+    pattern: '*.RED.*.tif'
+  operations: [ 'read', 'subset' ]
+  read:
+    module: 'gdal'
+  subset:
+    bounds: *bounds
+    bounds_epsg: 32652
+
+read_green:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/NO_META'
+    pattern: '*.GREEN.*.tif'
+  operations: [ 'read', 'subset' ]
+  read:
+    module: 'gdal'
+  subset:
+    bounds: *bounds
+    bounds_epsg: 32652
+
+rgb_stack:
+  input:
+    path: ['{{read_red}}', '{{read_green}}', '{{read_blue}}']
+  operations: ['stack', 'resample', 'write']
+  stack:
+    master_module: 'gdal'
+  resample:
+    epsg: 4326
+  write:
+    out_dir: '$ROOT_DIR/OUTPUTDATA'
+    out_stem: 'rgb_stack_resample'
+    out_ext: 'tif'

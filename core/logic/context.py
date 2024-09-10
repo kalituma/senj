@@ -8,6 +8,11 @@ class Context:
         self._cache = {}
         self._counter = {}
         self._graph_manager:"GraphManager" = graph_manager
+        if graph_manager:
+            if self._graph_manager.var_link_map is not None:
+                for var_key, var_links in self._graph_manager.var_link_map.items():
+                    self._cache[var_key] = {}
+                    self._cache[var_key]['links'] = var_links
 
         # manager = Manager()
         # self.counter = manager.dict()

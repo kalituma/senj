@@ -12,15 +12,11 @@ class TestReadWriteConfigExecution(unittest.TestCase):
         Logger.get_logger(log_level='info', log_file_path=log_path)
         self.schema_map = load_schema_map(SCHEMA_PATH)
 
-    def test_read_write_single_safe(self):
-        config_path = f'{self.resource_root}/config/read_write/simple_read_write.yaml'
+    def test_execute_config(self):
+        config_path = f'{self.resource_root}/config/execute/resampling.yaml'
         executeGraph(config_path, self.schema_map)
 
-    def test_read_write_dim_multiple(self):
-        config_path = f'{self.resource_root}/config/read_write/multiple_read_write.yaml'
-        executeGraph(config_path, self.schema_map)
-
-    def test_read_write_gdal_multiple(self):
-        config_path = f'{self.resource_root}/config/read_write/multiple_gdal_read_write.yaml'
+    def test_execute_atmos_corr_config(self):
+        config_path = f'{self.resource_root}/config/execute/atmos_corr.yaml'
         executeGraph(config_path, self.schema_map)
 

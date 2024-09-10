@@ -6,6 +6,7 @@ from .rename_raster import *
 from .meta_raster import *
 from .load_image_paths import *
 from .read_raster import *
+from .mosaic_raster import *
 from .update_raw import *
 from .convert_raster import *
 from .write_raster import *

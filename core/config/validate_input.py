@@ -16,7 +16,9 @@ def validate_input_path(input_path:Union[AnyStr, List[AnyStr]]) -> List[Tuple[bo
     result = []
     if isinstance(input_path, list):
         for input_value in input_path:
-            result.append(validate_input_path_recur(input_value))
+            valid_result = validate_input_path_recur(input_value)
+            result.append(valid_result)
     else:
-        result.append(validate_input_path_recur(input_path))
+        valid_result = validate_input_path_recur(input_path)
+        result.append(valid_result)
     return result

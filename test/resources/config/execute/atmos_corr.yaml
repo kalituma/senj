@@ -1,0 +1,16 @@
+subset_safe:
+  input:
+    path: ['$ROOT_DIR/INPUTDATA/S2/safe/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE',
+           '$ROOT_DIR/INPUTDATA/S2/safe/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDE_20230509T035526.SAFE']
+  operations: ['read', 'subset', 'write']
+  read:
+    module: 'snap'
+    bands: ['B2', 'B3', 'B4', 'B_detector_footprint_B2', 'B_detector_footprint_B3', 'B_detector_footprint_B4']
+  subset:
+    bounds: [435257, 3905427, 471373, 3876907]
+    bounds_epsg: 32652
+    copy_meta: true
+  write:
+    out_dir: '$ROOT_DIR/OUTPUTDATA/S2'
+    out_stem: 'S2A_MSIL1C_20230509T020651'
+    out_ext: 'tif'

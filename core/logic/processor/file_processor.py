@@ -1,4 +1,4 @@
-from typing import Callable, Union, TYPE_CHECKING, AnyStr
+from typing import Callable, Union, TYPE_CHECKING, AnyStr, List
 from pathlib import Path
 
 from core.operations import READ_OP
@@ -12,9 +12,9 @@ from core.raster import Raster
 @PROCESSOR.reg(FILE_PROCESSOR)
 class FileProcessor(Processor):
 
-    def __init__(self, proc_name:str, path:str, pattern:str='*', sort:dict=None, splittable:bool=True):
+    def __init__(self, proc_name:str, path:List, pattern:str='*', sort:dict=None, splittable:bool=True):
         super().__init__(proc_name=proc_name, proc_type=ProcessorType.FILE, splittable=splittable)
-        self.root:str = path
+        self.roots:List = path
         self.search_pattern:str = pattern
         self.sort_func: Union[Callable, None] = None
 
@@ -24,15 +24,28 @@ class FileProcessor(Processor):
         # print_log_attrs(self, 'debug')
 
     def preprocess(self):
-        target_path = Path(self.root)
+        if len(self.roots) == 0:
+            raise AssertionError('No root path provided')
+
+        if len(self.roots) == 1:
+            root = self.roots[0]
+            yield from self.get_file(root)
+
+        elif len(self.roots) > 1:
+            for root in self.roots:
+                yield from self.get_file(root)
+
+
+    def get_file(self, root:str):
+        target_path = Path(root)
         ext = target_path.suffix[1:].lower()
 
         if target_path.is_file() or ext == 'safe':
-            assert Path(self.root).exists(), f'File does not exist: {self.root}'
-            yield self.root
+            assert Path(root).exists(), f'File does not exist: {root}'
+            yield root
         else:
-            assert Path(self.root).exists(), f'File does not exist: {self.root}'
-            p = Path(self.root).rglob(self.search_pattern)
+            assert Path(root).exists(), f'File does not exist: {root}'
+            p = Path(root).rglob(self.search_pattern)
 
             if self.sort_func is None:
                 p_list = sorted(p)

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, List, Union
 from copy import deepcopy
-from logging import warn
-from core.util import assert_bnames
 
+from core.util import assert_bnames
 from core.util.op import op_constraint, MODULE_TYPE
+
 from core.raster import merge_raster_func, RasterType
 from core.raster.funcs import convert_raster, get_band_name_and_index
 from core.operations.parent import SelectOp
@@ -11,6 +11,7 @@ from core.operations import OPERATIONS, STACK_OP
 
 if TYPE_CHECKING:
     from core.raster import Raster
+    from core.logic import Context
 
 @OPERATIONS.reg(name=STACK_OP, conf_no_arg_allowed=True)
 @op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
@@ -34,9 +35,14 @@ class Stack(SelectOp):
 
         return raster
 
-    def __call__(self, rasters:List["Raster"], *args, **kwargs):
+    def __call__(self, rasters:List["Raster"], context:"Context", *args, **kwargs):
 
         assert len(rasters) > 1, 'At least two rasters are required for stacking'
+
+        assert self.proc_name in context.cache, f'{self.proc_name} not found in context.cache'
+
+        stack_order = context.cache[self.proc_name]['links']
+        rasters.sort(key=lambda x: stack_order.index(x.raster_from))
 
         if self._meta_from:
             assert self._meta_from in [r.raster_from for r in rasters], f'meta_from({self._meta_from}) not found in rasters'
@@ -63,6 +69,6 @@ class Stack(SelectOp):
             proc_raster_map = {r.raster_from: r for r in rasters}
             self.copy_meta(merged_raster, proc_raster_map[self._meta_from].meta_dict)
 
-        merged_raster = self.post_process(merged_raster, *args, **kwargs)
+        merged_raster = self.post_process(merged_raster, context, *args, **kwargs)
 
         return merged_raster

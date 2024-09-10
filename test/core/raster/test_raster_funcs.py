@@ -4,7 +4,7 @@ from pathlib import Path
 from core.raster import RasterType, Raster
 from core.raster.funcs import update_meta_band_map, get_epsg, load_raster, load_images_paths, create_meta_dict, init_bname_index_in_meta, set_raw_metadict
 from core.util import identify_product, parse_meta_xml, read_pickle, expand_var, ProductType, get_btoi_from_tif
-from core.util.gdal import load_raster_gdal, mosaic_tiles
+from core.util.gdal import load_raster_gdal, mosaic_by_file_paths
 from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands
 
 from core.logic.context import Context
@@ -115,7 +115,7 @@ class TestRasterFuncs(unittest.TestCase):
         update_meta_bounds = False
         if in_raster.module_type == RasterType.GDAL:
             if len(image_paths) > 1:
-                raw = mosaic_tiles(image_paths)
+                raw = mosaic_by_file_paths(image_paths)
                 update_meta_bounds = True
             else:
                 datasets = load_raster_gdal(image_paths)

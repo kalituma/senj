@@ -4,7 +4,7 @@ from pathlib import Path
 
 from core.util import identify_product, parse_meta_xml, read_pickle, get_btoi_from_tif, dict_to_ordered_list
 from core.util.identify import planet_test
-from core.util.gdal import load_raster_gdal, mosaic_tiles, read_gdal_bands_as_dict
+from core.util.gdal import load_raster_gdal, mosaic_by_file_paths, read_gdal_bands_as_dict
 from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands, read_gpf_bands_as_dict
 
 from core.raster import RasterType, Raster, ProductType
@@ -62,7 +62,7 @@ def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
     update_meta_bounds = False
     if empty_raster.module_type == RasterType.GDAL:
         if len(image_paths) > 1:
-            raw = mosaic_tiles(image_paths)
+            raw = mosaic_by_file_paths(image_paths)
             update_meta_bounds = True
         else:
             datasets = load_raster_gdal(image_paths)

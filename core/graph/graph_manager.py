@@ -20,8 +20,11 @@ class GraphManager:
         self.logger = Logger.get_logger()
 
         self.logger.log('info', '------------------------------------------------------ Building graph manager')
+
+
         # validate and parse
-        n_config, procs, proc_init, proc_end, proc_link, ops_args = parse_config(config, schema_map)
+        n_config, procs, proc_init, proc_end, proc_link, ops_args, var_link = parse_config(config, schema_map)
+
         self.logger.log('debug', f'processor_links : {proc_link}')
         self.logger.log('info', f'processors : {procs}, end processors : {proc_end}')
 
@@ -33,6 +36,11 @@ class GraphManager:
         self._ops:list[tuple] = [get_ops_args_from_graph(self._graph, proc) for proc in self.procs]
         self._proc_op_map:dict[str] = self._build_proc_op_map()
         self.current_idx:int = 0
+
+        self._var_link_map = None
+        if len(var_link):
+            self._var_link_map = var_link
+
         self.logger.log('info', '------------------------------------------------------ Graph manager built')
     @property
     def procs(self):
@@ -41,6 +49,10 @@ class GraphManager:
     @property
     def ops(self):
         return self._ops
+
+    @property
+    def var_link_map(self):
+        return self._var_link_map
 
     def __len__(self):
         return len(self.procs)
