@@ -25,3 +25,6 @@ class TestReadWriteGlobal(unittest.TestCase):
 
         out_raster = Read(module='gdal')(out_path, context)
         self.assertEqual(out_raster.get_band_names(), ['band_2', 'band_4'])
+
+    def test_read_write_with_config(self):
+        pass

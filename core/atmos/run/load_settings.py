@@ -3,6 +3,7 @@ import os
 import core.atmos as atmos
 from core import ATMOS_SCRATCH_PATH
 from core.util import polygon_from_wkt, Logger
+from core.util.errors import UserNamePasswdNotSetError
 
 def set_l2w_and_polygon(user_settings:dict) -> dict:
 
@@ -46,7 +47,10 @@ def set_earthdata_login_to_env(run_settings:dict):
         kv = run_settings[k] if k in run_settings else atmos.config[k]
         if len(kv) == 0: continue
         if '$' in kv:
-            os.environ[k] = os.environ[kv[1:]]
+            try:
+                os.environ[k] = os.environ[kv[1:]]
+            except KeyError:
+                raise UserNamePasswdNotSetError(k)
         else:
             os.environ[k] = kv
 

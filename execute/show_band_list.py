@@ -74,9 +74,9 @@ def main():
     file_path = expand_var(flags.file)
     ext = Path(file_path).suffix.lower()
 
-    # if ext not in ALLOWED_EXTENSIONS:
-    #     logging.error(f'File type not supported: %s, supported extensions are {ALLOWED_EXTENSIONS}', ext)
-    #     return 1
+    if ext not in ALLOWED_EXTENSIONS:
+        logging.error(f'File type not supported: %s, supported extensions are {ALLOWED_EXTENSIONS}', ext)
+        return 1
 
     assert Path(file_path).exists(), f'{file_path} does not exist.'
 

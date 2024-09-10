@@ -114,6 +114,7 @@ class Op(EventEmitter, metaclass=LogCall):
 
     def end_log(self, result:Union['Raster', str]):
         if isinstance(result, Raster):
+            self.log(f'bands_to_index : {result.band_to_index}')
             self.log(f'------------------------------------------------------ history: {result.op_history}')
         self.log(f'------------------------------------------------------ end {self.__class__.__name__} (counter:{self.counter})')
 

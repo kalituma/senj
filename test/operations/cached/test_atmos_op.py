@@ -1,18 +1,19 @@
 import os, unittest
 from core.logic import Context
-from core.util import expand_var
+from core.util import expand_var, Logger
 from core.operations import Read, Write
 from core.operations.cached import AtmosCorr
 
 class TestAtmosCorr(unittest.TestCase):
     def setUp(self) -> None:
         self.data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
-        self.s2_dim_path = os.path.join(self.data_root, 'dim', 's2', 'snap',
-                                        'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
+        self.s2_dim_path = os.path.join(self.data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
         self.wv_xml_path = os.path.join(self.data_root, 'tif', 'wv', '014493935010_01_P001_MUL',
                                         '19APR04021253-M2AS-014493935010_01_P001.XML')
         self.ps_xml_path = os.path.join(self.data_root, 'tif', 'ps', '20190817_Radiance', 'files',
                                         '20200817_013159_78_2277_3B_AnalyticMS_metadata_clip.xml')
+        self.logger = Logger.get_logger(log_level='info', log_file_path=os.path.join(self.data_root, 'target', 'test_out', 'atmos_op', 'atmos_op.log'))
+
     def test_atmos_corr_to_s2_dim(self):
         context = Context(None)
         raster = Read(module='snap')(self.s2_dim_path, context)

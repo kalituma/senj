@@ -85,7 +85,10 @@ def check_input_ext(path):
     return _input_ext
 
 def expand_var(path:str) -> str:
-    return os.path.expandvars(path)
+    abs_path = os.path.expandvars(path)
+    if '$' in abs_path:
+        raise ValueError(f'Path {abs_path} contains unresolved environment variable')
+    return abs_path
 
 def check_in_any_case(src_str:str, band_target_list:list) -> bool:
     src_str = src_str.lower()

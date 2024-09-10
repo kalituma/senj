@@ -12,9 +12,8 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=SPLIT_OP, conf_no_arg_allowed=True)
 @op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class Split(Op):
-    def __init__(self, axis:int=0, bands:list=None):
+    def __init__(self, bands:list=None):
         super().__init__(SPLIT_OP)
-        self.axis = axis
         self.bands = bands
 
     def __call__(self, raster:"Raster", context:"Context", *args) -> list["Raster"]:

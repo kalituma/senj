@@ -14,6 +14,20 @@ def print_log_attrs(self, level):
         if attr not in ['_listeners', '_counter', '_logger', '__len__']:
             self._logger.log(level, f'({self.__class__.__name__}) {attr} : {getattr(self, attr)}')
 
+class TruncatedFormatter(logging.Formatter):
+
+    def __init__(self, fmt=None, datefmt=None, style='%', max_length=1000):
+        super().__init__(fmt, datefmt, style)
+        self.max_length = max_length
+
+    def format(self, record):
+        message = super().format(record)
+
+        if len(message) > self.max_length:
+            return message[:self.max_length - 3] + '...'
+
+        return message
+
 class Logger:
     _instance = None
 
@@ -36,7 +50,7 @@ class Logger:
         file_handler = logging.FileHandler(log_file_path)
         file_handler.setLevel(logger_level_map[logging_level])
 
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = TruncatedFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', max_length=500)
         file_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
 
