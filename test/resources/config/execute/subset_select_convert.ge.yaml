@@ -1,0 +1,33 @@
+ge_atmos_corr:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/GE/tif'
+    pattern: '*.tif'
+    sort:
+      func: '!{sort_by_ge_date}'
+  operations: ['read', 'atmos_corr']
+  read:
+    module: 'snap'
+  atmos_corr:
+    bands: ['BAND_B', 'BAND_G', 'BAND_R', 'BAND_N']
+    band_slots: ['blue', 'green', 'red', 'nir']
+    write_map: true
+    map_dir: '$ROOT_DIR/OUTPUTDATA/GE'
+    map_stem: 'ge'
+
+ge_subset_select_convert:
+  input:
+    path: ['{{ge_atmos_corr}}']
+  operations: ['subset', 'select', 'convert', 'write']
+  subset:
+    bounds: [129.0115, 37.623, 129.0424, 37.5967]
+    bounds_epsg: 4326
+  select:
+    bands: ['BAND_R', 'BAND_G', 'BAND_B']
+    band_labels: ['RED', 'GREEN', 'BLUE']
+  convert:
+    to_module: 'gdal'
+  write:
+    out_dir: '$ROOT_DIR/OUTPUTDATA/GE'
+    out_stem: 'ge'
+    suffix: 'atmos_subset_select_convert'
+    out_ext: 'tif'

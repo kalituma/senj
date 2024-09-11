@@ -12,7 +12,7 @@ from core.util.errors import ExtensionNotSupportedError
 from core.util import assert_bnames
 
 from core.raster import RasterType, Raster, MODULE_EXT_MAP
-from core.raster.funcs import load_raster, select_band_raster, find_bands_contains_word
+from core.raster.funcs import load_raster, find_bands_contains_word
 
 if TYPE_CHECKING:
     from core.logic.context import Context

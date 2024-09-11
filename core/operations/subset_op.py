@@ -4,11 +4,10 @@ from copy import deepcopy
 from core.operations.parent import ParamOp, WarpOp
 from core.operations import OPERATIONS, SUBSET_OP
 from core.raster import Raster, RasterType
-from core.util import region_to_wkt, assert_bnames
+from core.util import region_to_wkt, assert_bnames, make_transform
 from core.util.op import MODULE_TYPE, op_constraint
 from core.util.snap import subset_gpf
-from core.util.gdal import make_transform, is_epsg_code_valid
-
+from core.util.gdal import is_epsg_code_valid
 
 if TYPE_CHECKING:
     from core.logic import Context
@@ -37,16 +36,16 @@ class Subset(ParamOp, WarpOp):
 
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
-        if self.module_type == MODULE_TYPE.SNAP:
-            assert raster.module_type == RasterType.SNAP, 'Subset operation is only available for SNAP module'
+        if raster.module_type == RasterType.SNAP:
+            assert self.module_type == MODULE_TYPE.SNAP, 'Subset operation is only available for SNAP module'
 
             self.add_param(bandNames=raster.get_band_names())
             tiePoints = raster.get_tie_point_grid_names()
             if tiePoints:
                 self.add_param(tiePointGridNames=tiePoints)
             raster.raw = subset_gpf(raster.raw, self.snap_params)
-        elif self.module_type == MODULE_TYPE.GDAL:
-            assert raster.module_type == RasterType.GDAL, 'Subset operation is only available for GDAL module'
+        elif raster.module_type == RasterType.GDAL:
+            assert self.module_type == MODULE_TYPE.GDAL, 'Subset operation is only available for GDAL module'
             cur_params = deepcopy(self.snap_params)
             cur_params['outputBounds'] = [self._bounds[0], self._bounds[3], self._bounds[2], self._bounds[1]]
             raster.raw, context = self.call_warp(raster.raw, cur_params, context)

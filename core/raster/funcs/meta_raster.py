@@ -1,5 +1,8 @@
 from typing import Union
-from warnings import warn
+
+from osgeo import gdal
+from esa_snappy import Product
+
 from core.util import assert_bnames, ProductType
 from core.raster import Raster, RasterType
 from core.raster.funcs import get_band_name_and_index
@@ -52,4 +55,6 @@ def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
     else:
         raise NotImplementedError(f'{raster.module_type} is not implemented.')
 
+def update_meta_boundary(meta_dict:dict, dataset:Union[gdal.Dataset, Product], product_type:ProductType) -> dict:
 
+    return meta_dict

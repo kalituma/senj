@@ -6,7 +6,6 @@ from core.operations import MULTI_WRITE_OP
 from core.operations import Write, Split
 from core.raster import RasterType, Raster, EXT_MAP
 
-
 @OPERATIONS.reg(name=MULTI_WRITE_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP], must_after=Split)
 class MultiWrite(Op):

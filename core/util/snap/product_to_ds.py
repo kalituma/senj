@@ -1,6 +1,7 @@
 import numpy as np
 from esa_snappy import Product, jpy, PixelPos, Band, CrsGeoCoding
-from core.util import epsg_to_wkt
+
+from core.util import epsg_to_wkt, transform_coords
 
 def find_epsg_from_product(product:Product) -> int:
     CRS = jpy.get_type('org.geotools.referencing.CRS')
@@ -19,7 +20,7 @@ def find_proj_from_band(band:Band) -> str:
         wkt = epsg_to_wkt(4326)
     return wkt
 
-def find_boundary_from_product(product:Product) -> dict:
+def find_boundary_from_product(product:Product, epsg:int=4326) -> dict:
 
     DIR_POS = jpy.get_type('org.geotools.geometry.DirectPosition2D')
     b_width, b_height = product.getSceneRasterWidth(), product.getSceneRasterHeight()
@@ -28,6 +29,11 @@ def find_boundary_from_product(product:Product) -> dict:
     min_x, max_y = list(affine.transform(DIR_POS(PixelPos(0, 0)), None).getCoordinate())
     max_x, min_y = list(affine.transform(DIR_POS(PixelPos(product.getSceneRasterWidth(), product.getSceneRasterHeight())), None).getCoordinate())
     # max_x, min_y = list(affine.transform(DIR_POS(PixelPos(product.getSceneRasterWidth()-0.5, product.getSceneRasterHeight()-0.5)), None).getCoordinate())
+
+
+    if epsg != 4326:
+        max_y, min_x = transform_coords(min_x, max_y, epsg, 4326)
+        min_y, max_x = transform_coords(max_x, min_y, epsg, 4326)
 
     x_res = (max_x - min_x) / b_width
     y_res = -(max_y - min_y) / b_height

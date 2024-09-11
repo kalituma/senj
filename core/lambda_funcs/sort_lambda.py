@@ -1,4 +1,5 @@
-import os
+import os, locale, re
+from datetime import datetime
 from pathlib import Path
 from core import LAMBDA
 
@@ -13,3 +14,13 @@ def sort_by_last_number(file_name: str) -> int:
 @LAMBDA.reg(name='sort_by_second_number')
 def sort_by_second_number(file_name: str) -> int:
     return int(Path(file_name).stem.split('_')[1])
+
+@LAMBDA.reg(name='sort_by_ge_date')
+def sort_by_ge_date(file_name: str) -> datetime:
+     date_paresed = re.search('(\d{2}[A-Za-z]{3}\d{2}\d{6})', Path(file_name).stem)
+     if date_paresed is None:
+         raise ValueError(f'Could not parse date from {file_name} to sort')
+     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+     date_obj = datetime.strptime(date_paresed.group(), '%y%b%d%H%M%S')
+
+     return date_obj

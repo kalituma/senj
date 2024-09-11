@@ -20,7 +20,7 @@ def select_band_raster(raster:Raster, selected_bands_or_indices:List[Union[int,s
     new_raster = Raster.from_raster(raster)
 
     if raster.module_type == RasterType.SNAP:
-        raw = copy_product(raster.raw, selected_bands=selected_band_name)
+        raw = copy_product(raster.raw, selected_bands=selected_band_name, copy_tie_point=False)
     elif raster.module_type == RasterType.GDAL:
         assert all([b > 0 for b in selected_index]), f'selected_bands for module "{RasterType.GDAL.__str__()}" should be > 0'
         raw = copy_ds(raster.raw, 'MEM', selected_index=selected_index)

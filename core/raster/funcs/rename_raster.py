@@ -18,10 +18,10 @@ def rename_raster_bands(raster:Raster, old_names_or_indices:List[AnyStr], new_ba
         if band_name_list[i] in old_to_new:
             band_name_list[i] = old_to_new[band_name_list[i]]
 
-    if path != '':
-        ext = Path(path).suffix[1:].lower()
-        if ext == 'tif':
-            raster.raw = set_btoi_to_tif(path, {band_name_list[i]:i+1 for i in range(len(band_name_list))})
+    # if path != '':
+    #     ext = Path(path).suffix[1:].lower()
+    #     if ext == 'tif':
+    #         raster.raw = set_btoi_to_tif(path, {band_name_list[i]:i+1 for i in range(len(band_name_list))})
 
     if raster.meta_dict:
         raster.update_band_map_to_meta(band_name_list)

@@ -6,7 +6,7 @@ from core.logic import Context
 from core.raster import Raster, RasterType, get_epsg, get_res
 from core.util.snap import reproject_gpf, find_gt_from_product
 from core.util.op import MODULE_TYPE, op_constraint
-from core.util.gdal import is_epsg_code_valid
+from core.util.gdal import is_epsg_code_valid, unit_from_epsg
 
 SNAP_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic']
 GDAL_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic', 'cubicspline', 'lanczos']
@@ -53,6 +53,16 @@ class Resample(ParamOp, WarpOp):
             usr_res = res
 
         if src_epsg != usr_epsg or not np.isclose(res, usr_res):
+
+            if not np.isclose(res, usr_res):
+                unit = unit_from_epsg(int(usr_epsg.split(':')[1]))['unit_name']
+                if unit == 'degree':
+                    assert usr_res < 1, 'Resolutions should be less than 1 degree for degree unit'
+                elif unit == 'metre':
+                    assert usr_res > 0.1, 'Resolutions should be greater than 0.1 metre for metre unit'
+                else:
+                    raise NotImplementedError(f"Unit {unit} is not supported yet")
+
 
             if self.module_type == MODULE_TYPE.SNAP:
                 assert raster.module_type == RasterType.SNAP, 'Resample operation is only available for SNAP module'

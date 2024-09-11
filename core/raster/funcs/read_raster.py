@@ -54,7 +54,7 @@ def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
 
     product_type, meta_path = identify_product(path)
 
-    if product_type == ProductType.WV: # to merge tiles for WorldView, in_path should be the xml file
+    if product_type == ProductType.WV and Path(meta_path).suffix.lower() == '.xml': # to merge tiles for WorldView, in_path should be the xml file
         path = empty_raster.path = meta_path
 
     image_paths = load_images_paths(path, product_type)

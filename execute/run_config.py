@@ -10,7 +10,7 @@ from core.logic import Context
 from core.logic.processor import ProcessorBuilder
 
 def parse_args():
-    parser = ArgumentParser(description="main script for preprocessing sentinel-1 and sentinel-2")
+    parser = ArgumentParser(description="main script to preprocesss radar and optical product based on yaml config file")
     parser.add_argument('--config_path', help="yaml based config file path")
     parser.add_argument('--log_dir', default='$ROOT_DIR/OUTPUTDATA', help="log directory path")
     parser.add_argument('--log_level', default='info', help="log level")

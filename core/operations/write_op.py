@@ -59,6 +59,10 @@ class Write(SelectOp):
 
         if self._out_ext == 'tif':
             if not has_same_band_shape(result):
+                raster_data_list = result.raw.getRasterDataNodes()
+                for i in range(raster_data_list.size()):
+                    band = raster_data_list.get(i)
+                    self.log(f'Band "{band.getName()}" : {band.getRasterHeight()} x {band.getRasterWidth()}', level='error')
                 raise NotHaveSameBandShapeError(f'All bands should have same shape if out extensions({self._out_ext}) is for tiff format.')
         write_raster(result, output_path)
 

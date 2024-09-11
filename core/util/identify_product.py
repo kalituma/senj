@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from lxml import etree
 
-from core.util import S1_MISSION_PATTERN, S2_MISSION_PATTERN
+from core.util import S1_MISSION_PATTERN, S2_MISSION_PATTERN, PS_MISSION_PATTERN, WV_MISSION_PATTERN
 from core.util import ProductType, read_pickle, query_dict
 from core.util.identify import safe_test, dim_test, planet_test, worldview_test
 
@@ -15,16 +15,20 @@ def check_product_type_using_meta(meta_dict: dict) -> ProductType:
             found_values = query_dict(S1_MISSION_PATTERN, target_dict=meta_dict)
             if 'sentinel-1' in found_values[0].lower():
                 return ProductType.S1
-            else:
-                return ProductType.UNKNOWN
         elif len(query_dict(S2_MISSION_PATTERN, target_dict=meta_dict)) > 0:
             found_values = query_dict(S2_MISSION_PATTERN, target_dict=meta_dict)
             if 'sentinel-2' in found_values[0].lower():
                 return ProductType.S2
-            else:
-                return ProductType.UNKNOWN
-        else:
-            return ProductType.UNKNOWN
+        elif len(query_dict(PS_MISSION_PATTERN, target_dict=meta_dict)) > 0:
+            found_values = query_dict(PS_MISSION_PATTERN, target_dict=meta_dict)
+            if 'planetscope' in found_values[0].lower():
+                return ProductType.PS
+        elif len(query_dict(WV_MISSION_PATTERN, target_dict=meta_dict)) > 0:
+            found_values = query_dict(WV_MISSION_PATTERN, target_dict=meta_dict)
+            if 'geoeye' in found_values[0].lower() or 'worldview' in found_values[0].lower():
+                return ProductType.WV
+
+        return ProductType.UNKNOWN
     except:
         return ProductType.UNKNOWN
 

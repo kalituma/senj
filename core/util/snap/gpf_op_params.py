@@ -3,6 +3,7 @@ from esa_snappy import HashMap, jpy, Rectangle
 from core.util.snap import get_default_bands, get_default_masks
 from core.util.snap.gpf_const import BOXCAR, MEDIAN, FROST, GAMMA_MAP, LEE_SPECKLE, LEE_REFINED, LEE_SIGMA, IDAN, MEAN_SPECKLE
 
+
 def _build_params(params: HashMap=None, **kwargs):
     if params is None:
         params = HashMap()
@@ -73,6 +74,7 @@ def build_mosaic_params(geo_spec:dict, **kwargs):
     vars = [OpVar(k, v) for k, v in kwargs['variables']]
 
     kwargs['variables'] = jpy.array('org.esa.snap.core.gpf.common.MosaicOp$Variable', vars)
+
 
     kwargs['westBound'] = geo_spec['ul_x'] + geo_spec['res_x'] / 2
     kwargs['eastBound'] = geo_spec['lr_x'] + geo_spec['res_x'] / 2

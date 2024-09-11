@@ -1,0 +1,16 @@
+mosaic:
+  type: 'dict'
+  required: True
+  schema:
+    bands:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+        oneof:
+        - type: 'integer'
+          min: 1
+        - type: 'string'
+    master_module:
+      type: 'string'
+      required: false

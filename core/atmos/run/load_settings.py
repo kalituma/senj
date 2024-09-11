@@ -50,7 +50,7 @@ def set_earthdata_login_to_env(run_settings:dict):
             try:
                 os.environ[k] = os.environ[kv[1:]]
             except KeyError:
-                raise UserNamePasswdNotSetError(k)
+                raise UserNamePasswdNotSetError(kv)
         else:
             os.environ[k] = kv
 

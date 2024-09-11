@@ -1,9 +1,9 @@
 import unittest
 from osgeo import gdal
-from core.util.gdal import mosaic_by_ds, copy_ds
+from core.util.gdal import mosaic_by_ds, copy_ds, unit_from_epsg
 
 
-class TestMosaicFuncs(unittest.TestCase):
+class TestCoreFuncs(unittest.TestCase):
 
     def test_mosaic(self):
         paths = [
@@ -19,3 +19,7 @@ class TestMosaicFuncs(unittest.TestCase):
 
         mosaic_ds = mosaic_by_ds(ds_list)
         copy_ds(mosaic_ds, "GTiff", is_bigtiff=False, compress=False, out_path=out_path)
+
+    def test_get_unit(self):
+        self.assertEqual(unit_from_epsg(4326)['unit_name'], 'degree')
+        self.assertEqual(unit_from_epsg(5186)['unit_name'], 'metre')

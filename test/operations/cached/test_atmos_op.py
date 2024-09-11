@@ -58,6 +58,7 @@ class TestAtmosCorr(unittest.TestCase):
 
     def test_atmos_corr_to_ps(self):
         context = Context(None)
+        Logger.get_logger(log_level='info', log_file_path=os.path.join(self.data_root, 'target', 'test_out', 'atmos_op', 'atmos_op.log'))
         raster = Read(module='snap')(self.ps_xml_path, context)
         raster = AtmosCorr(bands=['band_1', 'band_2', 'band_3', 'band_4'],
                            band_slots=['blue', 'green', 'red', 'nir'],

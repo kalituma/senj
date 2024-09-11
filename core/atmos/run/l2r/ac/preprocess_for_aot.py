@@ -19,7 +19,7 @@ def band_data_fixed(band_data:np.ndarray, band_sub:np.ndarray, percentile, inter
     if len(dark_pixel_location[0]) != 0:
         dark_pixel_location_x = dark_pixel_location[0][0]
         dark_pixel_location_y = dark_pixel_location[1][0]
-    Logger.get_logger().log(f'Dark pixel location: {dark_pixel_location_x}, {dark_pixel_location_y}')
+    Logger.get_logger().log('info', f'Dark pixel location: {dark_pixel_location_x}, {dark_pixel_location_y}')
     # print(band_data)
     # if not use_revlut:
     #    gk='_mean'

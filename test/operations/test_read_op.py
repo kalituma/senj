@@ -4,7 +4,7 @@ from esa_snappy import Product
 
 from osgeo.gdal import Dataset
 
-from core.util import expand_var
+from core.util import expand_var, Logger
 from core.util.snap import read_gpf_bands_as_dict
 from core.util.gdal import read_gdal_bands_as_dict
 from core.util import ProductType, compare_nested_dicts_with_arrays
@@ -76,6 +76,7 @@ class TestReadOp(unittest.TestCase):
 
     def test_read_world_view(self):
         context = Context(None)
+        Logger.get_logger(log_level='info', log_file_path='/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_example/LIBRARY/senj/data/test/target/test_out/read_op.log')
         with self.subTest('read world view'):
             tif_raster = Read(module='snap', bands=['BAND_R', 'BAND_B'])(self.wv_tif_path, context)
             self.assertEqual(list(tif_raster.get_band_names()), ['BAND_R', 'BAND_B'])
@@ -329,3 +330,20 @@ class TestReadOp(unittest.TestCase):
         r_gdal = Read(module='GDAL', bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
         self.assertTrue(compare_nested_dicts_with_arrays(r.meta_dict, r_gdal.meta_dict))
 
+    def test_convert_ps(self):
+        out_dir = '/home/airs_khw/mount/d_drive/__develope/temp/etri/etri_example/INPUTDATA/PS/'
+
+        ps_path_1 = os.path.join(self.test_data_root, 'tif', 'ps', '20190817_Radiance', 'files', '20200817_013159_78_2277_3B_AnalyticMS_clip.tif')
+        ps_path_2 = os.path.join(self.test_data_root, 'tif', 'ps', '20190817_Radiance', 'files', '20200817_013201_99_2277_3B_AnalyticMS_clip.tif')
+
+        Logger.get_logger(log_file_path=out_dir + 'subset_op.log')
+        context = Context(None)
+        with self.subTest(msg='read_and_write ps_1'):
+            snap_tif_raster_1 = Read(module='gdal')(ps_path_1, context)
+            # print(Write(out_dir=out_dir, out_stem='20200817_013159_78_2277_3B', out_ext='tif')(snap_tif_raster, context))
+
+        # with self.subTest(msg='read_and_write ps_2'):
+            snap_tif_raster_2 = Read(module='gdal')(ps_path_2, context)
+
+            # print(Write(out_dir=out_dir, out_stem='20200817_013159_99_2277_3B', out_ext='tif')(snap_tif_raster, context))
+            print()

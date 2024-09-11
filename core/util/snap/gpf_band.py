@@ -56,7 +56,7 @@ def add_band_to_product(product, bands:dict):
 
     return product
 
-def copy_product(src_product, selected_bands:list=None):
+def copy_product(src_product, selected_bands:list=None, copy_tie_point:bool=True) -> Product:
 
     if selected_bands:
         matched_band = selected_bands
@@ -75,7 +75,9 @@ def copy_product(src_product, selected_bands:list=None):
     new_product.setSceneGeoCoding(target_band.getGeoCoding())
 
     ProductUtils.copyMetadata(src_product, new_product)
-    ProductUtils.copyTiePointGrids(src_product, new_product)
+    if copy_tie_point:
+        ProductUtils.copyTiePointGrids(src_product, new_product)
+        
     # ProductUtils.copyMasks(src_product, new_product)
     # ProductUtils.copyFlagBands(src_product, new_product, True)
 

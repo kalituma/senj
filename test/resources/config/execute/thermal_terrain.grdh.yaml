@@ -1,0 +1,62 @@
+grdh_1:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/S1/S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE'
+  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'terrain_correction', 'subset']
+  read:
+    module: 'snap'
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: 3
+    continue_on_fail: false
+  thermal_noise_removal:
+    polarisations: ['VV', 'VH']
+  calibrate:
+    polarisations: ['VV', 'VH']
+    output_sigma: true
+  terrain_correction:
+    pixel_spacing_meter: 10
+    pixel_spacing_degree: 0.0008
+    img_method: 'BICUBIC_INTERPOLATION'
+    map_projection: 'WGS84(DD)'
+  subset:
+    bounds: [127.54, 35.818, 128.227, 35.132]
+    bounds_epsg: 4326
+
+grdh_2:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/S1/S1A_IW_GRDH_1SDV_20230524T093131_20230524T093201_048674_05DAB1_1DB4.SAFE'
+  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'terrain_correction', 'subset']
+  read:
+    module: 'snap'
+  apply_orbit:
+    orbit_type: 'SENTINEL_PRECISE'
+    poly_degree: 3
+    continue_on_fail: false
+  thermal_noise_removal:
+    polarisations: ['VV', 'VH']
+  calibrate:
+    polarisations: ['VV', 'VH']
+    output_sigma: true
+  terrain_correction:
+    pixel_spacing_meter: 10
+    pixel_spacing_degree: 0.0008
+    img_method: 'BICUBIC_INTERPOLATION'
+    map_projection: 'WGS84(DD)'
+  subset:
+    bounds: [127.54, 35.818, 128.227, 35.132]
+    bounds_epsg: 4326
+
+mosaic_warp_write:
+  input:
+    path: ['{{grdh_1}}', '{{grdh_2}}']
+  operations: ['mosaic', 'resample', 'write']
+  mosaic:
+    master_module: 'gdal'
+  resample:
+    epsg: 5186
+    pixel_size: 20
+  write:
+    out_dir: '$ROOT_DIR/OUTPUTDATA/S1'
+    out_stem: 's1'
+    suffix: 'grdh_mosaic'
+    out_ext: 'tif'

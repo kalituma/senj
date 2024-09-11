@@ -1,7 +1,11 @@
 import os
+import re
 import unittest
+import locale
+from datetime import datetime, timedelta
+from pathlib import Path
 
-from core.util import expand_var
+from core.util import expand_var, Logger
 from core.operations import Write, Read
 from core.logic import Context
 
@@ -132,3 +136,23 @@ class TestWriteOp(unittest.TestCase):
             out_result_path = Write(out_dir=out_dir, out_stem='s2_without_meta_out_snap', out_ext='dim', bands=['band_3'])(s2_raster)
             result = Read(module='snap')(out_result_path, context)
             self.assertEqual(result.get_band_names(), ['band_3'])
+
+    def test_copy_ge(self):
+        context = Context(None)
+        out_dir = expand_var(os.path.join('$PROJECT_PATH', '..', '..', 'OUTPUTDATA', 'ge'))
+
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
+        Logger.get_logger(log_level='info', log_file_path=os.path.join(out_dir, 'copy_ge.log'))
+
+        with self.subTest('copy_ge_tif'):
+            parsed_date = re.search('(\d{2}([A-Z]{3})\d{2}\d{6})', Path(self.ge_xml_path).stem)
+            date_str = parsed_date.group()
+            # month_str = parsed_date.group(2)
+            # date_str = date_str.replace(month_str, month_str.title())
+            locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+            date_obj = datetime.strptime(date_str, '%y%b%d%H%M%S')
+
+            ge_raster = Read(module='gdal')(self.ge_xml_path, context)
+            for i in range(3):
+                date_obj = date_obj + timedelta(days=i)
+                Write(out_dir=out_dir, out_stem=f'{date_obj.strftime("%y%b%d%H%M%S")}-{"_".join(Path(self.ge_xml_path).stem.split("-")[1:])}', out_ext='tif')(ge_raster)

@@ -10,7 +10,7 @@ from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands
 from core.logic.context import Context
 from core.operations import Read, Write, Split, MultiWrite
 
-class TestRasterFuncs(unittest.TestCase):
+class TestLoadRasterFuncs(unittest.TestCase):
     def setUp(self) -> None:
         self.test_data_root = expand_var(os.path.join('$PROJECT_PATH', 'data', 'test'))
         self.s2_without_meta = os.path.join(self.test_data_root, 'tif', 'no_meta', 'out_0_read.tif')

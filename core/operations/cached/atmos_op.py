@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, List, AnyStr, Union
 from core import OPERATIONS
 from core.config import expand_var
 from core.logic import Context
-from core.operations.parent import CachedOp
+from core.operations.parent import CachedOp, SelectOp
 from core.operations import ATMOSCORR_OP
 from core.util.op import op_constraint, call_constraint, MODULE_TYPE
 from core.util import ProductType, is_contained, glob_match
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 @OPERATIONS.reg(name=ATMOSCORR_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_module_types=[MODULE_TYPE.SNAP, MODULE_TYPE.GDAL])
-class AtmosCorr(CachedOp):
+class AtmosCorr(CachedOp, SelectOp):
     def __init__(self, bands:List[Union[AnyStr, int]], band_slots:List[AnyStr], write_map:bool=False, map_dir:str=None, map_stem:str=None,
                  det_bnames:List[AnyStr]=None, det_bword_included=False, det_bpattern=None):
         super().__init__(ATMOSCORR_OP)
@@ -86,12 +86,12 @@ class AtmosCorr(CachedOp):
 
         raster.bands = bands
         raster = self.post_process(raster, context, clear=True)
-
+        raster = SelectOp.pre_process(self, raster, selected_bands_or_indices=self._target_band_names, band_select=True)
 
         return raster
 
     def load_bands(self, raster:"Raster", target_band_names:List[AnyStr], target_band_slot:List[AnyStr], context) -> "Raster":
-        raster = self.pre_process(raster, context, bands_to_load=target_band_names)
+        raster = CachedOp.pre_process(self, raster, context, bands_to_load=target_band_names)
         for bname, bslot in zip(target_band_names, target_band_slot):
             raster[bname]['slot'] = bslot
         return raster
@@ -120,7 +120,7 @@ class AtmosCorr(CachedOp):
 
         # target_bands = target_bands + [target_det]
         det_names = list(det_res_map.values())
-        raster = self.pre_process(raster, context, bands_to_load=det_names)
+        raster = CachedOp.pre_process(self, raster, context, bands_to_load=det_names)
 
         for det_res, det_bname in det_res_map.items():
             det_elems = np.unique(raster[det_bname]['value']).tolist()

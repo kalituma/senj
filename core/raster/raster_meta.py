@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 class RasterMeta(ABC):
     def __init__(self):
         self._meta_dict:dict = None
@@ -93,3 +94,4 @@ class RasterMeta(ABC):
     def close(self):
         self.bands = None
         self.meta_dict = None
+

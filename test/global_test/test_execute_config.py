@@ -20,3 +20,14 @@ class TestReadWriteConfigExecution(unittest.TestCase):
         config_path = f'{self.resource_root}/config/execute/atmos_corr.yaml'
         executeGraph(config_path, self.schema_map)
 
+    def test_execute_planetscope_config(self):
+        config_path = f'{self.resource_root}/config/execute/mosaic_atmos_corr.ps.yaml'
+        executeGraph(config_path, self.schema_map)
+
+    def test_execute_s1_config(self):
+        config_path = f'{self.resource_root}/config/execute/thermal_terrain.grdh.yaml'
+        executeGraph(config_path, self.schema_map)
+
+    def test_execute_gee_config(self):
+        config_path = f'{self.resource_root}/config/execute/subset_select_convert.ge.yaml'
+        executeGraph(config_path, self.schema_map)
