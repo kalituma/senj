@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=NL_DENOISING_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class NLMeanDenoising(CachedOp):
-    def __init__(self, bands:List[Union[AnyStr, int]]=None, h:float=10, templateWindowSize:int=7, searchWindowSize:int=21):
+    def __init__(self, bands:List[Union[AnyStr, int]]=None, h:float=3, templateWindowSize:int=7, searchWindowSize:int=21):
         super().__init__(NL_DENOISING_OP)
         self.h = h
         self.templateWindowSize = templateWindowSize

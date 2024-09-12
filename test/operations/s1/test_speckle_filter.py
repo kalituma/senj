@@ -2,7 +2,7 @@ import os
 import unittest
 import numpy as np
 
-from core.util import expand_var
+from core.util import expand_var, Logger
 from core.operations import Read, Write, Subset
 from core.operations.s1 import SpeckleFilter
 from core.util.errors import ProductTypeError
@@ -20,16 +20,18 @@ class TestSpeckleFilter(unittest.TestCase):
 
     def test_speckle_filter(self):
         context = Context(None)
+
         out_dir = os.path.join(self.data_root, 'target', 'test_out', 's1_speckle_op')
+        Logger.get_logger(log_level='debug', log_file_path=os.path.join(out_dir, 'speckle_filter.log'))
         with self.subTest('try to open and apply speckle filter to s1 grdh product'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-            raster = SpeckleFilter()(raster, context)
+            raster = SpeckleFilter(filter='LEE_REFINED')(raster, context)
             # out_path = Write(out_dir=out_dir, out_stem='s1', suffix='speckle_filter', out_ext='dim')(raster)
             self.assertEqual(raster.get_band_names(), ['Amplitude_VV', 'Intensity_VV', 'Amplitude_VH', 'Intensity_VH'])
 
         with self.subTest('try to open and apply speckle filter to s1 grdh product with polarisations'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
-            raster = SpeckleFilter(bands=['Amplitude_VV'])(raster, context)
+            raster = SpeckleFilter(bands=[1])(raster, context)
             # out_path = Write(out_dir=out_dir, out_stem='s1', suffix='speckle_filter', out_ext='dim')(raster)
             self.assertEqual(raster.get_band_names(), ['Amplitude_VV'])
 
@@ -40,6 +42,7 @@ class TestSpeckleFilter(unittest.TestCase):
             self.assertEqual(raster.get_band_names(), ['Intensity_VV'])
 
     def test_sepck_filter_with_filter(self):
+
         context = Context(None)
         with self.subTest('try to open and apply speckle filter to s1 grdh product with polarisations and filter'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)

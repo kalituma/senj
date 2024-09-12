@@ -15,7 +15,7 @@ ALL_RESAMPLING_METHODS = GDAL_RESAMPLING_METHODS
 @OPERATIONS.reg(name=RESAMPLE_OP, no_arg_allowed=False)
 @op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
 class Resample(ParamOp, WarpOp):
-    def __init__(self, epsg:int=None, pixel_size:float=None, resampling_method:str= 'nearest'):
+    def __init__(self, epsg:int=None, pixel_size:float=None, resampling_method:str='nearest'):
         super().__init__(RESAMPLE_OP)
 
         assert resampling_method in ALL_RESAMPLING_METHODS, f'resampling_method should be one of {ALL_RESAMPLING_METHODS}'
@@ -23,10 +23,15 @@ class Resample(ParamOp, WarpOp):
         self.resampling_method:str = resampling_method.lower()
         self.add_param(resamplingName=resampling_method)
 
+        self.epsg:int = epsg
+
         if pixel_size:
             self.add_param(pixelSizeX=pixel_size, pixelSizeY=pixel_size)
 
-        self.epsg:int = epsg
+        if epsg is None:
+            assert pixel_size is not None, 'Either epsg or pixel_size should be provided'
+        if pixel_size is None:
+            assert epsg is not None, 'Either epsg or pixel_size should be provided'
 
     def __call__(self, raster:"Raster", context:"Context", *args):
 

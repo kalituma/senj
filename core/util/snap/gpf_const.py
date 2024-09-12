@@ -1,15 +1,50 @@
 import re
+from enum import Enum
+
+class FILTER_WINDOW(Enum):
+    SIZE_3x3 = '3x3'
+    SIZE_5x5 = '5x5'
+    SIZE_7x7 = '7x7'
+    SIZE_9x9 = '9x9'
+    SIZE_11x11 = '11x11'
+    SIZE_13x13 = '13x13'
+    SIZE_15x15 = '15x15'
+    SIZE_17x17 = '17x17'
+    SIZE_21x21 = '21x21'
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def from_str(cls, value:str):
+        for filter_window in cls:
+            if filter_window.value == value:
+                return filter_window
+        return None
+
+class SPECKLE_FILTER(Enum):
+    BOXCAR = 'Boxcar'
+    MEDIAN = 'Median'
+    FROST = 'Frost'
+    GAMMA_MAP = 'Gamma Map'
+    LEE_SPECKLE = 'Lee'
+    LEE_REFINED = 'Refined Lee'
+    LEE_SIGMA = 'Lee Sigma'
+    IDAN = 'IDAN'
+    MEAN_SPECKLE = 'Mean'
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def from_str(cls, value:str):
+        for speckle_filter in cls:
+            if speckle_filter.value == value:
+                return speckle_filter
+        return None
 
 # SPECKLE FILTER
-BOXCAR = 'Boxcar'
-MEDIAN = 'Median'
-FROST = 'Frost'
-GAMMA_MAP = 'Gamma Map'
-LEE_SPECKLE = 'Lee'
-LEE_REFINED = 'Refined Lee'
-LEE_SIGMA = 'Lee Sigma'
-IDAN = 'IDAN'
-MEAN_SPECKLE = 'Mean'
+
 
 SIZE_3x3 = '3x3'
 SIZE_5x5 = '5x5'

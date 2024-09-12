@@ -16,7 +16,7 @@ ge_atmos_corr:
 
 ge_subset_select_convert:
   input:
-    path: ['{{ge_atmos_corr}}']
+    path: '{{ge_atmos_corr}}'
   operations: ['subset', 'select', 'convert', 'write']
   subset:
     bounds: [129.0115, 37.623, 129.0424, 37.5967]

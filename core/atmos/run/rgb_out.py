@@ -165,7 +165,7 @@ def create_map(im, lon, lat, scene_mask, rgb_used, font, title_base:str, cpar, p
         if title_exists:
             plt.title(title, **font)
 
-        ## add point markers
+        # ## add point markers
         if points is not None:
             for pname in points:
                 if 'px' not in points[pname]: continue

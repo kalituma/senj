@@ -1,7 +1,7 @@
 from esa_snappy import HashMap, jpy, Rectangle
 
 from core.util.snap import get_default_bands, get_default_masks
-from core.util.snap.gpf_const import BOXCAR, MEDIAN, FROST, GAMMA_MAP, LEE_SPECKLE, LEE_REFINED, LEE_SIGMA, IDAN, MEAN_SPECKLE
+from core.util.snap.gpf_const import SPECKLE_FILTER
 
 
 def _build_params(params: HashMap=None, **kwargs):
@@ -89,7 +89,6 @@ def build_mosaic_params(geo_spec:dict, **kwargs):
 
 def build_speckle_filter_params(**kwargs):
     assert kwargs['sourceBandNames'], "sourceBandNames must be provided"
-    assert kwargs['filter'] in [BOXCAR, MEDIAN, FROST, GAMMA_MAP, LEE_SPECKLE, LEE_REFINED, LEE_SIGMA, IDAN, MEAN_SPECKLE], "Invalid filter type"
     int_type = jpy.get_type('java.lang.Integer')
 
     kwargs['sourceBandNames'] = jpy.array('java.lang.String', kwargs['sourceBandNames'])

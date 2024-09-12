@@ -39,6 +39,8 @@ class Logger:
         return cls._instance
 
     def setup_logger(self, logging_level, log_file_path):
+
+        logging_level = logging_level.lower()
         assert logging_level in logger_level_map.keys(), f'Invalid logging level: {logging_level}'
 
         self.logger = logging.getLogger('senj')

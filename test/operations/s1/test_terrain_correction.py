@@ -2,7 +2,7 @@ import numpy as np
 import os
 import unittest
 
-from core.util import expand_var
+from core.util import expand_var, Logger
 from core.util.errors import ModuleError, ProductTypeError
 from core.raster import read_gpf_bands_as_dict
 from core.util.snap import DemType, InterpolType
@@ -22,16 +22,20 @@ class TestTerrainCorrection(unittest.TestCase):
         self.s2_dim_path = os.path.join(self.data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
     def test_terrain_correction(self):
         context = Context(None)
+        log_out_path = os.path.join(self.data_root, 'target', 'test_out', 'tr.log')
+        Logger.get_logger(log_level='DEBUG', log_file_path=log_out_path)
         with self.subTest('try to open and terrain correction with different dem name'):
             for dem_type in DemType:
                 raster = Read(module='snap')(self.s1_safe_grdh_path, context)
                 self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [25197, 19930])
-                raster = TerrainCorrection(bands=['Amplitude_VV'], dem_name=dem_type)(raster, context)
+                raster = TerrainCorrection(bands=[1], dem_name=dem_type.name)(raster, context)
                 self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [34776, 24366])
                 self.assertEqual(raster.get_band_names(), ['Amplitude_VV'])
 
     def test_terrain_correction_with_pixel_spacing(self):
         context = Context(None)
+        log_out_path = os.path.join(self.data_root, 'target', 'test_out', 'tr.log')
+        Logger.get_logger(log_level='DEBUG', log_file_path=log_out_path)
         with self.subTest('try to do terrain correction with different pixel spacing'):
             raster = Read(module='snap')(self.s1_safe_grdh_path, context)
             self.assertEqual([raster.raw.getSceneRasterWidth(), raster.raw.getSceneRasterHeight()], [25197, 19930])
