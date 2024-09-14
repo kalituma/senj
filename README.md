@@ -1,5 +1,5 @@
 # Senj
-[![ko](https://img.shields.io/badge/lang-ko-red.svg)](https://github.com/kalituma/senj/blob/main/README.md)
+[![ko](https://img.shields.io/badge/lang-ko-red.svg)](https://github.com/kalituma/senj/blob/main/README.ko.md)
 
 - Yaml based preprocessing library project for Sentinel and other optical products
 
