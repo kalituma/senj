@@ -1,8 +1,9 @@
 # Senj
 [![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/kalituma/senj/blob/main/README.en.md) 
 
-- Yaml 기반 Snap 및 GDAL을 이용한 전처리 라이브러리
+- Yaml 기반 Snap 및 GDAL 전처리 라이브러리
 - Senj에 포함된 대기보정 프로세서는 acolite를 구성하는 소스 코드를 활용하였습니다.  (https://github.com/acolite/acolite).
+- being developed by kalituma and Curious_Coldbrew at AIRS lab., PKNU
 
 ---
 
@@ -601,8 +602,11 @@ processor_1:
 ---
 ## References
 
-The Dark Spectrum Fitting (DSF) algorithm was presented in:
+source codes in atmos package are based on the following repositories:
+
 * acolite, https://github.com/acolite/acolite
+
+The Dark Spectrum Fitting (DSF) algorithm was presented in:
    
 
 * Vanhellemont and Ruddick 2018, [Atmospheric correction of metre-scale optical satellite data for inland and coastal water applications](https://www.sciencedirect.com/science/article/pii/S0034425718303481)
