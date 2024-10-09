@@ -1,7 +1,6 @@
 from enum import Enum
 from cerberus import Validator
-from core.raster import RasterType
-from core.operations import MODULE_EXT_MAP
+from core.raster import ModuleType, MODULE_EXT_MAP
 
 class ValidatorRule(Enum):
     SAME_LENGTH = 'same_length_with'

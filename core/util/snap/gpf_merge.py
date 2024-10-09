@@ -1,14 +1,18 @@
-from typing import Union
-from esa_snappy import Product, GPF, HashMap, jpy, PixelPos, GeoPos
+from typing import Union, TYPE_CHECKING
 from copy import deepcopy
+from core.util import load_snap
 
-def get_merged_len_gpf(products:list[Product]):
+if TYPE_CHECKING:
+    from esa_snappy import Product
+
+def get_merged_len_gpf(products:list["Product"]):
     len_sum = 0
     for product in products:
         len_sum += len(list(product.getBandNames()))
     return len_sum
 
-def change_valid_mask_expression(product:Product):
+def change_valid_mask_expression(product:"Product"):
+
     band_names = list(product.getBandNames())
     for band_name in band_names:
         band = product.getBand(band_name)
@@ -19,7 +23,10 @@ def change_valid_mask_expression(product:Product):
             band.setValidPixelExpression(new_band_valid_exp)
     return product
 
-def merge(products:list[Product], geo_err:float):
+def merge(products:list["Product"], geo_err:float):
+    jpy = load_snap('jpy')
+    GPF = load_snap('GPF')
+    HashMap = load_snap('HashMap')
 
     total_len = get_merged_len_gpf(products)
     node_desc = jpy.get_type("org.esa.snap.core.gpf.common.MergeOp$NodeDescriptor")

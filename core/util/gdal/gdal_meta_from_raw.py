@@ -1,6 +1,9 @@
-from osgeo import gdal
+from typing import TYPE_CHECKING
 
-def build_grid_meta_from_gdal(ds:gdal.Dataset) -> dict:
+if TYPE_CHECKING:
+    from osgeo.gdal import Dataset
+
+def build_grid_meta_from_gdal(ds:"Dataset") -> dict:
 
     grid = {}
     grid['NCOLS'] = ds.RasterXSize

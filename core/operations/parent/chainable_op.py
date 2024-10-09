@@ -1,5 +1,5 @@
 from typing import Union
-from core.util.op import CHAIN_KEY, MODULE_TYPE
+from core.util.op import CHAIN_KEY, OP_Module_Type
 from core.operations.parent import Op
 
 class ChainableOp(Op):
@@ -10,8 +10,8 @@ class ChainableOp(Op):
         self._chain_key:CHAIN_KEY = CHAIN_KEY.NOTSET
         self.on('op_type_changed', self._update_chain_key)
 
-    def _update_chain_key(self, module_type:MODULE_TYPE):
-        if module_type == MODULE_TYPE.GDAL:
+    def _update_chain_key(self, module_type:OP_Module_Type):
+        if module_type == OP_Module_Type.GDAL:
             self.chain_key = 'warp'
 
     @property

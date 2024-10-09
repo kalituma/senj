@@ -3,9 +3,9 @@ from copy import deepcopy
 
 from core.operations.parent import ParamOp, WarpOp
 from core.operations import OPERATIONS, SUBSET_OP
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
 from core.util import region_to_wkt, assert_bnames, make_transform
-from core.util.op import MODULE_TYPE, op_constraint
+from core.util.op import OP_Module_Type, op_constraint
 from core.util.snap import subset_gpf
 from core.util.gdal import is_epsg_code_valid
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=SUBSET_OP, no_arg_allowed=False)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Subset(ParamOp, WarpOp):
     def __init__(self, bounds:list[float], bounds_epsg:int=4326,  copy_meta:bool=True):
         super().__init__(SUBSET_OP)
@@ -36,16 +36,16 @@ class Subset(ParamOp, WarpOp):
 
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
-        if raster.module_type == RasterType.SNAP:
-            assert self.module_type == MODULE_TYPE.SNAP, 'Subset operation is only available for SNAP module'
+        if raster.module_type == ModuleType.SNAP:
+            assert self.module_type == OP_Module_Type.SNAP, 'Subset operation is only available for SNAP module'
 
             self.add_param(bandNames=raster.get_band_names())
             tiePoints = raster.get_tie_point_grid_names()
             if tiePoints:
                 self.add_param(tiePointGridNames=tiePoints)
             raster.raw = subset_gpf(raster.raw, self.snap_params)
-        elif raster.module_type == RasterType.GDAL:
-            assert self.module_type == MODULE_TYPE.GDAL, 'Subset operation is only available for GDAL module'
+        elif raster.module_type == ModuleType.GDAL:
+            assert self.module_type == OP_Module_Type.GDAL, 'Subset operation is only available for GDAL module'
             cur_params = deepcopy(self.snap_params)
             cur_params['outputBounds'] = [self._bounds[0], self._bounds[3], self._bounds[2], self._bounds[1]]
             raster.raw, context = self.call_warp(raster.raw, cur_params, context)

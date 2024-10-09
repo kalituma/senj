@@ -1,7 +1,7 @@
 from core.util import assert_bnames, remove_list_elements
 from core.util.gdal import read_gdal_bands_as_dict, create_ds_with_dict
 from core.util.snap import copy_cached_to_raw_gpf, read_gpf_bands_as_dict, del_bands_from_product
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
 from core.raster.funcs import read_band_from_raw
 
 def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
@@ -16,12 +16,12 @@ def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
 
     module_type = raster_obj.module_type
 
-    if module_type == RasterType.SNAP:
+    if module_type == ModuleType.SNAP:
         updated_bands = read_gpf_bands_as_dict(raster_obj.raw, selected_bands)
         for bname in selected_bands:
             raster_obj.bands[bname] = updated_bands[bname]
 
-    elif module_type == RasterType.GDAL:
+    elif module_type == ModuleType.GDAL:
         updated_bands = read_gdal_bands_as_dict(raster_obj.raw, selected_bands)
         for bname in selected_bands:
             raster_obj.bands[bname] = updated_bands[bname]
@@ -39,7 +39,7 @@ def update_raw_from_cache(raster:Raster, clear=False):
 
         module_type = raster.module_type
 
-        if module_type == RasterType.SNAP:
+        if module_type == ModuleType.SNAP:
             if clear:
                 raster.raw = del_bands_from_product(raster.raw, raster.get_band_names())
             else:
@@ -51,7 +51,7 @@ def update_raw_from_cache(raster:Raster, clear=False):
                 raster.update_band_map_to_meta(list(raster.raw.getBandNames()))
                 raster.copy_band_map_from_meta()
 
-        elif module_type == RasterType.GDAL:
+        elif module_type == ModuleType.GDAL:
             assert raster.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
 
             if not clear:

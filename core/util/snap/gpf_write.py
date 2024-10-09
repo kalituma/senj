@@ -1,9 +1,8 @@
 from pathlib import Path
-from esa_snappy import ProductIO
-
-from core.util import write_pickle
+from core.util import load_snap, write_pickle
 
 def write_gpf(product, path, type='BEAM-DIMAP'):
+    ProductIO = load_snap('ProductIO')
     ProductIO.writeProduct(product, path, type)
 
 def write_metadata(meta_dict:dict, path:str):

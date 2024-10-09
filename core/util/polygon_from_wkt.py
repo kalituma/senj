@@ -1,9 +1,12 @@
 import os, json
-from osgeo import ogr
+
 
 from core import ATMOS_SCRATCH_PATH
+from core.util import load_ogr
 
 def polygon_from_wkt(wkt, file=None):
+
+    ogr = load_ogr()
 
     if file == None:
         file = ATMOS_SCRATCH_PATH + '/polygon.json'

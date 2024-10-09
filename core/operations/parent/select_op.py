@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, Type, List, Union
-from core.raster import RasterType
-from core.raster.funcs import assert_bnames, select_band_raster, get_band_name_and_index
+from core.raster import ModuleType
+from core.util import assert_bnames
+from core.raster.funcs import select_band_raster, get_band_name_and_index
+
 from core.operations.parent import Op
 
 if TYPE_CHECKING:
@@ -14,11 +16,11 @@ class SelectOp(Op):
         if selected_bands_or_indices:
             selected_bands, selected_indices = get_band_name_and_index(raster, selected_bands_or_indices)
             assert_bnames(selected_bands, raster.get_band_names(), f'selected bands{selected_bands} should be in source bands({raster.get_band_names()})')
-            if raster.module_type == RasterType.SNAP:
+            if raster.module_type == ModuleType.SNAP:
                 if len(selected_bands) < raster.raw.getRasterDataNodes().size():
                     if band_select:
                         raster = select_band_raster(raster, selected_bands)
-            elif raster.module_type == RasterType.GDAL:
+            elif raster.module_type == ModuleType.GDAL:
                 if len(selected_indices) < raster.raw.RasterCount:
                     if band_select:
                         raster = select_band_raster(raster, selected_indices)

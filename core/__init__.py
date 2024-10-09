@@ -16,11 +16,14 @@ ATMOS_CONFIG = os.path.join(PROJECT_PATH, 'config', 'atmos')
 SCHEMA_PATH = os.path.join(PROJECT_PATH, 'config', 'schema')
 ATMOS_SCRATCH_PATH = os.path.join(PROJECT_PATH, 'atmos', 'scratch')
 
+# not importing snap
 from core.registry import Registry, LAMBDA, PROCESSOR, OPERATIONS
-
 from core import util
 from core import lambda_funcs
 from core import atmos
+from core import logic
+
+# importing snap
 from core import operations
 from core import config
-from core import logic
+

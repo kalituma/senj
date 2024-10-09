@@ -1,8 +1,11 @@
 from typing import List, Union
-from core.util import assert_bnames
-from core.util import glob_match
-from core.raster import Raster, RasterType
-from core.raster.funcs import copy_product, copy_ds, set_raw_metadict, update_meta_band_map, get_band_name_and_index
+from core.util import assert_bnames, glob_match, ModuleType
+from core.raster import Raster
+
+from core.util.snap import copy_product
+from core.util.gdal import copy_ds
+from core.raster.funcs import set_raw_metadict, update_meta_band_map, get_band_name_and_index
+
 
 def find_bands_contains_word(raster:Raster, bname_word):
     src_bands = raster.get_band_names()
@@ -19,11 +22,11 @@ def select_band_raster(raster:Raster, selected_bands_or_indices:List[Union[int,s
 
     new_raster = Raster.from_raster(raster)
 
-    if raster.module_type == RasterType.SNAP:
-        raw = copy_product(raster.raw, selected_bands=selected_band_name, copy_tie_point=False)
-    elif raster.module_type == RasterType.GDAL:
-        assert all([b > 0 for b in selected_index]), f'selected_bands for module "{RasterType.GDAL.__str__()}" should be > 0'
+    if raster.module_type == ModuleType.GDAL:
+        assert all([b > 0 for b in selected_index]), f'selected_bands for module "{ModuleType.GDAL.__str__()}" should be > 0'
         raw = copy_ds(raster.raw, 'MEM', selected_index=selected_index)
+    elif raster.module_type == ModuleType.SNAP:
+        raw = copy_product(raster.raw, selected_bands=selected_band_name, copy_tie_point=False)
     else:
         raise NotImplementedError(f'Raster type {raster.module_type.__str__()} is not implemented')
 

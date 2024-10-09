@@ -1,7 +1,10 @@
 import numpy as np
-from osgeo import gdal, osr, ogr
+from core.util import load_gdal, load_ogr
 
 def is_bigtiff_gdal(ds):
+
+    gdal = load_gdal()
+
     width = ds.RasterXSize
     height = ds.RasterYSize
     bands = ds.RasterCount
@@ -18,6 +21,7 @@ def is_bigtiff_gdal(ds):
 
 
 def create_geom(wkt):
+    ogr = load_ogr()
     geom = ogr.CreateGeometryFromWkt(wkt)
     return geom
 

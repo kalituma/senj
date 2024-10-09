@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING, List, Union
 from copy import deepcopy
 
 from core.util import assert_bnames
-from core.util.op import op_constraint, MODULE_TYPE
+from core.util.op import op_constraint, OP_Module_Type
 
-from core.raster import RasterType
+from core.raster import ModuleType
 
 from core.raster.funcs import convert_raster, mosaic_raster_func
 
@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=MOSAIC_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Mosaic(SelectOp):
     def __init__(self, master_module:str, bands=None):
         super().__init__(MOSAIC_OP)
         self._selected_bands = bands
-        self._module = RasterType.from_str(master_module)
-        self.module_type = MODULE_TYPE.from_str(master_module)
+        self._module = ModuleType.from_str(master_module)
+        self.module_type = OP_Module_Type.from_str(master_module)
 
     def copy_meta(self, raster:"Raster", selected_meta:dict):
 
@@ -41,7 +41,7 @@ class Mosaic(SelectOp):
         assert len(set([r.product_type for r in rasters])) == 1, 'All rasters should have the same product type'
         assert len(set([len(r.get_band_names()) for r in rasters])) == 1, 'All rasters should have the same number of bands'
 
-        assert self._module == RasterType.GDAL, 'Mosaic operation is temporarily available for GDAL module only'
+        assert self._module == ModuleType.GDAL, 'Mosaic operation is temporarily available for GDAL module only'
 
         if self._selected_bands:
             for i, raster in enumerate(rasters):

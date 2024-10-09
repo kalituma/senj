@@ -1,16 +1,15 @@
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 import copy
 import dateutil.parser
 from jsonpath_ng.ext import parse
 
-from esa_snappy import jpy
-from esa_snappy import Product
+from core.util import distance_se, ProductType, load_snap
+from core.util.snap import get_metadata_recursive, get_metadata_value, grid_geom, build_meta_dict, set_meta_recursive
 
-from core.util import distance_se, ProductType
-
-from core.util.snap.meta_func import get_metadata_recursive, get_metadata_value, grid_geom, build_meta_dict, set_meta_recursive
+if TYPE_CHECKING:
+    from esa_snappy import Product
 
 def get_polarization(meta_dict:dict) -> Union[list[str], None]:
     pols = list(set(found.value for found in parse('$..*[polarization]').find(meta_dict)))
@@ -20,7 +19,7 @@ def get_polarization(meta_dict:dict) -> Union[list[str], None]:
 
     return pols
 
-def make_meta_dict_from_product(product:Product, product_type:ProductType) -> dict:
+def make_meta_dict_from_product(product:"Product", product_type:ProductType) -> dict:
 
     meta_dict = build_meta_dict(product.getMetadataRoot())
     if product_type == ProductType.S2:
@@ -32,8 +31,8 @@ def make_meta_dict_from_product(product:Product, product_type:ProductType) -> di
 
     return meta_dict
 
-def set_meta_to_product(product:Product, meta_dict:dict):
-
+def set_meta_to_product(product:"Product", meta_dict:dict):
+    jpy = load_snap('jpy')
     metadata_element = jpy.get_type('org.esa.snap.core.datamodel.MetadataElement')
 
     meta_root = product.getMetadataRoot()
@@ -45,7 +44,7 @@ def set_meta_to_product(product:Product, meta_dict:dict):
 
     return product
 
-def read_grid_angle_meta_from_product(product:Product) -> dict:
+def read_grid_angle_meta_from_product(product:"Product") -> dict:
 
     # read tileid, datastripid, sensing time, horizontal and vertical cs name, horizontal and vertical cs code
     meta_root = product.getMetadataRoot()
@@ -77,7 +76,7 @@ def read_grid_angle_meta_from_product(product:Product) -> dict:
 
     return granule_meta
 
-def make_gattr(product:Product):
+def make_gattr(product:"Product"):
 
     input_file = str(product.getFileLocation())
 
@@ -242,7 +241,7 @@ def get_band_info_meta(meta_dict:dict):
 
     return banddata
 
-def get_band_info_meta_from_product(product:Product) -> dict:
+def get_band_info_meta_from_product(product:"Product") -> dict:
 
     meta_root = product.getMetadataRoot()
 
@@ -354,7 +353,7 @@ def get_product_info_meta(meta_dict:dict) -> dict:
 
     return reflectance_metadata
 
-def get_reflectance_meta_from_product(product:Product) -> dict:
+def get_reflectance_meta_from_product(product:"Product") -> dict:
 
     product_info_uri = ['Level-1C_User_Product/General_Info/Product_Info',
                         'Level-1C_User_Product/General_Info/Product_Info/Datatake',

@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Union
 from core.util import wkt_to_epsg
+
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset
 

@@ -1,10 +1,15 @@
-from esa_snappy import HashMap, jpy, Rectangle
-
+from typing import TYPE_CHECKING
+from core.util import load_snap
 from core.util.snap import get_default_bands, get_default_masks
 from core.util.snap.gpf_const import SPECKLE_FILTER
 
+if TYPE_CHECKING:
+    from esa_snappy import HashMap
 
-def _build_params(params: HashMap=None, **kwargs):
+def _build_params(params: "HashMap"=None, **kwargs):
+
+    HashMap = load_snap('HashMap')
+
     if params is None:
         params = HashMap()
     for key, value in kwargs.items():
@@ -13,6 +18,9 @@ def _build_params(params: HashMap=None, **kwargs):
     return params
 
 def build_read_params(file:str, bandNames:list=None, bname_match=True, useAdvancedOptions:bool=False):
+
+    jpy = load_snap('jpy')
+
     band_names_arr = None
     mask_names_arr = None
 
@@ -31,11 +39,16 @@ def build_read_params(file:str, bandNames:list=None, bname_match=True, useAdvanc
 
 def build_apply_orbit_params(polyDegree:int=3, orbitType:str="Sentinel Precise (Auto Download)", continueOnFail:bool=False):
 
+    jpy = load_snap('jpy')
+
     jint = jpy.get_type('java.lang.Integer')
     return _build_params(orbitType=orbitType, polyDegree=jint(polyDegree), continueOnFail=continueOnFail)
 
 def build_calib_params(selectedPolarisations:list[str], outputSigmaBand=True, outputGammaBand:bool=False, outputBetaBand:bool=False,
                        outputImageInComplex:bool=False, outputImageScaleInDb=False):
+
+    jpy = load_snap('jpy')
+
     polarArray = jpy.array('java.lang.String', selectedPolarisations)
     return _build_params(selectedPolarisations=polarArray, outputSigmaBand=outputSigmaBand, outputGammaBand=outputGammaBand, outputBetaBand=outputBetaBand,
                          outputImageInComplex=outputImageInComplex, outputImageScaleInDb=outputImageScaleInDb)
@@ -43,6 +56,9 @@ def build_calib_params(selectedPolarisations:list[str], outputSigmaBand=True, ou
 def build_terrain_correction_params(sourceBandNames:list[str], imgResamplingMethod:str, demName:str,
                                     demResamplingMethod:str, pixelSpacingInMeter:float, pixelSpacingInDegree:float,
                                     mapProjection:str, saveDem:bool=False):
+
+    jpy = load_snap('jpy')
+
     double_type = jpy.get_type('java.lang.Double')
     source_bands = jpy.array('java.lang.String', sourceBandNames)
     return _build_params(sourceBands=source_bands, imgResamplingMethod=imgResamplingMethod, demName=demName, demResamplingMethod=demResamplingMethod,
@@ -50,10 +66,15 @@ def build_terrain_correction_params(sourceBandNames:list[str], imgResamplingMeth
                          saveDEM=saveDem)
 
 def build_thermal_noise_removal_params(selectedPolarisations:list[str]):
+
+    jpy = load_snap('jpy')
+
     polarArray = jpy.array('java.lang.String', selectedPolarisations)
     return _build_params(selectedPolarisations=polarArray)
 
 def build_subset_params(**kwargs):
+
+    jpy = load_snap('jpy')
 
     assert kwargs['bandNames'], "bandNames must be provided"
 
@@ -65,10 +86,15 @@ def build_subset_params(**kwargs):
     return _build_params(**kwargs)
 
 def build_topsar_deburst_params(selectedPolarisations:list[str]):
+
+    jpy = load_snap('jpy')
+
     polarArray = jpy.array('java.lang.String', selectedPolarisations)
     return _build_params(selectedPolarisations=polarArray)
 
 def build_mosaic_params(geo_spec:dict, **kwargs):
+
+    jpy = load_snap('jpy')
 
     OpVar = jpy.get_type('org.esa.snap.core.gpf.common.MosaicOp$Variable')
     vars = [OpVar(k, v) for k, v in kwargs['variables']]
@@ -88,6 +114,9 @@ def build_mosaic_params(geo_spec:dict, **kwargs):
     return _build_params(**kwargs)
 
 def build_speckle_filter_params(**kwargs):
+
+    jpy = load_snap('jpy')
+
     assert kwargs['sourceBandNames'], "sourceBandNames must be provided"
     int_type = jpy.get_type('java.lang.Integer')
 
@@ -100,6 +129,8 @@ def build_speckle_filter_params(**kwargs):
     return _build_params(**kwargs)
 
 def build_reproject_params(**kwargs):
+
+    jpy = load_snap('jpy')
 
     assert kwargs['crs'], "crs must be provided"
     assert kwargs['resamplingName'] in ['nearest', 'bilinear', 'bicubic'], "Invalid resampling method"

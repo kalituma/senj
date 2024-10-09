@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from core.util.op import MODULE_TYPE, op_constraint
+from core.util.op import OP_Module_Type, op_constraint
 from core.operations.parent import Op
 from core.operations import OPERATIONS, SPLIT_OP
 from core.raster.funcs import split_raster
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=SPLIT_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Split(Op):
     def __init__(self, bands:list=None):
         super().__init__(SPLIT_OP)

@@ -1,19 +1,21 @@
-from typing import Union
+from typing import Union, TYPE_CHECKING
 from pathlib import Path
-from esa_snappy import Product
-from osgeo.gdal import Dataset
-from core.util import ProductType, read_pickle, parse_meta_xml
+from core.util import ProductType, read_pickle, parse_meta_xml, load_gdal
 
-from core.raster import RasterType
+from core.raster import ModuleType
 from core.util.gdal import get_image_spec_gdal, get_geo_spec_gdal
 from core.util.snap import make_meta_dict_from_product, get_image_spec_gpf, get_geo_spec_gpf
 
-def update_meta_dict(meta_dict:dict, raw:Union[Dataset, Product], module_type:RasterType) -> dict:
+if TYPE_CHECKING:
+    from osgeo.gdal import Dataset
+    from esa_snappy import Product
+
+def update_meta_dict(meta_dict:dict, raw:Union["Dataset", "Product"], module_type:ModuleType) -> dict:
 
     tmp_tile_info = meta_dict['TILE_INFO'][0].copy()
     tmp_band_info = meta_dict['BAND_INFO'].copy()
 
-    if module_type == RasterType.GDAL:
+    if module_type == ModuleType.GDAL:
         image_spec = get_image_spec_gdal(raw)
         geo_spec = get_geo_spec_gdal(raw)
     else:
@@ -57,8 +59,9 @@ def update_meta_dict(meta_dict:dict, raw:Union[Dataset, Product], module_type:Ra
 
     return meta_dict
 
-def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, module_type:RasterType, raster_path:str, update_meta_bounds:bool) -> Union[dict, None]:
+def create_meta_dict(raw:Union["Product", "Dataset"], product_type:ProductType, module_type:ModuleType, raster_path:str, update_meta_bounds:bool) -> Union[dict, None]:
 
+    gdal = load_gdal()
     # xml, dim, safe or tif can be in raster_path
 
     meta_dict = None
@@ -73,7 +76,7 @@ def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, modu
             return meta_dict
 
     # parse from snap
-    if module_type == RasterType.SNAP and (product_type == ProductType.S2 or product_type == ProductType.S1):
+    if module_type == ModuleType.SNAP and (product_type == ProductType.S2 or product_type == ProductType.S1):
         meta_dict = make_meta_dict_from_product(raw,  product_type)
         return meta_dict
 
@@ -81,7 +84,7 @@ def create_meta_dict(raw:Union[Product, Dataset], product_type:ProductType, modu
     if product_type != ProductType.UNKNOWN:
         tif_file_dim = None
         if raw is not None:
-            if isinstance(raw, Dataset):
+            if isinstance(raw, gdal.Dataset):
                 tif_file_dim = [raw.RasterYSize, raw.RasterXSize]
         meta_dict = parse_meta_xml(raster_path, product_type, tif_file_dim)
 

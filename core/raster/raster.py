@@ -1,10 +1,16 @@
 from typing import Union, TypeVar, TYPE_CHECKING
-from osgeo.gdal import Dataset
-from esa_snappy import Product
+
 from pathlib import Path
 
-from core.util import ProductType
-from core.raster import RasterType, RasterMeta
+from core.util import ProductType, ModuleType
+from core.util.lazy_import import check_raw_type
+
+from core.raster import RasterMeta
+
+
+if TYPE_CHECKING:
+    from esa_snappy import Product
+    from osgeo.gdal import Dataset
 
 
 T = TypeVar('T', bound='Raster')
@@ -14,11 +20,11 @@ class Raster(RasterMeta):
 
         super().__init__()
 
-        self._module_type:RasterType = None
+        self._module_type:ModuleType = None
         self._path:str = path
         # self._selected_bands:list[Union[str, int]] = band_names
 
-        self._raw:Union[ProductType, Dataset] = None
+        self._raw:Union["Product", "Dataset"] = None
 
         self._bands_data:dict = None
         self._product_type:ProductType = ProductType.UNKNOWN
@@ -56,9 +62,9 @@ class Raster(RasterMeta):
         return f'Raster : {self.path} processed from {self.op_history[0]} to {self.op_history[-1]}'
 
     def get_bands_size(self) -> int:
-        if self.module_type == RasterType.GDAL:
+        if self.module_type == ModuleType.GDAL:
             return self.raw.RasterCount
-        elif self.module_type == RasterType.SNAP:
+        elif self.module_type == ModuleType.SNAP:
             return self.raw.getNumBands()
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
@@ -71,10 +77,10 @@ class Raster(RasterMeta):
         if self._index_to_band is not None and self._band_to_index is not None:
             return list(self._index_to_band.values())
 
-        if self.module_type == RasterType.GDAL:
+        if self.module_type == ModuleType.GDAL:
             band_indices = list(range(1, self.raw.RasterCount+1))
             bnames = self._get_band_names_from_meta(band_indices) # from meta if exists else create by index
-        elif self.module_type == RasterType.SNAP:
+        elif self.module_type == ModuleType.SNAP:
             bnames = list(self.raw.getBandNames())
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
@@ -82,7 +88,7 @@ class Raster(RasterMeta):
         return bnames
 
     def get_tie_point_grid_names(self) -> Union[list[str], None]:
-        if self.module_type == RasterType.SNAP:
+        if self.module_type == ModuleType.SNAP:
             grid_names = self.raw.getTiePointGridNames()
             if len(grid_names) > 0:
                 return grid_names
@@ -95,9 +101,9 @@ class Raster(RasterMeta):
     def close(self):
         super().close()
 
-        if self.module_type == RasterType.GDAL:
+        if self.module_type == ModuleType.GDAL:
             self.raw = None
-        elif self.module_type == RasterType.SNAP:
+        elif self.module_type == ModuleType.SNAP:
             self.raw.dispose()
 
         self.is_band_cached = False
@@ -109,20 +115,13 @@ class Raster(RasterMeta):
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'
 
-        if self.module_type == RasterType.GDAL:
+        if self.module_type == ModuleType.GDAL:
             return self.raw.GetProjection()
-        elif self.module_type == RasterType.SNAP:
+        elif self.module_type == ModuleType.SNAP:
             return self.raw.getSceneCRS().toWKT()
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
 
-    # @property
-    # def selected_bands(self):
-    #     return self._selected_bands
-    #
-    # @selected_bands.setter
-    # def selected_bands(self, bands):
-    #     self._selected_bands = bands
 
     @property
     def bands(self):
@@ -145,14 +144,9 @@ class Raster(RasterMeta):
         return self._raw
 
     @raw.setter
-    def raw(self, raw):
+    def raw(self, raw:Union["Product", "Dataset"]):
         self._raw = raw
-        if isinstance(raw, Dataset):
-            self._module_type = RasterType.GDAL
-        elif isinstance(raw, Product):
-            self._module_type = RasterType.SNAP
-        else:
-            self._module_type = None
+        self._module_type = check_raw_type(raw)
 
     @property
     def module_type(self):
@@ -161,7 +155,7 @@ class Raster(RasterMeta):
     @module_type.setter
     def module_type(self, module_type):
         if isinstance(module_type, str):
-            self._module_type = RasterType.from_str(module_type)
+            self._module_type = ModuleType.from_str(module_type)
         else:
             self._module_type = module_type
 
@@ -199,7 +193,7 @@ class Raster(RasterMeta):
             return None
 
     def update_index_bnames_from_raw(self):
-        if self.module_type == RasterType.SNAP:
+        if self.module_type == ModuleType.SNAP:
             bnames = list(self.raw.getBandNames())
             self.update_band_map(bnames)
             if self.meta_dict:

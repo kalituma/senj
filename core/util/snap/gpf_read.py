@@ -1,11 +1,13 @@
 import re
 import numpy as np
 from typing import Tuple, TYPE_CHECKING
-from esa_snappy import GPF, Product, ProductData
 
-from core.util import assert_bnames
+from core.util import assert_bnames, load_snap
 from core.util.errors import ContainedBandError
 from core.util.snap import build_read_params
+
+if TYPE_CHECKING:
+    from esa_snappy import Product
 
 def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=None, bname_word_included:bool=False):
     selected = []
@@ -28,12 +30,15 @@ def get_selected_bands_names(src_bnames:list[str], selected_bnames:list[str]=Non
 
     return selected
 
-def read_gpf(in_path:str) -> Product:
+def read_gpf(in_path:str) -> "Product":
+    GPF = load_snap('GPF')
     params = build_read_params(file=in_path)
     product = GPF.createProduct('Read', params)
     return product
 
 def read_gpf_bands_as_dict(product, selected_bands:list[str]=None) -> Tuple[dict, list[str]]:
+
+    ProductData = load_snap('ProductData')
     result = {}
 
     if not selected_bands:

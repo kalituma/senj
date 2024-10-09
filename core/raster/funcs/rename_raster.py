@@ -3,7 +3,7 @@ from pathlib import Path
 
 from core.util import set_btoi_to_tif
 from core.util.snap import rename_bands
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
 from core.raster.funcs import get_band_name_and_index
 
 def rename_raster_bands(raster:Raster, old_names_or_indices:List[AnyStr], new_band_names:List[AnyStr]):
@@ -29,7 +29,7 @@ def rename_raster_bands(raster:Raster, old_names_or_indices:List[AnyStr], new_ba
     else:
         raster.update_index_bnames(band_name_list)
 
-    if raster.module_type == RasterType.SNAP:
+    if raster.module_type == ModuleType.SNAP:
         raster.raw = rename_bands(raster.raw, band_names=band_name_list)
 
     return raster

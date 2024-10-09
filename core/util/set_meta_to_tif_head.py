@@ -1,6 +1,7 @@
-from osgeo import gdal
+from core.util import load_gdal
 
 def set_btoi_to_tif(tif_path, band_name_to_index:dict[str, int]):
+    gdal = load_gdal()
     ds = gdal.Open(tif_path, gdal.GA_Update)
     return set_btoi_to_tif_meta(ds, band_name_to_index)
 
@@ -13,6 +14,8 @@ def set_btoi_to_tif_meta(ds, band_name_to_index:dict[str, int]):
     return ds
 
 def get_btoi_from_tif(tif_path):
+    gdal = load_gdal()
+
     ds = gdal.Open(tif_path)
     return get_btoi_to_tif_meta(ds)
 

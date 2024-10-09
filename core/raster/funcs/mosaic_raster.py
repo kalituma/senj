@@ -1,15 +1,15 @@
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
 from core.util.gdal import mosaic_by_ds
 from core.util.snap import mosaic_gpf
 
-def mosaic_raster_func(rasters:list[Raster], module_type:RasterType):
+def mosaic_raster_func(rasters:list[Raster], module_type:ModuleType):
 
     raw_list = [r.raw for r in rasters]
 
     band_name_list = rasters[0].get_band_names()
-    if module_type == RasterType.GDAL:
+    if module_type == ModuleType.GDAL:
         mosaic_raw = mosaic_by_ds(raw_list)
-    elif module_type == RasterType.SNAP:
+    elif module_type == ModuleType.SNAP:
         mosaic_raw = mosaic_gpf(raw_list)
         band_name_list = list(mosaic_raw.getBandNames())
     else:

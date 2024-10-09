@@ -1,10 +1,10 @@
 import os, sys, fnmatch
-from osgeo import gdal
-gdal.UseExceptions()
+from core.util import load_gdal
 
 def read_band(file, idx = None, warp_to=None, warp_alg = 'near', # 'cubic', 'bilinear'
                  target_res=None, sub=None, gdal_meta = False, rpc_dem = None, targetAlignedPixels = False):
 
+    gdal = load_gdal()
 
     close = False
     if type(file) == str:

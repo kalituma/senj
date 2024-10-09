@@ -4,7 +4,7 @@ from pathlib import Path
 from core.util.errors import ProductTypeError, OperationTypeError, ModuleError, ExtensionError
 
 if TYPE_CHECKING:
-    from core.raster import Raster, RasterType
+    from core.raster import Raster, ModuleType
     from core.operations.parent import Op
 
 def check_init_operation(*init_ops:Tuple[AnyStr]):

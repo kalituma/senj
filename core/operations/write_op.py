@@ -5,20 +5,19 @@ from core import OPERATIONS
 
 from core.util import expand_var
 from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
-from core.util.op import MODULE_TYPE, op_constraint
+from core.util.op import OP_Module_Type, op_constraint
 from core.operations import SelectOp
 from core.operations import WRITE_OP
-from core.raster import RasterType, Raster, EXT_MAP
-from core.raster import write_raster
-from core.raster.funcs import has_same_band_shape
+from core.raster import ModuleType, Raster, EXT_MAP
+from core.raster.funcs import has_same_band_shape, write_raster
 
 DEFAULT_OUT_EXT = {
-    RasterType.GDAL : 'tif',
-    RasterType.SNAP : 'dim'
+    ModuleType.GDAL : 'tif',
+    ModuleType.SNAP : 'dim'
 }
 
 @OPERATIONS.reg(name=WRITE_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Write(SelectOp):
     def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:List[Union[int,AnyStr]]=None, prefix:str= '', suffix:str= ''):
         super().__init__(WRITE_OP)

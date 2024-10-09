@@ -4,7 +4,7 @@ from pathlib import Path
 from core.operations import READ_OP
 from core import PROCESSOR
 from core.util.logger import print_log_attrs
-from core.util.op import check_init_operation, MODULE_TYPE
+from core.util.op import check_init_operation, OP_Module_Type
 from core.logic import FILE_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
 from core.raster import Raster
@@ -68,7 +68,7 @@ class FileProcessor(Processor):
             x = super().postprocess(x)
         return x
 
-    def get_first_op_type(self) -> MODULE_TYPE:
+    def get_first_op_type(self) -> OP_Module_Type:
         return self.ops[0].module_type
 
     def set_all_op_types(self):

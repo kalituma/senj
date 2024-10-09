@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING, List, AnyStr, Union
-from core.operations import CachedOp, NL_DENOISING_OP
+from core.operations import NL_DENOISING_OP
+from core.operations.parent import CachedOp
+
 from core.registry import OPERATIONS
 from core.util import nonlocal_mean_denoising, assert_bnames
 from core.util import percentile_norm
-from core.util.op import op_constraint, MODULE_TYPE
+from core.util.op import op_constraint, OP_Module_Type
 from core.raster import Raster
 from core.raster.funcs import check_bname_index_valid
 
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=NL_DENOISING_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class NLMeanDenoising(CachedOp):
     def __init__(self, bands:List[Union[AnyStr, int]]=None, h:float=3, templateWindowSize:int=7, searchWindowSize:int=21):
         super().__init__(NL_DENOISING_OP)

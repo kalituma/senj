@@ -2,7 +2,6 @@ import os
 import unittest
 
 from core.util import expand_var
-from core.raster.funcs import update_meta_boundary
 from core.logic import Context
 from core.operations import Read
 

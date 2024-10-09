@@ -3,9 +3,11 @@ from copy import deepcopy
 from core.operations.parent import ParamOp, WarpOp
 from core.operations import OPERATIONS, RESAMPLE_OP
 from core.logic import Context
-from core.raster import Raster, RasterType, get_epsg, get_res
+from core.raster import Raster, ModuleType
+from core.raster.funcs import get_epsg, get_res
+
 from core.util.snap import reproject_gpf, find_gt_from_product
-from core.util.op import MODULE_TYPE, op_constraint
+from core.util.op import OP_Module_Type, op_constraint
 from core.util.gdal import is_epsg_code_valid, unit_from_epsg
 
 SNAP_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic']
@@ -13,7 +15,7 @@ GDAL_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic', 'cubicspline', 'lan
 ALL_RESAMPLING_METHODS = GDAL_RESAMPLING_METHODS
 
 @OPERATIONS.reg(name=RESAMPLE_OP, no_arg_allowed=False)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Resample(ParamOp, WarpOp):
     def __init__(self, epsg:int=None, pixel_size:float=None, resampling_method:str='nearest'):
         super().__init__(RESAMPLE_OP)
@@ -35,9 +37,9 @@ class Resample(ParamOp, WarpOp):
 
     def __call__(self, raster:"Raster", context:"Context", *args):
 
-        if self.module_type == MODULE_TYPE.SNAP:
+        if self.module_type == OP_Module_Type.SNAP:
             assert self.resampling_method in SNAP_RESAMPLING_METHODS, f'resampling_method should be one of {SNAP_RESAMPLING_METHODS}'
-        elif self.module_type == MODULE_TYPE.GDAL:
+        elif self.module_type == OP_Module_Type.GDAL:
             assert self.resampling_method in GDAL_RESAMPLING_METHODS, f'resampling_method should be one of {GDAL_RESAMPLING_METHODS}'
         else:
             raise NotImplementedError(f"Resample method cannot be executed if op_type is {self.module_type}")
@@ -69,11 +71,11 @@ class Resample(ParamOp, WarpOp):
                     raise NotImplementedError(f"Unit {unit} is not supported yet")
 
 
-            if self.module_type == MODULE_TYPE.SNAP:
-                assert raster.module_type == RasterType.SNAP, 'Resample operation is only available for SNAP module'
+            if self.module_type == OP_Module_Type.SNAP:
+                assert raster.module_type == ModuleType.SNAP, 'Resample operation is only available for SNAP module'
                 dataset = reproject_gpf(raster.raw, self.snap_params)
-            elif self.module_type == MODULE_TYPE.GDAL:
-                assert raster.module_type == RasterType.GDAL, 'Resample operation is only available for GDAL module'
+            elif self.module_type == OP_Module_Type.GDAL:
+                assert raster.module_type == ModuleType.GDAL, 'Resample operation is only available for GDAL module'
                 self.add_param(src_crs=src_epsg)
                 cur_params = deepcopy(self.snap_params)
                 dataset, context = self.call_warp(raster.raw, cur_params, context)

@@ -7,7 +7,7 @@ from core.util.identify import planet_test
 from core.util.gdal import load_raster_gdal, mosaic_by_file_paths, read_gdal_bands_as_dict
 from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands, read_gpf_bands_as_dict
 
-from core.raster import RasterType, Raster, ProductType
+from core.raster import ModuleType, Raster, ProductType
 from core.raster.funcs import set_raw_metadict, get_band_name_and_index, create_meta_dict, init_bname_index_in_meta, load_images_paths
 
 def load_images_paths_and_bnames(in_path:str, product_type) -> Tuple[List[AnyStr], List[AnyStr]]:
@@ -47,7 +47,7 @@ def load_images_paths_and_bnames(in_path:str, product_type) -> Tuple[List[AnyStr
 
     return image_list, loaded_bnames
 
-def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
+def load_raster(empty_raster:Raster, in_module:ModuleType) -> Raster:
 
     path = empty_raster.path
     empty_raster.module_type = in_module
@@ -60,14 +60,14 @@ def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
     image_paths = load_images_paths(path, product_type)
 
     update_meta_bounds = False
-    if empty_raster.module_type == RasterType.GDAL:
+    if empty_raster.module_type == ModuleType.GDAL:
         if len(image_paths) > 1:
             raw = mosaic_by_file_paths(image_paths)
             update_meta_bounds = True
         else:
             datasets = load_raster_gdal(image_paths)
             raw = datasets[0]
-    elif empty_raster.module_type == RasterType.SNAP:
+    elif empty_raster.module_type == ModuleType.SNAP:
         datasets = load_raster_gpf(image_paths)
         if len(datasets) > 1:
             raw = mosaic_gpf(datasets)
@@ -99,7 +99,7 @@ def load_raster(empty_raster:Raster, in_module:RasterType) -> Raster:
         empty_raster.copy_band_map_from_meta()
 
     # new band names loaded from metadict and tif header should be reflected to product object if snap module is being used
-    if empty_raster.module_type == RasterType.SNAP:
+    if empty_raster.module_type == ModuleType.SNAP:
         if btoi_from_header is not None:
             empty_raster.raw = rename_bands(empty_raster.raw, band_names=dict_to_ordered_list(btoi_from_header))
         elif meta_dict is not None:
@@ -117,10 +117,10 @@ def read_band_from_raw(raster:Raster, selected_name_or_id:list[Union[str, int]]=
 
     bnames, index = get_band_name_and_index(raster, selected_name_or_id)
 
-    if module_type == RasterType.GDAL:
+    if module_type == ModuleType.GDAL:
         all_bnames = raster.get_band_names()
         bands, new_selected_bands = read_gdal_bands_as_dict(raster.raw, all_band_names=all_bnames, selected_index=index)
-    elif module_type == RasterType.SNAP:
+    elif module_type == ModuleType.SNAP:
         bands, new_selected_bands = read_gpf_bands_as_dict(raster.raw, bnames)
     else:
         raise NotImplementedError(f'Module type({module_type}) is not implemented for the input process.')

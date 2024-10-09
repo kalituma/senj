@@ -7,7 +7,7 @@ from core.config import expand_var
 from core.logic import Context
 from core.operations.parent import CachedOp, SelectOp
 from core.operations import ATMOSCORR_OP
-from core.util.op import op_constraint, call_constraint, MODULE_TYPE
+from core.util.op import op_constraint, call_constraint, OP_Module_Type
 from core.util import ProductType, is_contained, glob_match
 from core.raster.funcs import get_band_name_and_index, get_band_grid_size
 from core.raster.funcs import apply_atmos, write_l2r_as_map
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from core.raster import Raster
 
 @OPERATIONS.reg(name=ATMOSCORR_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_module_types=[MODULE_TYPE.SNAP, MODULE_TYPE.GDAL])
+@op_constraint(avail_module_types=[OP_Module_Type.SNAP, OP_Module_Type.GDAL])
 class AtmosCorr(CachedOp, SelectOp):
     def __init__(self, bands:List[Union[AnyStr, int]], band_slots:List[AnyStr], write_map:bool=False, map_dir:str=None, map_stem:str=None,
                  det_bnames:List[AnyStr]=None, det_bword_included=False, det_bpattern=None):

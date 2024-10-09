@@ -1,6 +1,6 @@
 from typing import Union
 
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
 from core.util import assert_bnames, ProductType
 from core.util.snap import merge as merge_gpf
 from core.util.gdal import merge as merge_gdal
@@ -11,12 +11,12 @@ def merge_product_types(rasters:list[Raster]):
         return ProductType.UNKNOWN
     return product_types[0]
 
-def merge_raster_func(rasters:list[Raster], module_type:RasterType, geo_err:float):
+def merge_raster_func(rasters:list[Raster], module_type:ModuleType, geo_err:float):
 
     raw_list = [r.raw for r in rasters]
 
     band_name_list = []
-    if module_type == RasterType.GDAL:
+    if module_type == ModuleType.GDAL:
         merged = merge_gdal(raw_list)
         for i, r in enumerate(rasters):
             if i == 0:
@@ -24,7 +24,7 @@ def merge_raster_func(rasters:list[Raster], module_type:RasterType, geo_err:floa
             else:
                 ds_name = f'slaveDs{i}'
             band_name_list += [f'{ds_name}${b}' for b in r.get_band_names()]
-    elif module_type == RasterType.SNAP:
+    elif module_type == ModuleType.SNAP:
         merged = merge_gpf(raw_list, geo_err)
         band_name_list = list(merged.getBandNames())
     else:

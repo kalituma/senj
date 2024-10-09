@@ -1,7 +1,14 @@
 import numpy as np
-from esa_snappy import Product, jpy, PixelPos
+from typing import TYPE_CHECKING
+from core.util import load_snap
 
-def build_grid_meta_from_gpf(product:Product, det_name:str):
+if TYPE_CHECKING:
+    from esa_snappy import Product
+
+def build_grid_meta_from_gpf(product:"Product", det_name:str):
+
+    jpy = load_snap('jpy')
+    PixelPos = load_snap('PixelPos')
 
     grid = {}
 

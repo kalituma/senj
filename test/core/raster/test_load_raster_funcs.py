@@ -1,7 +1,7 @@
 import os
 import unittest
 from pathlib import Path
-from core.raster import RasterType, Raster
+from core.raster import ModuleType, Raster
 from core.raster.funcs import update_meta_band_map, get_epsg, load_raster, load_images_paths, create_meta_dict, init_bname_index_in_meta, set_raw_metadict
 from core.util import identify_product, parse_meta_xml, read_pickle, expand_var, ProductType, get_btoi_from_tif
 from core.util.gdal import load_raster_gdal, mosaic_by_file_paths
@@ -103,7 +103,7 @@ class TestLoadRasterFuncs(unittest.TestCase):
     def load_raster_reimpl(self, path, in_module):
         in_raster = Raster(path)
         in_raster.module_type = in_module
-        in_module = RasterType.from_str(in_module)
+        in_module = ModuleType.from_str(in_module)
 
         product_type, meta_path = identify_product(path)
 
@@ -113,7 +113,7 @@ class TestLoadRasterFuncs(unittest.TestCase):
         image_paths = load_images_paths(path, product_type)
 
         update_meta_bounds = False
-        if in_raster.module_type == RasterType.GDAL:
+        if in_raster.module_type == ModuleType.GDAL:
             if len(image_paths) > 1:
                 raw = mosaic_by_file_paths(image_paths)
                 update_meta_bounds = True
@@ -121,7 +121,7 @@ class TestLoadRasterFuncs(unittest.TestCase):
                 datasets = load_raster_gdal(image_paths)
                 raw = datasets[0]
 
-        elif in_raster.module_type == RasterType.SNAP:
+        elif in_raster.module_type == ModuleType.SNAP:
             datasets = load_raster_gpf(image_paths)
 
             if len(datasets) > 1:
@@ -143,7 +143,7 @@ class TestLoadRasterFuncs(unittest.TestCase):
         in_raster = set_raw_metadict(in_raster, raw=raw, meta_dict=meta_dict, product_type=product_type)
         in_raster = in_raster.update_index_bnames(band_to_index)
 
-        if in_raster.module_type == RasterType.SNAP:
+        if in_raster.module_type == ModuleType.SNAP:
             in_raster.raw = rename_bands(in_raster.raw, band_names=in_raster.get_band_names())
 
         return in_raster

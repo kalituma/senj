@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Type, Union, AnyStr
 
 from core import PROCESSOR
-from core.util.op import MODULE_TYPE
+from core.util.op import OP_Module_Type
 from core.logic import LINK_PROCESSOR
 from core.logic.processor import Processor, ProcessorType
 from core.raster import Raster
@@ -71,12 +71,12 @@ class LinkProcessor(Processor):
             if isinstance(single_process, Processor):
                 single_process.set_executor(executor)
 
-    def get_first_op_type(self) -> MODULE_TYPE:
-        if self.ops[0].module_type == MODULE_TYPE.NOTSET:
+    def get_first_op_type(self) -> OP_Module_Type:
+        if self.ops[0].module_type == OP_Module_Type.NOTSET:
             raise ValueError('First operation type is not set yet.')
         return self.ops[0].module_type
 
-    def set_all_op_types(self) -> MODULE_TYPE:
+    def set_all_op_types(self) -> OP_Module_Type:
         prev_op_types = []
         for proc in self.proc_list:
             prev_op_types.append(proc.set_all_op_types())

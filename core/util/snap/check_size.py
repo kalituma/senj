@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from core.util.snap import find_boundary_from_product
 
 if TYPE_CHECKING:
-    from core.raster import Raster
     from esa_snappy import Product
 
 def is_bigtiff_gpf(product):

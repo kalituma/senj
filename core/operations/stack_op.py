@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, List, Union
 from copy import deepcopy
 
 from core.util import assert_bnames
-from core.util.op import op_constraint, MODULE_TYPE
+from core.util.op import op_constraint, OP_Module_Type
 
-from core.raster import merge_raster_func, RasterType
-from core.raster.funcs import convert_raster, get_band_name_and_index
+from core.raster import ModuleType
+from core.raster.funcs import convert_raster, get_band_name_and_index, merge_raster_func
 from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, STACK_OP
 
@@ -14,15 +14,15 @@ if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=STACK_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_module_types=[MODULE_TYPE.GDAL, MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Stack(SelectOp):
     def __init__(self, bands_list:List[List[Union[str, int]]]=None, master_module:str=None, meta_from:str=None, geo_err:float=1e-5):
         super().__init__(STACK_OP)
         self._selected_bands_list = bands_list
-        self._module = RasterType.from_str(master_module)
+        self._module = ModuleType.from_str(master_module)
         self._meta_from = meta_from
         self._geo_err = geo_err
-        self.module_type = MODULE_TYPE.from_str(master_module)
+        self.module_type = OP_Module_Type.from_str(master_module)
 
     def copy_meta(self, raster:"Raster", selected_meta:dict):
 

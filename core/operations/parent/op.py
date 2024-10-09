@@ -1,12 +1,11 @@
 from typing import TYPE_CHECKING, Type, List, Union, AnyStr
 from core.raster import Raster
 from core.logic.event import EventEmitter
-from core.util.op import MODULE_TYPE
+from core.util.op import OP_Module_Type
 from core.util.errors import OPTypeNotAvailableError
 from core.util.logger import Logger, print_log_attrs
 
 if TYPE_CHECKING:
-
     from core.logic import Context
 
 class LogCall(type):
@@ -32,9 +31,9 @@ class Op(EventEmitter, metaclass=LogCall):
 
         self._op_name:str = op_name
         self._pro_name:str = ''
-        self._avail_types: list[MODULE_TYPE] = None
+        self._avail_types: list[OP_Module_Type] = None
         self._must_after: Type[Op] = None
-        self._module_type:MODULE_TYPE = MODULE_TYPE.from_str(op_name) if op_name in ['convert'] else MODULE_TYPE.NOTSET
+        self._module_type:OP_Module_Type = OP_Module_Type.from_str(op_name) if op_name in ['convert'] else OP_Module_Type.NOTSET
         self._counter = 0
         self._logger = Logger.get_logger()
 
@@ -59,7 +58,7 @@ class Op(EventEmitter, metaclass=LogCall):
         return self._avail_types
 
     @avail_types.setter
-    def avail_types(self, op_types:list[MODULE_TYPE]):
+    def avail_types(self, op_types:list[OP_Module_Type]):
         self._avail_types = op_types
 
     @property
@@ -67,10 +66,10 @@ class Op(EventEmitter, metaclass=LogCall):
         return self._module_type
 
     @module_type.setter
-    def module_type(self, op_type:Union[MODULE_TYPE, AnyStr]):
+    def module_type(self, op_type:Union[OP_Module_Type, AnyStr]):
 
         if isinstance(op_type, str):
-            op_type = MODULE_TYPE.from_str(op_type)
+            op_type = OP_Module_Type.from_str(op_type)
 
         if op_type not in self.avail_types:
             raise OPTypeNotAvailableError(self.name, op_type, self.avail_types)

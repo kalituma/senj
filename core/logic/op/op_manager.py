@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Type
 
 from core.operations.parent import ChainableOp
-from core.util.op import MODULE_TYPE
+from core.util.op import OP_Module_Type
 
 if TYPE_CHECKING:
     from core.operations.parent import Op
@@ -40,12 +40,12 @@ class OperationManager:
 
         return op_map
 
-    def apply_module_type_to_ops(self, in_module_type:MODULE_TYPE):
+    def apply_module_type_to_ops(self, in_module_type:OP_Module_Type):
         prev_module_type = in_module_type
         for op in self._ops:
-            if op.module_type == MODULE_TYPE.NOTSET:
+            if op.module_type == OP_Module_Type.NOTSET:
                 op.module_type = prev_module_type
-            elif op.module_type == MODULE_TYPE.CONVERT:
+            elif op.module_type == OP_Module_Type.CONVERT:
                 prev_module_type = ~prev_module_type
             else:
                 # in case of being changed by stack operation
@@ -53,7 +53,7 @@ class OperationManager:
         return prev_module_type
 
     @abstractmethod
-    def set_all_op_types(self) -> MODULE_TYPE:
+    def set_all_op_types(self) -> OP_Module_Type:
         pass
 
     @abstractmethod

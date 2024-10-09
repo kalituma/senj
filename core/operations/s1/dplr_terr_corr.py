@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING, Union
 
 from core import OPERATIONS
-from core.operations import ParamOp, SnappyOp
 from core.operations import TERR_CORR_OP
-from core.operations.parent import SelectOp
+from core.operations.parent import SelectOp, SnappyOp, ParamOp
 
 from core.util import assert_bnames, ProductType
-from core.util.op import  call_constraint, MODULE_TYPE, op_constraint
-from core.raster import Raster, RasterType
+from core.util.op import  call_constraint, OP_Module_Type, op_constraint
+from core.raster import Raster, ModuleType
 from core.raster.funcs import get_band_name_and_index
 from core.util.snap import DemType, InterpolType, terrain_correction_func
 from core.util.gdal import is_epsg_code_valid
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
     from core.logic.context import Context
 
 @OPERATIONS.reg(name=TERR_CORR_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.SNAP])
 class TerrainCorrection(ParamOp, SelectOp, SnappyOp):
     def __init__(self, bands:list[Union[str,int]]=None, dem_name:str='SRTM_3SEC',
                  pixel_spacing_meter:float=0.0, pixel_spacing_degree: float=0.0,
@@ -43,7 +42,7 @@ class TerrainCorrection(ParamOp, SelectOp, SnappyOp):
                        pixelSpacingInMeter=pixel_spacing_meter, pixelSpacingInDegree=pixel_spacing_degree,
                        demResamplingMethod=str(InterpolType[dem_method]), imgResamplingMethod=str(InterpolType[img_method]),
                        mapProjection=map_projection)
-    @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1])
+    @call_constraint(module_types=[ModuleType.SNAP], product_types=[ProductType.S1])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
         if self._selected_name_or_index:

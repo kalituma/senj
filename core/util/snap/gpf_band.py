@@ -1,14 +1,16 @@
 import numpy as np
 from tqdm import tqdm
 import re
-from esa_snappy import jpy, Product, Band, ProductUtils, ProductData, PixelPos
+from typing import TYPE_CHECKING, List
 
-from core.util import assert_bnames, get_contained_list_map
+from core.util import assert_bnames, get_contained_list_map, load_snap
 from core.util.errors import ContainedBandError
 from core.util.snap import create_product_data
 
+if TYPE_CHECKING:
+    from esa_snappy import Product, Band
 
-def rename_bands(product:Product, band_names:list) -> Product:
+def rename_bands(product:"Product", band_names:List) -> "Product":
     product_bands = list(product.getBandNames())
 
     # assert len(band_names) == len(product.getBandNames()), 'The number of band names should be the same as the source product'
@@ -27,6 +29,8 @@ def rename_bands(product:Product, band_names:list) -> Product:
     return product
 
 def add_band_to_product(product, bands:dict):
+
+    ProductData = load_snap('ProductData')
 
     for band_name, band_elem_dict in bands.items():
         band_arr = band_elem_dict['value']
@@ -56,7 +60,10 @@ def add_band_to_product(product, bands:dict):
 
     return product
 
-def copy_product(src_product, selected_bands:list=None, copy_tie_point:bool=True) -> Product:
+def copy_product(src_product, selected_bands:list=None, copy_tie_point:bool=True) -> "Product":
+
+    Product = load_snap('Product')
+    ProductUtils = load_snap('ProductUtils')
 
     if selected_bands:
         matched_band = selected_bands
@@ -88,7 +95,10 @@ def copy_product(src_product, selected_bands:list=None, copy_tie_point:bool=True
 
     return new_product
 
-def _get_band_grid(band:Band) -> dict:
+def _get_band_grid(band:"Band") -> dict:
+
+    jpy = load_snap('jpy')
+    PixelPos = load_snap('PixelPos')
 
     band_size = {}
 
@@ -115,7 +125,7 @@ def _get_band_grid(band:Band) -> dict:
 
     return band_size
 
-def get_band_grid_size_gpf(product:Product, selected_bands:list=None) -> dict:
+def get_band_grid_size_gpf(product:"Product", selected_bands:list=None) -> dict:
 
     size_meta = {}
 

@@ -1,5 +1,5 @@
 import numpy as np
-from esa_snappy import jpy
+from core.util import load_snap
 
 def grid_geom(elem):
 
@@ -34,6 +34,9 @@ def get_metadata_value(element, path):
     return None
 
 def set_meta_recursive(element, meta_dict):
+
+    jpy = load_snap('jpy')
+
     metadata_element = jpy.get_type('org.esa.snap.core.datamodel.MetadataElement')
 
     for key, value in meta_dict.items():

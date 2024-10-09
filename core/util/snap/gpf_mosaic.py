@@ -1,8 +1,12 @@
-import numpy as np
-from esa_snappy import GPF, Product, jpy, Band, ProductData, ProductUtils
+from typing import TYPE_CHECKING
 
-from core.util import assert_bnames, transform_coords
+import numpy as np
+
+from core.util import assert_bnames, transform_coords, load_snap
 from core.util.snap import build_mosaic_params, find_epsg_from_product, find_boundary_from_product
+
+if TYPE_CHECKING:
+    from esa_snappy import Product
 
 def check_mosaic_assert(src_products):
     target_bnames = list(src_products[0].getBandNames())
@@ -32,14 +36,16 @@ def merge_spec(geo_specs:list):
     return result_spec
 
 
-def delete_count_bands(src_product:Product) -> Product:
+def delete_count_bands(src_product:"Product") -> "Product":
     bands = list(src_product.getBands())
     for band in bands:
         if 'count' in band.getName().lower():
             src_product.removeBand(band)
     return src_product
 
-def mosaic_gpf(src_products:list[Product], band_label_names:list[str] = None) -> Product:
+def mosaic_gpf(src_products:list["Product"], band_label_names:list[str] = None) -> "Product":
+
+    GPF = load_snap('GPF')
 
     check_mosaic_assert(src_products)
 

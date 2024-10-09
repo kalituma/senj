@@ -1,9 +1,11 @@
-from typing import Union, Tuple
-from osgeo.gdal import Dataset
-from esa_snappy import Product
+from typing import TYPE_CHECKING, Union, Tuple
 
 from core.util import ProductType, assert_bnames, get_btoi_from_tif
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
+
+if TYPE_CHECKING:
+    from osgeo.gdal import Dataset
+    from esa_snappy import Product
 
 def check_bname_index_valid(raster:Raster, band_id_list:list[Union[str, int]]) -> bool:
 
@@ -33,7 +35,7 @@ def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return band_name, index
 
-def init_bname_index_in_meta(meta_dict:dict, raw:Union[Dataset, Product], product_type:ProductType, module_type:RasterType, band_to_index:dict=None) -> dict:
+def init_bname_index_in_meta(meta_dict:dict, raw:Union["Dataset", "Product"], product_type:ProductType, module_type:ModuleType, band_to_index:dict=None) -> dict:
 
     if meta_dict:
         if 'band_to_index' not in meta_dict or 'index_to_band' not in meta_dict:
@@ -42,10 +44,10 @@ def init_bname_index_in_meta(meta_dict:dict, raw:Union[Dataset, Product], produc
                 meta_dict['index_to_band'] = {int(i): b for b, i in band_to_index.items()}
             else:
                 if product_type == ProductType.S1 or product_type == ProductType.S2 or product_type == ProductType.PS:
-                    if module_type == RasterType.GDAL:
+                    if module_type == ModuleType.GDAL:
                         band_indices = list(range(1, raw.RasterCount + 1))
                         bnames = [f'band_{index}' for index in band_indices]
-                    elif module_type == RasterType.SNAP:
+                    elif module_type == ModuleType.SNAP:
                         bnames = list(raw.getBandNames())
                     else:
                         raise NotImplementedError(f'{module_type} is not implemented.')

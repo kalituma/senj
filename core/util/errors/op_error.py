@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from core.util.op import MODULE_TYPE
+    from core.util.op import OP_Module_Type
 
 class ExtensionNotSupportedError(Exception):
     def __init__(self, module:str, available_exts:list[str], specified_ext:str):
@@ -21,6 +21,6 @@ class NotHaveSameBandShapeError(Exception):
         super(NotHaveSameBandShapeError, self).__init__(msg)
 
 class OPTypeNotAvailableError(Exception):
-    def __init__(self, op_name:str, set_op: "MODULE_TYPE", available_ops:list):
+    def __init__(self, op_name:str, set_op: "OP_Module_Type", available_ops:list):
         super().__init__(f'{str(set_op)} can not be set at "{op_name}". {available_ops} is available')
 

@@ -1,13 +1,15 @@
-from typing import Union
-
-from osgeo import gdal
-from esa_snappy import Product
+from typing import TYPE_CHECKING, Union
 
 from core.util import assert_bnames, ProductType
-from core.raster import Raster, RasterType
+from core.raster import Raster, ModuleType
 from core.raster.funcs import get_band_name_and_index
 from core.util.snap import get_band_grid_size_gpf
 from core.util.gdal import get_band_grid_size_gdal, build_grid_meta_from_gdal
+
+if TYPE_CHECKING:
+    from osgeo.gdal import Dataset
+    from esa_snappy import Product
+
 
 def set_raw_metadict(raster:Raster, raw, product_type:ProductType, meta_dict:dict, selected_bands:list[Union[str, int]]=None):
     raster.raw = raw
@@ -44,9 +46,9 @@ def update_meta_band_map(meta_dict:dict, selected_band:list[Union[str, int]]) ->
 
 def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
 
-    if raster.module_type == RasterType.SNAP:
+    if raster.module_type == ModuleType.SNAP:
         return get_band_grid_size_gpf(raster.raw, selected_bands=selected_bands)
-    elif raster.module_type == RasterType.GDAL:
+    elif raster.module_type == ModuleType.GDAL:
         if selected_bands is None:
             selected_bands = raster.get_band_names()
         _, index = get_band_name_and_index(raster, selected_bands)
@@ -55,6 +57,6 @@ def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
     else:
         raise NotImplementedError(f'{raster.module_type} is not implemented.')
 
-def update_meta_boundary(meta_dict:dict, dataset:Union[gdal.Dataset, Product], product_type:ProductType) -> dict:
+def update_meta_boundary(meta_dict:dict, dataset:Union["Dataset", "Product"], product_type:ProductType) -> dict:
 
     return meta_dict

@@ -1,24 +1,25 @@
 from typing import TYPE_CHECKING
 from core import OPERATIONS
 
-from core.operations import ParamOp, SnappyOp, TOPSAR_DEBURST_OP
+from core.operations import TOPSAR_DEBURST_OP
+from core.operations.parent import ParamOp, SnappyOp
 from core.util import assert_bnames, ProductType
-from core.util.op import call_constraint, op_constraint, MODULE_TYPE
-from core.raster import Raster, RasterType
+from core.util.op import call_constraint, op_constraint, OP_Module_Type
+from core.raster import Raster, ModuleType
 from core.util.snap import get_polarization, topsar_deburst
 
 if TYPE_CHECKING:
     from core.logic import Context
 
 @OPERATIONS.reg(name=TOPSAR_DEBURST_OP, conf_no_arg_allowed=True)
-@op_constraint(avail_module_types=[MODULE_TYPE.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.SNAP])
 class TopsarDeburst(ParamOp, SnappyOp):
     def __init__(self, polarisations:list[str]=None):
         super().__init__(TOPSAR_DEBURST_OP)
 
         self.add_param(selectedPolarisations=polarisations)
 
-    @call_constraint(module_types=[RasterType.SNAP], product_types=[ProductType.S1], ext=['safe'])
+    @call_constraint(module_types=[ModuleType.SNAP], product_types=[ProductType.S1], ext=['safe'])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
         pols = get_polarization(raster.meta_dict)
         assert pols is not None, "Polarization not found in metadata"

@@ -1,5 +1,4 @@
 from enum import Enum
-from esa_snappy import jpy
 
 DET_BANDS = ['B1', 'B2', 'B11']
 

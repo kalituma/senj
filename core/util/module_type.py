@@ -1,9 +1,9 @@
-from core.util.errors import ModuleError
 from typing import Union
 from enum import Enum
 
+from core.util.errors import ModuleError
 
-class RasterType(Enum):
+class ModuleType(Enum):
     GDAL = 'gdal'
     SNAP = 'snap'
 
@@ -20,8 +20,8 @@ class RasterType(Enum):
     def __str__(self):
         return self.value
 
-def raster_type(s:Union[str, RasterType]) -> RasterType:
-    if isinstance(s, RasterType):
+def module_type(s:Union[str, ModuleType]) -> ModuleType:
+    if isinstance(s, ModuleType):
         return s
     else:
-        return RasterType.from_str(s)
+        return ModuleType.from_str(s)

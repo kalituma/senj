@@ -1,5 +1,5 @@
 from pathlib import Path
-from core.raster import Raster, RasterType, EXT_MAP
+from core.raster import Raster, ModuleType, EXT_MAP
 from core.util import set_btoi_to_tif, set_btoi_to_tif_meta
 from core.util.snap import write_gpf, write_metadata, is_bigtiff_gpf
 from core.util.gdal import copy_ds, is_bigtiff_gdal
@@ -9,7 +9,7 @@ def write_raster(raster:Raster, out_path:str):
 
     out_ext = Path(out_path).suffix[1:]
 
-    if raster.module_type == RasterType.GDAL:
+    if raster.module_type == ModuleType.GDAL:
         is_bigtiff = is_bigtiff_gdal(raster.raw)
         if is_bigtiff:
             compress = True
@@ -20,7 +20,7 @@ def write_raster(raster:Raster, out_path:str):
             write_metadata(raster.meta_dict, out_path)
         raster.raw = copy_ds(raster.raw, "GTiff", is_bigtiff=is_bigtiff, compress=compress, out_path=out_path)
 
-    elif raster.module_type == RasterType.SNAP:
+    elif raster.module_type == ModuleType.SNAP:
         if out_ext == 'dim':
             write_gpf(raster.raw, out_path, 'BEAM-DIMAP')
         elif out_ext == 'tif':
@@ -40,7 +40,7 @@ def write_raster(raster:Raster, out_path:str):
         raise NotImplementedError(f'Write function for {raster.module_type.__str__()} is not implemented')
 
     if out_ext == 'tif':
-        if raster.module_type == RasterType.SNAP:
+        if raster.module_type == ModuleType.SNAP:
             set_btoi_to_tif(out_path, raster._band_to_index)
-        elif raster.module_type == RasterType.GDAL:
+        elif raster.module_type == ModuleType.GDAL:
             set_btoi_to_tif_meta(raster.raw, raster._band_to_index)
