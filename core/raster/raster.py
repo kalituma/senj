@@ -2,9 +2,8 @@ from typing import Union, TypeVar, TYPE_CHECKING
 
 from pathlib import Path
 
-from core.util import ProductType, ModuleType
-from core.util.lazy_import import check_raw_type
-
+from core.util import ProductType, ModuleType, check_raw_type
+from core.util.nc import get_band_names_nc
 from core.raster import RasterMeta
 
 
@@ -82,6 +81,8 @@ class Raster(RasterMeta):
             bnames = self._get_band_names_from_meta(band_indices) # from meta if exists else create by index
         elif self.module_type == ModuleType.SNAP:
             bnames = list(self.raw.getBandNames())
+        elif self.module_type == ModuleType.NETCDF:
+            bnames = get_band_names_nc(self.raw)
         else:
             raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
 

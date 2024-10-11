@@ -6,6 +6,7 @@ from core.util import identify_product, parse_meta_xml, read_pickle, get_btoi_fr
 from core.util.identify import planet_test
 from core.util.gdal import load_raster_gdal, mosaic_by_file_paths, read_gdal_bands_as_dict
 from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands, read_gpf_bands_as_dict
+from core.util.nc import load_raster_nc, read_nc_bands_as_dict
 
 from core.raster import ModuleType, Raster, ProductType
 from core.raster.funcs import set_raw_metadict, get_band_name_and_index, create_meta_dict, init_bname_index_in_meta, load_images_paths
@@ -74,6 +75,9 @@ def load_raster(empty_raster:Raster, in_module:ModuleType) -> Raster:
             update_meta_bounds = True
         else:
             raw = datasets[0]
+    elif empty_raster.module_type == ModuleType.NETCDF:
+        raws = load_raster_nc(image_paths)
+        raw = raws[0]
     else:
         raise NotImplementedError(f'Module type({in_module}) is not implemented for the input process.')
 
@@ -122,6 +126,8 @@ def read_band_from_raw(raster:Raster, selected_name_or_id:list[Union[str, int]]=
         bands, new_selected_bands = read_gdal_bands_as_dict(raster.raw, all_band_names=all_bnames, selected_index=index)
     elif module_type == ModuleType.SNAP:
         bands, new_selected_bands = read_gpf_bands_as_dict(raster.raw, bnames)
+    elif module_type == ModuleType.NETCDF:
+        bands, new_selected_bands = read_nc_bands_as_dict(raster.raw, bnames)
     else:
         raise NotImplementedError(f'Module type({module_type}) is not implemented for the input process.')
 

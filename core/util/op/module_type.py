@@ -10,6 +10,7 @@ class OP_Module_Type(Enum):
     NOTSET = 'none'
     GDAL = 'gdal'
     SNAP = 'snap'
+    NETCDF = 'netcdf'
     CONVERT = 'convert'
 
     @classmethod
@@ -21,6 +22,8 @@ class OP_Module_Type(Enum):
             return cls.SNAP
         elif s == 'convert':
             return cls.CONVERT
+        elif s == 'netcdf':
+            return cls.NETCDF
         elif s == 'notset':
             return cls.NOTSET
         else:
@@ -30,6 +33,8 @@ class OP_Module_Type(Enum):
         if self == self.GDAL:
             return self.SNAP
         elif self == self.SNAP:
+            return self.GDAL
+        elif self == self.NETCDF:
             return self.GDAL
         else:
             raise ValueError(f"Cannot invert OP_TYPE: {self}")

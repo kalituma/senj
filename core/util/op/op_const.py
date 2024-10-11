@@ -10,6 +10,7 @@ MOSAIC_OP = 'mosaic'
 SUBSET_OP = 'subset'
 SPLIT_OP = 'split'
 RESAMPLE_OP = 'resample'
+GCP_REPROJECT_OP = 'gcp_reproject'
 SELECT_OP = 'select'
 
 #pixel-wise

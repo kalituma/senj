@@ -83,13 +83,14 @@ def _convert_to_gdal(raster:Raster, cache_bands:dict) -> Raster:
     band_name_list = list(cache_bands.keys())
 
     if raster.module_type == ModuleType.SNAP:
-
         wkt = find_proj_from_band(raster.raw.getBand(band_name_list[0]))
         gt = find_gt_from_band(raster.raw.getBand(band_name_list[0]))
         raster.raw, btoi = create_ds_with_dict(cache_bands, gdal_format='MEM', proj_wkt=wkt, transform=gt, metadata=None, out_path='')
         if btoi != raster.band_to_index:
             raster.update_index_bnames(btoi)
             raster.copy_band_map_to_meta()
+    if raster.module_type == ModuleType.NETCDF:
+        raster.raw, btoi = create_ds_with_dict(cache_bands, gdal_format='MEM', proj_wkt=None, transform=None, metadata=None, out_path='')
     else:
         raise NotImplementedError('another type to GDAL is not implemented')
 

@@ -1,5 +1,6 @@
 from .import_lazy_funcs import *
 from .module_type import *
+from .raw_type_check import *
 from .logger import *
 from .trans_coords import *
 from .util_const import *

@@ -4,6 +4,7 @@ from core.raster import Raster
 
 from core.util.snap import copy_product
 from core.util.gdal import copy_ds
+from core.util.nc import copy_nc_ds
 from core.raster.funcs import set_raw_metadict, update_meta_band_map, get_band_name_and_index
 
 
@@ -27,6 +28,8 @@ def select_band_raster(raster:Raster, selected_bands_or_indices:List[Union[int,s
         raw = copy_ds(raster.raw, 'MEM', selected_index=selected_index)
     elif raster.module_type == ModuleType.SNAP:
         raw = copy_product(raster.raw, selected_bands=selected_band_name, copy_tie_point=False)
+    elif raster.module_type == ModuleType.NETCDF:
+        raw = copy_nc_ds(raster.raw, selected_bands=selected_band_name)
     else:
         raise NotImplementedError(f'Raster type {raster.module_type.__str__()} is not implemented')
 

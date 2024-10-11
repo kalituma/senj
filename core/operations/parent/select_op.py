@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Type, List, Union
 from core.raster import ModuleType
 from core.util import assert_bnames
+from core.util.nc import get_band_length
 from core.raster.funcs import select_band_raster, get_band_name_and_index
 
 from core.operations.parent import Op
@@ -24,4 +25,8 @@ class SelectOp(Op):
                 if len(selected_indices) < raster.raw.RasterCount:
                     if band_select:
                         raster = select_band_raster(raster, selected_indices)
+            elif raster.module_type == ModuleType.NETCDF:
+                if len(selected_bands) < get_band_length(raster.raw):
+                    if band_select:
+                        raster = select_band_raster(raster, selected_bands)
         return raster

@@ -2,7 +2,6 @@ import unittest
 from osgeo import gdal
 from core.util.gdal import mosaic_by_ds, copy_ds, unit_from_epsg
 
-
 class TestCoreFuncs(unittest.TestCase):
 
     def test_mosaic(self):

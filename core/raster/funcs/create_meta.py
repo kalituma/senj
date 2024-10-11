@@ -5,6 +5,7 @@ from core.util import ProductType, read_pickle, parse_meta_xml, load_gdal
 from core.raster import ModuleType
 from core.util.gdal import get_image_spec_gdal, get_geo_spec_gdal
 from core.util.snap import make_meta_dict_from_product, get_image_spec_gpf, get_geo_spec_gpf
+from core.util.nc import make_meta_dict_from_nc_ds
 
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset
@@ -79,6 +80,9 @@ def create_meta_dict(raw:Union["Product", "Dataset"], product_type:ProductType, 
     if module_type == ModuleType.SNAP and (product_type == ProductType.S2 or product_type == ProductType.S1):
         meta_dict = make_meta_dict_from_product(raw,  product_type)
         return meta_dict
+
+    if module_type == ModuleType.NETCDF:
+        return make_meta_dict_from_nc_ds(raw)
 
     # parse from xml
     if product_type != ProductType.UNKNOWN:

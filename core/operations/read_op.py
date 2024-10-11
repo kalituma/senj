@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @OPERATIONS.reg(name=READ_OP, conf_no_arg_allowed=False)
-@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
+@op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP, OP_Module_Type.NETCDF])
 class Read(SelectOp):
     def __init__(self, module:str, bands:List[Union[int,AnyStr]]=None, bword:str='*', bname_word_included:bool=False):
         super().__init__(READ_OP)

@@ -24,8 +24,10 @@ def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str, transfo
     else:
         new_ds = driver.Create(out_path, width, height, band_num, gdal_dtype)
 
-    new_ds.SetProjection(proj_wkt)
-    new_ds.SetGeoTransform(transform)
+    if proj_wkt is not None:
+        new_ds.SetProjection(proj_wkt)
+    if transform is not None:
+        new_ds.SetGeoTransform(transform)
     if metadata is not None:
         new_ds.SetMetadata(metadata)
     return new_ds

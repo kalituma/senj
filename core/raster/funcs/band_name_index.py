@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Union, Tuple
 
 from core.util import ProductType, assert_bnames, get_btoi_from_tif
+from core.util.nc import get_band_names_nc
 from core.raster import Raster, ModuleType
 
 if TYPE_CHECKING:
@@ -57,6 +58,11 @@ def init_bname_index_in_meta(meta_dict:dict, raw:Union["Dataset", "Product"], pr
                     assert 'BAND_INFO' in meta_dict, f'BAND_INFO is not found in meta_dict'
                     meta_dict['band_to_index'] = {band_name:band_info['index'] for band_name, band_info in meta_dict['BAND_INFO'].items()}
                     meta_dict['index_to_band'] = {band_info['index']:band_name for band_name, band_info in meta_dict['BAND_INFO'].items()}
+                elif product_type == ProductType.GOCI_CDOM or product_type == ProductType.GOCI_AC:
+                    if module_type == ModuleType.NETCDF:
+                        meta_dict['band_to_index'] = {b:i+1 for i, b in enumerate(get_band_names_nc(raw))}
+                        meta_dict['index_to_band'] = {i+1:b for i, b in enumerate(get_band_names_nc(raw))}
+
                 else:
                     raise NotImplementedError(f'{product_type} is not implemented.')
 
