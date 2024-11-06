@@ -39,10 +39,10 @@ class Stack(SelectOp):
 
         assert len(rasters) > 1, 'At least two rasters are required for stacking'
 
-        assert self.proc_name in context.cache, f'{self.proc_name} not found in context.cache'
-
-        stack_order = context.cache[self.proc_name]['links']
-        rasters.sort(key=lambda x: stack_order.index(x.raster_from))
+        # assert self.proc_name in context.cache, f'{self.proc_name} not found in context.cache'
+        if self.proc_name in context.cache:
+            stack_order = context.cache[self.proc_name]['links']
+            rasters.sort(key=lambda x: stack_order.index(x.raster_from))
 
         if self._meta_from:
             assert self._meta_from in [r.raster_from for r in rasters], f'meta_from({self._meta_from}) not found in rasters'

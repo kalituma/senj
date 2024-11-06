@@ -1,6 +1,7 @@
 from typing import List, AnyStr
 from netCDF4 import Dataset, Dimension
 
+from core.util import str_to_hash
 from core.util.errors import ContainedBandError
 from core.util.nc import get_band_names_nc, read_band
 
@@ -22,7 +23,8 @@ def copy_nc_ds(src_ds:Dataset, selected_bands:List[AnyStr]=None):
     if len(matched_band) == 0:
         raise ContainedBandError(list(matched_band))
 
-    target_ds = Dataset('inmemory.nc', 'w', diskless=True, persist=False)
+    in_path_hash = str_to_hash(src_ds.filepath())
+    target_ds = Dataset(f'inmemory_{in_path_hash}.nc', 'w', diskless=True, persist=False)
     copy_dimenstions(src_ds, target_ds)
 
     for name in matched_band:
@@ -30,7 +32,6 @@ def copy_nc_ds(src_ds:Dataset, selected_bands:List[AnyStr]=None):
         x = target_ds.createVariable(name, src_band.datatype, src_band.dimensions)
         target_ds[name].setncatts(src_band.__dict__)
         target_ds[name][:] = src_band[:]
-
 
     target_ds.setncatts(src_ds.__dict__)
     src_ds.close()

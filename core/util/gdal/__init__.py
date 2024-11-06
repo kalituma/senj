@@ -15,7 +15,7 @@ GDAL_DTYPE_MAP = {
 
 RESAMPLING_METHODS = {
     'nearest' : gdal.GRA_NearestNeighbour,
-    'bilinear': gdal.GRA_Bilinear ,
+    'bilinear': gdal.GRA_Bilinear,
     'cubic': gdal.GRA_Cubic,
     'cubicspline': gdal.GRA_CubicSpline,
     'lanczos': gdal.GRA_Lanczos,
@@ -29,6 +29,7 @@ from .op_funcs import *
 from .gdal_funcs import *
 from .gdal_read import *
 from .gdal_ds import *
+from .gdal_reproj import *
 from .gdal_merge import *
 from .load_gdal import *
 from .projection_read import *

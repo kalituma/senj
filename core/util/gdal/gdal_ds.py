@@ -4,8 +4,8 @@ from osgeo import gdal
 
 from core.util.gdal import GDAL_DTYPE_MAP, read_gdal_bands
 
-def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str, transform:tuple, metadata=None,
-              out_path='', is_bigtiff=False, compress=False):
+def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str=None, transform:tuple=None, metadata=None,
+              out_path='', is_bigtiff=False, compress=False, no_data=np.nan):
 
     if isinstance(dtype, str):
         gdal_dtype = GDAL_DTYPE_MAP[dtype]
@@ -30,20 +30,31 @@ def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str, transfo
         new_ds.SetGeoTransform(transform)
     if metadata is not None:
         new_ds.SetMetadata(metadata)
+
+    for i in range(band_num):
+        new_ds.GetRasterBand(i+1).SetNoDataValue(no_data)
+        new_ds.GetRasterBand(i+1).Fill(no_data)
+
     return new_ds
 
 def create_ds_with_arr(arr:np.ndarray, gdal_format,
-                       proj_wkt:str, transform:tuple, metadata:dict=None,
-                       out_path='', is_bigtiff=False, compress=False):
+                       proj_wkt:Union[str, None]=None, transform:Union[tuple, None]=None, metadata:dict=None,
+                       out_path='', is_bigtiff=False, compress=False, no_data=np.nan):
+
+    if arr.ndim == 2:
+        arr = np.expand_dims(arr, axis=0)
 
     band_num, arr_height, arr_width = arr.shape
     dtype = arr.dtype.name
+
+    arr[arr == no_data] = np.nan
 
     mem_ds = create_ds(gdal_format, arr_width, arr_height,
                        band_num=band_num, dtype=dtype,
                        proj_wkt=proj_wkt, transform=transform,
                        metadata=metadata, out_path=out_path,
-                       is_bigtiff=is_bigtiff, compress=compress)
+                       is_bigtiff=is_bigtiff, compress=compress,
+                       no_data=np.nan)
     mem_ds.WriteArray(arr)
     mem_ds.FlushCache()
 

@@ -19,7 +19,7 @@ DEFAULT_OUT_EXT = {
 @OPERATIONS.reg(name=WRITE_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Write(SelectOp):
-    def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:List[Union[int,AnyStr]]=None, prefix:str= '', suffix:str= ''):
+    def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:List[Union[int,AnyStr]]=None, prefix:str= '', suffix:str= '', compress=False):
         super().__init__(WRITE_OP)
 
         self._selected_bands = bands
@@ -29,6 +29,7 @@ class Write(SelectOp):
 
         self._prefix = prefix
         self._suffix = suffix
+        self._compress = compress
 
     def __call__(self, raster:Raster, *args):
 
@@ -57,12 +58,13 @@ class Write(SelectOp):
         result = self.pre_process(raster, selected_bands_or_indices=self._selected_bands, band_select=True) # select bands first
 
         if self._out_ext == 'tif':
-            if not has_same_band_shape(result):
-                raster_data_list = result.raw.getRasterDataNodes()
-                for i in range(raster_data_list.size()):
-                    band = raster_data_list.get(i)
-                    self.log(f'Band "{band.getName()}" : {band.getRasterHeight()} x {band.getRasterWidth()}', level='error')
-                raise NotHaveSameBandShapeError(f'All bands should have same shape if out extensions({self._out_ext}) is for tiff format.')
+            if raster.module_type == ModuleType.SNAP:
+                if not has_same_band_shape(result):
+                    raster_data_list = result.raw.getRasterDataNodes()
+                    for i in range(raster_data_list.size()):
+                        band = raster_data_list.get(i)
+                        self.log(f'Band "{band.getName()}" : {band.getRasterHeight()} x {band.getRasterWidth()}', level='error')
+                    raise NotHaveSameBandShapeError(f'All bands should have same shape if out extensions({self._out_ext}) is for tiff format.')
         write_raster(result, output_path)
 
         self.post_process(result, None)

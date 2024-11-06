@@ -16,6 +16,7 @@ SELECT_OP = 'select'
 #pixel-wise
 WARP_OP = 'warp'
 CONVERT_OP = 'convert'
+MINMAX_CLIP_OP = 'minmax_clip'
 
 #s1, snap
 APPLYORBIT_OP = 'apply_orbit'

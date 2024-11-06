@@ -63,7 +63,7 @@ def get_files_recursive(root: str, pattern, sort_func=None, filter_func=lambda x
         if x.is_file() and filter_func(str(x)):
             file_list.append(str(x))
 
-    sorted(file_list, key=sort_func)
+    file_list = sorted(file_list, key=sort_func)
     # file_list = [str(x) for x in p if x.is_file() and filter_func(str(x))]
     return file_list
 
@@ -95,3 +95,6 @@ def check_in_any_case(src_str:str, band_target_list:list) -> bool:
     target_list = band_target_list.copy()
     target_list = [target.lower() for target in target_list]
     return src_str in target_list
+
+def str_to_hash(src_str:str) -> int:
+    return abs(hash(src_str)) % (10 ** 8)

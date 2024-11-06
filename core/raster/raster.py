@@ -147,7 +147,8 @@ class Raster(RasterMeta):
     @raw.setter
     def raw(self, raw:Union["Product", "Dataset"]):
         self._raw = raw
-        self._module_type = check_raw_type(raw)
+        if raw is not None:
+            self._module_type = check_raw_type(raw)
 
     @property
     def module_type(self):

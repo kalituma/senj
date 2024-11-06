@@ -19,6 +19,7 @@ def is_snap_product(raw:Union["Product", "Dataset"]) -> bool:
     return isinstance(raw, Product)
 
 def check_raw_type(raw:Union["Product", "Dataset"]) -> "ModuleType":
+
     if is_gdal_dataset(raw):
         return ModuleType.GDAL
     elif is_nc_dataset(raw):

@@ -1,3 +1,4 @@
+from .time_check import *
 from .import_lazy_funcs import *
 from .module_type import *
 from .raw_type_check import *

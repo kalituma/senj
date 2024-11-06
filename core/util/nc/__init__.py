@@ -1,18 +1,20 @@
-from typing import Dict, AnyStr, List
-from netCDF4 import Dataset, Variable
+from typing import Dict, AnyStr, List, Union
+from netCDF4 import Dataset, Variable, Group
 
-def get_varaibles(nc_ds:Dataset) -> Dict[AnyStr, Variable]:
-    if len(nc_ds.variables) > 0:
-        return nc_ds.variables
+def get_variables(nc_ds:Union[Group, Dataset]) -> Dict[AnyStr, Variable]:
 
     variables = {}
+
     if len(nc_ds.groups) > 0:
         for group in nc_ds.groups:
-            if len(nc_ds.groups[group].variables) > 0:
-                variables.update(nc_ds.groups[group].variables)
-        return variables
+            variables_dict = get_variables(nc_ds.groups[group])
+            variables.update(variables_dict)
 
-    raise ValueError('No variables in the dataset')
+    if len(nc_ds.variables) > 0:
+        root_vars = {var_name: nc_ds.variables[var_name] for var_name in nc_ds.variables}
+        variables.update(root_vars)
+
+    return variables
 
 from .nc_read import *
 from .nc_meta import *

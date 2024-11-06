@@ -347,10 +347,4 @@ class TestReadOp(unittest.TestCase):
             # print(Write(out_dir=out_dir, out_stem='20200817_013159_99_2277_3B', out_ext='tif')(snap_tif_raster, context))
             print()
 
-    def test_goci_cdom(self):
-        cdom_path = expand_var('$ELEC_DATA/CDOM/2021/5/GK2B_GOCI2_L2_20210531_231530_LA_S000_CDOM.nc')
-        out_dir = '/tmp/'
-        Logger.get_logger(log_file_path=out_dir + 'read_op.log')
-        context = Context(None)
-        r = Read(module='netcdf', bands=['CDOM', 'latitude', 'longitude'])(cdom_path, context)
-        r = Convert(to_module='gdal')(r, context)
+

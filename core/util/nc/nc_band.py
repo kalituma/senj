@@ -2,17 +2,17 @@ from typing import AnyStr, TYPE_CHECKING, List, Dict
 import numpy as np
 
 from core.util import assert_bnames
-from core.util.nc import get_varaibles, get_band_names_nc
+from core.util.nc import get_variables, get_band_names_nc
 
 if TYPE_CHECKING:
     from netCDF4 import Dataset
 
 def get_band_length(nc_ds:"Dataset") -> int:
-    variables = get_varaibles(nc_ds)
+    variables = get_variables(nc_ds)
     return len(variables)
 
 def read_band(nc_ds: "Dataset", band_name:AnyStr):
-    variables = get_varaibles(nc_ds)
+    variables = get_variables(nc_ds)
     if band_name in variables:
         return variables[band_name]
     else:
@@ -20,7 +20,7 @@ def read_band(nc_ds: "Dataset", band_name:AnyStr):
 
 def read_bands_array(nc_ds: "Dataset", selected_bands:List[AnyStr]=None):
 
-    variables = get_varaibles(nc_ds)
+    variables = get_variables(nc_ds)
     arrs = []
     no_data_vals = []
 

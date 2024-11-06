@@ -11,13 +11,13 @@ from core.util.op import OP_Module_Type, op_constraint
 from core.util.gdal import is_epsg_code_valid, unit_from_epsg
 
 SNAP_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic']
-GDAL_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic', 'cubicspline', 'lanczos']
+GDAL_RESAMPLING_METHODS = ['nearest', 'bilinear', 'cubic', 'cubicspline', 'lanczos']
 ALL_RESAMPLING_METHODS = GDAL_RESAMPLING_METHODS
 
 @OPERATIONS.reg(name=RESAMPLE_OP, no_arg_allowed=False)
 @op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Resample(ParamOp, WarpOp):
-    def __init__(self, epsg:int=None, pixel_size:float=None, resampling_method:str='nearest'):
+    def __init__(self, epsg:int=None, pixel_size:float=None, resampling_method:str='nearest', use_all_cores:bool=True):
         super().__init__(RESAMPLE_OP)
 
         assert resampling_method in ALL_RESAMPLING_METHODS, f'resampling_method should be one of {ALL_RESAMPLING_METHODS}'
@@ -34,6 +34,8 @@ class Resample(ParamOp, WarpOp):
             assert pixel_size is not None, 'Either epsg or pixel_size should be provided'
         if pixel_size is None:
             assert epsg is not None, 'Either epsg or pixel_size should be provided'
+
+        self._use_all_cores = use_all_cores
 
     def __call__(self, raster:"Raster", context:"Context", *args):
 
@@ -77,6 +79,8 @@ class Resample(ParamOp, WarpOp):
             elif self.module_type == OP_Module_Type.GDAL:
                 assert raster.module_type == ModuleType.GDAL, 'Resample operation is only available for GDAL module'
                 self.add_param(src_crs=src_epsg)
+                self.add_param(use_all_cores=self._use_all_cores)
+
                 cur_params = deepcopy(self.snap_params)
                 dataset, context = self.call_warp(raster.raw, cur_params, context)
             else:
