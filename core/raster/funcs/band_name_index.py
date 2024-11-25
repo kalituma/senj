@@ -22,7 +22,7 @@ def check_bname_index_valid(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return True
 
-def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -> tuple[list[str], list[int]]:
+def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -> tuple[list[str], list[int]]: # done
 
     is_index = all([isinstance(b, int) for b in band_id_list])
 
@@ -36,7 +36,7 @@ def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return band_name, index
 
-def init_bname_index_in_meta(meta_dict:dict, raw:Union["Dataset", "Product"], product_type:ProductType, module_type:ModuleType, band_to_index:dict=None) -> dict:
+def init_bname_index_in_meta(meta_dict:dict, raw:Union["Dataset", "Product"], product_type:ProductType, module_type:ModuleType, band_to_index:dict=None) -> dict: # done
 
     if meta_dict:
         if 'band_to_index' not in meta_dict or 'index_to_band' not in meta_dict:

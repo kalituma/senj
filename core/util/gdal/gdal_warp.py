@@ -2,9 +2,6 @@ from typing import Union
 from osgeo import gdal
 from osgeo.gdal import WarpOptions, Dataset
 
-from core.util import epsg_to_wkt
-from core.util.gdal import RESAMPLING_METHODS, copy_ds
-
 SNAP_TO_GDAL_RESAMPLING = {
     'nearest': 'near',
     'bicubic': 'cubic'

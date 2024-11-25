@@ -17,7 +17,7 @@ def set_raw_metadict(raster:Raster, raw, product_type:ProductType, meta_dict:dic
     raster.meta_dict = meta_dict
     return raster
 
-def update_meta_band_map(meta_dict:dict, selected_band:list[Union[str, int]]) -> dict:
+def update_meta_band_map(meta_dict:dict, selected_band:list[Union[str, int]]) -> dict: #done
 
     assert 'band_to_index' in meta_dict and 'index_to_band' in meta_dict, 'band_to_index and index_to_band should be in meta_dict'
 
@@ -44,7 +44,7 @@ def update_meta_band_map(meta_dict:dict, selected_band:list[Union[str, int]]) ->
 
     return new_meta
 
-def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
+def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict: #done
 
     if raster.module_type == ModuleType.SNAP:
         return get_band_grid_size_gpf(raster.raw, selected_bands=selected_bands)
@@ -56,7 +56,3 @@ def get_band_grid_size(raster:Raster, selected_bands:list[str]=None) -> dict:
         return get_band_grid_size_gdal(raster.raw, band_name=all_band_name, selected_index=index)
     else:
         raise NotImplementedError(f'{raster.module_type} is not implemented.')
-
-def update_meta_boundary(meta_dict:dict, dataset:Union["Dataset", "Product"], product_type:ProductType) -> dict:
-
-    return meta_dict

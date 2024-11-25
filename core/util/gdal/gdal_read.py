@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from typing import Tuple
 from pathlib import Path
@@ -39,3 +40,8 @@ def read_gdal_bands_as_dict(ds, all_band_names:list[str], selected_index:list[in
 
     return arr_dict, selected_band_names
 
+def load_raster_gdal(paths:list[str]) -> list[gdal.Dataset]:
+
+    for path in paths:
+        assert os.path.splitext(path)[1] == os.path.splitext(paths[0])[1], f'All input files should have the same extension'
+    return [read_tif(path) for path in paths]

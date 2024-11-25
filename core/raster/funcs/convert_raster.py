@@ -89,6 +89,7 @@ def _convert_to_gdal(raster:Raster, cache_bands:dict) -> Raster:
         if btoi != raster.band_to_index:
             raster.update_index_bnames(btoi)
             raster.copy_band_map_to_meta()
+
     if raster.module_type == ModuleType.NETCDF:
         raster.raw, btoi = create_ds_with_dict(cache_bands, gdal_format='MEM', proj_wkt=None, transform=None, metadata=None, out_path='')
     else:
