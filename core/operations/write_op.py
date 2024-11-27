@@ -19,13 +19,24 @@ DEFAULT_OUT_EXT = {
 @OPERATIONS.reg(name=WRITE_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Write(SelectOp):
-    def __init__(self, out_dir:str, out_stem:str='out', out_ext:str='', bands:List[Union[int,AnyStr]]=None, prefix:str= '', suffix:str= '', compress=False):
+    def __init__(self, out_path: str=None, out_dir: str = None, out_stem: str = 'out', out_ext: str = '',
+                 bands: List[Union[int, AnyStr]] = None,
+                 prefix: str = '', suffix: str = '', compress=False):
+
         super().__init__(WRITE_OP)
 
+        if out_path is None:
+            assert out_dir is not None, 'out_dir should be provided when out_path is None'
+
         self._selected_bands = bands
-        self._out_dir = out_dir
-        self._out_ext = out_ext
-        self._out_stem = out_stem
+
+        if out_path is not None:
+            self._out_path = out_path
+            self._out_ext = Path(out_path).suffix[1:]
+        else:
+            self._out_dir = out_dir
+            self._out_ext = out_ext
+            self._out_stem = out_stem
 
         self._prefix = prefix
         self._suffix = suffix
@@ -43,16 +54,22 @@ class Write(SelectOp):
 
         # if self._selected_bands is not None:
         #     raster.selected_bands = self._selected_bands
-        expanded_dir = expand_var(self._out_dir)
-        Path(expanded_dir).mkdir(parents=True, exist_ok=True)
 
-        output_basename = ''
-        output_basename += f'{f"{self._prefix}_" if self._prefix else self._prefix}'
-        output_basename += f'{self._out_stem}'
-        output_basename += f'{f"_{self._suffix}" if self._suffix else self._suffix}'
-        output_basename += f'.{self.counter}.{self._out_ext}'
+        if self._out_path is not None:
+            expanded_path = expand_var(self._out_path)
+            Path(expanded_path).parent.mkdir(parents=True, exist_ok=True)
+            output_path = expanded_path
+        else:
+            expanded_dir = expand_var(self._out_dir)
+            Path(expanded_dir).mkdir(parents=True, exist_ok=True)
 
-        output_path = f'{expanded_dir}/{output_basename}'
+            output_basename = ''
+            output_basename += f'{f"{self._prefix}_" if self._prefix else self._prefix}'
+            output_basename += f'{self._out_stem}'
+            output_basename += f'{f"_{self._suffix}" if self._suffix else self._suffix}'
+            output_basename += f'.{self.counter}.{self._out_ext}'
+
+            output_path = f'{expanded_dir}/{output_basename}'
 
         # result = update_cached_to_raw(raster)  # copy bands to raw
         result = self.pre_process(raster, selected_bands_or_indices=self._selected_bands, band_select=True) # select bands first

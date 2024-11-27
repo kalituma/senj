@@ -31,6 +31,5 @@ from .gdal_read import *
 from .gdal_ds import *
 from .gdal_reproj import *
 from .gdal_merge import *
-from .load_gdal import *
 from .projection_read import *
 from .gdal_warp import *

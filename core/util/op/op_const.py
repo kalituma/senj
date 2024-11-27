@@ -28,4 +28,6 @@ SPECKLE_FILTER_OP = 'speckle_filter'
 
 #cached
 ATMOSCORR_OP = 'atmos_corr'
+REV_REF_OP = 'rev_ref'
 NL_DENOISING_OP = 'nl_mean_denoising'
+NORMALIZE_OP = 'normalize'

@@ -21,7 +21,6 @@ class GraphManager:
 
         self.logger.log('info', '------------------------------------------------------ Building graph manager')
 
-
         # validate and parse
         n_config, procs, proc_init, proc_end, proc_link, ops_args, var_link = parse_config(config, schema_map)
 

@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from core.graph import GraphManager
 
 class Context:
-    def __init__(self, graph_manager:"GraphManager"):
+    def __init__(self, graph_manager:Optional["GraphManager"]):
         self._cache = {}
         self._counter = {}
         self._graph_manager:"GraphManager" = graph_manager

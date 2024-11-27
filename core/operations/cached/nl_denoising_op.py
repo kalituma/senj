@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING, List, AnyStr, Union
-from core.operations import NL_DENOISING_OP
 from core.operations.parent import CachedOp
 
 from core.registry import OPERATIONS
 from core.util import nonlocal_mean_denoising, assert_bnames
 from core.util import percentile_norm
-from core.util.op import op_constraint, OP_Module_Type
+from core.util.op import op_constraint, OP_Module_Type, NL_DENOISING_OP
 from core.raster import Raster
 from core.raster.funcs import check_bname_index_valid
 

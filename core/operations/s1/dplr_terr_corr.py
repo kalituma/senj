@@ -22,7 +22,7 @@ class TerrainCorrection(ParamOp, SelectOp, SnappyOp):
                  pixel_spacing_meter:float=0.0, pixel_spacing_degree: float=0.0,
                  dem_method:str='BICUBIC_INTERPOLATION',
                  img_method:str='BICUBIC_INTERPOLATION',
-                 save_dem: bool=False, epsg:int=4326):
+                 save_dem: bool=False, save_incidence_angle=False, epsg:int=4326):
 
         super().__init__(TERR_CORR_OP)
 

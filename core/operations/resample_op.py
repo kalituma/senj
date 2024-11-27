@@ -11,7 +11,7 @@ from core.util.op import OP_Module_Type, op_constraint
 from core.util.gdal import is_epsg_code_valid, unit_from_epsg
 
 SNAP_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic']
-GDAL_RESAMPLING_METHODS = ['nearest', 'bilinear', 'cubic', 'cubicspline', 'lanczos']
+GDAL_RESAMPLING_METHODS = ['nearest', 'bilinear', 'bicubic', 'cubicspline', 'lanczos']
 ALL_RESAMPLING_METHODS = GDAL_RESAMPLING_METHODS
 
 @OPERATIONS.reg(name=RESAMPLE_OP, no_arg_allowed=False)

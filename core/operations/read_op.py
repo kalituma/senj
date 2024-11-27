@@ -2,11 +2,10 @@ import numpy as np
 from typing import TYPE_CHECKING, List, Union, AnyStr
 
 from core import OPERATIONS
-from core.operations import READ_OP
 from core.operations.parent import SelectOp
 
 from core.util import check_input_ext
-from core.util.op import op_constraint, OP_Module_Type
+from core.util.op import op_constraint, OP_Module_Type, READ_OP
 from core.util.errors import ExtensionNotSupportedError
 from core.util import assert_bnames
 

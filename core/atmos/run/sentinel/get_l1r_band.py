@@ -43,6 +43,7 @@ def get_l1r_band(bands:dict, user_settings:dict, l1r_meta:dict, global_attrs:dic
 
             if 'RADIO_ADD_OFFSET' in band_info:
                 band_value += band_info['RADIO_ADD_OFFSET'][band_slot]
+                l1r_band_attr['radio_offset'] = band_info['RADIO_ADD_OFFSET'][band_slot]
 
             band_value /= quant
             band_value[band_mask] = np.nan

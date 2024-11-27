@@ -6,7 +6,7 @@ from typing import Union, List, Tuple, Callable
 
 from core import LAMBDA
 from core.util import PathType, read_yaml, get_files_recursive, query_dict, assert_bnames
-from core.config import LAMBDA_PATTERN, VAR_PATTERN, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, validate_input_path, \
+from core.config import LAMBDA_PATTERN, PROC_VAR_PATTERN, remove_var_bracket, remove_func_bracket, parse_sort, validate_config_func, validate_input_path, \
     validate_processor_relation
 
 
@@ -93,7 +93,7 @@ def replace_config_properties_after(config:dict) -> dict:
 def replace_config_properties_before(config:dict) -> dict:
     # meta_from from stack op
     config = replace_config_property(config, '$..meta_from',
-                                     val_match_func=partial(val_pattern_match, pattern=VAR_PATTERN),
+                                     val_match_func=partial(val_pattern_match, pattern=PROC_VAR_PATTERN),
                                      change_val_func=lambda x: x.replace('{{', '').replace('}}', ''))
     return config
 
@@ -110,6 +110,7 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
     validate_processor_relation(n_config, proc_list=p_nodes)
 
     # replace var which represent lambda or any link used in any properties would be replaced here
+    # todo: consider it should be separated on text level
     n_config = replace_config_properties_before(n_config)
 
     var_link_map = {}

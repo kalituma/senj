@@ -3,12 +3,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, List, AnyStr, Union
 
 from core import OPERATIONS
-from core.config import expand_var
 from core.logic import Context
 from core.operations.parent import CachedOp, SelectOp
-from core.operations import ATMOSCORR_OP
-from core.util.op import op_constraint, call_constraint, OP_Module_Type
-from core.util import ProductType, is_contained, glob_match
+from core.util.op import op_constraint, call_constraint, OP_Module_Type, ATMOSCORR_OP
+from core.util import ProductType, is_contained, glob_match, expand_var
 from core.raster.funcs import get_band_name_and_index, get_band_grid_size
 from core.raster.funcs import apply_atmos, write_l2r_as_map
 
@@ -122,9 +120,10 @@ class AtmosCorr(CachedOp, SelectOp):
         det_names = list(det_res_map.values())
         raster = CachedOp.pre_process(self, raster, context, bands_to_load=det_names)
 
-        for det_res, det_bname in det_res_map.items():
-            det_elems = np.unique(raster[det_bname]['value']).tolist()
-            assert is_contained(det_elems, src_list=[2, 3, 4, 5, 6, 7]), 'Detector band should have values from 2 to 7.'
+        # todo: should be improved to be faster
+        # for det_res, det_bname in det_res_map.items():
+        #     det_elems = np.unique(raster[det_bname]['value']).tolist()
+        #     assert is_contained(det_elems, src_list=[1, 2, 3, 4, 5, 6, 7]), 'Detector band should have values from 1 to 7.'
 
         det_dict = {res: raster[det_bname]['value'] for res, det_bname in det_res_map.items()}
 

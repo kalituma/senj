@@ -27,6 +27,9 @@ def remove_list_elements(src_list:list[str], remove_list:list[str]) -> list[str]
     ref_set = set(remove_list)
     return list(filter(lambda x: x not in ref_set, src_list))
 
+def get_included_elements(src_list:list[str], include_list:list[str]) -> list[str]:
+    ref_set = set(include_list)
+    return list(filter(lambda x: x in ref_set, src_list))
 
 def dict_with_key(key:str, value:dict) -> dict:
     return {key: value}
@@ -56,12 +59,16 @@ def transpose_3d(arr, ch_count):
             return arr
         return np.moveaxis(arr, -1, 0)
 
-def get_files_recursive(root: str, pattern, sort_func=None, filter_func=lambda x: x):
+def get_files_recursive(root: str, pattern, sort_func=None, filter_func=lambda x: x, need_to_be_file=True):
     p = Path(root).rglob(pattern)
     file_list = []
     for x in p:
-        if x.is_file() and filter_func(str(x)):
-            file_list.append(str(x))
+        if need_to_be_file:
+            if x.is_file() and filter_func(str(x)):
+                file_list.append(str(x))
+        else:
+            if filter_func(str(x)):
+                file_list.append(str(x))
 
     file_list = sorted(file_list, key=sort_func)
     # file_list = [str(x) for x in p if x.is_file() and filter_func(str(x))]

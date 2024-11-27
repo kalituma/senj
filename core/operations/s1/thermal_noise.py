@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class ThermalNoiseRemoval(ParamOp, SnappyOp):
     def __init__(self, polarisations:list[str]=None):
         super().__init__(THERM_NOISE_OP)
-        self. add_param(selectedPolarisations=polarisations)
+        self.add_param(selectedPolarisations=polarisations)
 
     @call_constraint(module_types=[ModuleType.SNAP], product_types=[ProductType.S1], ext=['safe'])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):

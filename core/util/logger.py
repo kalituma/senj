@@ -33,12 +33,12 @@ class Logger:
 
     def __new__(cls, log_level, log_file_path):
         if cls._instance is None:
-            assert log_file_path is not None, 'Log file path is required at the first time of logger initialization'
+            # assert log_file_path is not None, 'Log file path is required at the first time of logger initialization'
             cls._instance = super(Logger, cls).__new__(cls)
             cls._instance.setup_logger(log_level, log_file_path)
         return cls._instance
 
-    def setup_logger(self, logging_level, log_file_path):
+    def setup_logger(self, logging_level, log_file_path=None):
 
         logging_level = logging_level.lower()
         assert logging_level in logger_level_map.keys(), f'Invalid logging level: {logging_level}'
@@ -46,18 +46,18 @@ class Logger:
         self.logger = logging.getLogger('senj')
         self.logger.setLevel(logger_level_map[logging_level])
 
+        formatter = TruncatedFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', max_length=500)
+
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logger_level_map[logging_level])
-
-        file_handler = logging.FileHandler(log_file_path)
-        file_handler.setLevel(logger_level_map[logging_level])
-
-        formatter = TruncatedFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', max_length=500)
-        file_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
-
-        self.logger.addHandler(file_handler)
         self.logger.addHandler(console_handler)
+
+        if log_file_path:
+            file_handler = logging.FileHandler(log_file_path)
+            file_handler.setLevel(logger_level_map[logging_level])
+            file_handler.setFormatter(formatter)
+            self.logger.addHandler(file_handler)
 
     def log(self, level, msg):
         level = level.lower()
