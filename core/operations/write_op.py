@@ -5,11 +5,10 @@ from core import OPERATIONS
 
 from core.util import expand_var
 from core.util.errors import ExtensionNotSupportedError, ExtensionMatchingError, NotHaveSameBandShapeError
-from core.util.op import OP_Module_Type, op_constraint
+from core.util.op import OP_Module_Type, op_constraint, WRITE_OP
 from core.operations import SelectOp
-from core.operations import WRITE_OP
 from core.raster import ModuleType, Raster, EXT_MAP
-from core.raster.funcs import has_same_band_shape, write_raster
+from core.raster.funcs import has_same_band_shape, write_raster, check_bname_index_valid
 
 DEFAULT_OUT_EXT = {
     ModuleType.GDAL : 'tif',
@@ -28,10 +27,12 @@ class Write(SelectOp):
         if out_path is None:
             assert out_dir is not None, 'out_dir should be provided when out_path is None'
 
-        self._selected_bands = bands
+        self.selected_names_or_indices = bands
 
         if out_path is not None:
             self._out_path = out_path
+            self._out_dir = Path(out_path).parent
+            self._out_stem = Path(out_path).stem
             self._out_ext = Path(out_path).suffix[1:]
         else:
             self._out_dir = out_dir
@@ -71,8 +72,13 @@ class Write(SelectOp):
 
             output_path = f'{expanded_dir}/{output_basename}'
 
+        if check_bname_index_valid(raster, self.selected_names_or_indices):
+            selected_name_or_id = self.selected_names_or_indices
+        else:
+            selected_name_or_id = raster.get_band_names()
+
         # result = update_cached_to_raw(raster)  # copy bands to raw
-        result = self.pre_process(raster, selected_bands_or_indices=self._selected_bands, band_select=True) # select bands first
+        result = self.pre_process(raster, selected_bands_or_indices=selected_name_or_id, band_select=True) # select bands first
 
         if self._out_ext == 'tif':
             if raster.module_type == ModuleType.SNAP:

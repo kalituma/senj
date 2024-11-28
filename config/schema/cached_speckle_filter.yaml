@@ -1,0 +1,13 @@
+cached_speckle_filter:
+  type: 'dict'
+  nullable: True
+  schema:
+    bands:
+      type: 'list'
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+    drop_other_bands:
+      type: 'boolean'

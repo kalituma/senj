@@ -1,5 +1,6 @@
 calibrate:
   type: 'dict'
+  nullable: true
   schema:
     polarisations:
       type: 'list'

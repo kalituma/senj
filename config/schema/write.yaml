@@ -4,16 +4,24 @@ ext_const: &ext_cons '^(?:[.][a-zA-Z0-9]+)?$'
 write:
   type: 'dict'
   required: true
+  xor_fields : ['out_path', 'out_dir,out_stem']
   schema:
+    bands:
+      type: 'list'
+      schema:
+        oneof:
+        - type: 'integer'
+          min: 1
+        - type: 'string'
+    out_path:
+      type: 'string'
+      regex: *path_cons
     out_dir:
       type: 'string'
 #      dependencies: [output_affix, output_prefix]
       regex: *path_cons
-      required: true
     out_stem:
       type: 'string'
-      required: true
-
     suffix:
       type: 'string'
     prefix:

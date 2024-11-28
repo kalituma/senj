@@ -18,7 +18,7 @@ class ValidatorRule(Enum):
         else:
             raise ValueError(f'"{s}" is not supported')
 
-class ConfigDependencyValidator(Validator):
+class CustomValidator(Validator):
     def _validate_dependencies(self, dependencies:dict, field, in_value):
 
         for rule_str, values in dependencies.items():
@@ -28,6 +28,22 @@ class ConfigDependencyValidator(Validator):
                     self._error(field, f'{field} and {dependencies[rule_str]} must have the same length')
             else:
                 raise ValueError(f'"{rule}" is not supported')
+
+    def _validate_xor_fields(self, xor_fields, field, value):
+        """{ 'type' : 'list' }"""
+
+        if isinstance(value, dict):
+            xor_fields = [group.split(',') for group in xor_fields]
+            for group in xor_fields:
+                exists = [field in value for field in group]
+                if any(exists) and not all(exists):
+                    self._error(field, f'"{field}" must be used with {group}')
+                if all(exists):
+                    other_fields = [f for g in xor_fields if g != group for f in g]
+                    if any(f in value for f in other_fields):
+                        self._error(field, f'"{field}" cannot be used with {other_fields}')
+
+
 
     # def _check_ext(self, field, dependency, value, dependent_value):
     #     out_raster_type = RasterType.from_str(dependent_value)

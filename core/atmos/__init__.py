@@ -1,7 +1,7 @@
 import os, sys, platform
 
 import core
-from core import PROJECT_PATH, ATMOS_CONFIG, code_path
+from core import PROJECT_PATH, ATMOS_CONFIG
 
 from core.atmos import shared
 from core.atmos import ac
@@ -19,7 +19,6 @@ if not os.path.exists(ATMOS_CONFIG):
 cfile = os.path.join(ATMOS_CONFIG, 'config.txt')
 config = shared.import_config(cfile)
 
-config['code_path'] = code_path
 config['path'] = PROJECT_PATH
 
 for t in config:

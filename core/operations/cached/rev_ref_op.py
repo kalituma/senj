@@ -25,9 +25,8 @@ class RevRef(CachedOp):
 
         QUANTIFICATION_VALUE = 10000
         for key, band in cached_raster.bands.items():
-            no_data = band['no_data']
+            assert np.isnan(band['no_data']), 'no_data should be np.nan'
             radio_offset = raster.meta_dict['atmos_band_meta'][key]['radio_offset']
-            band['value'][band['value'] == no_data] = np.nan
             band['value'] = (band['value'] * QUANTIFICATION_VALUE) + np.abs(radio_offset)
             band['value'][np.isnan(band['value'])] = 0
             band['value'] = band['value'].astype(np.uint16)

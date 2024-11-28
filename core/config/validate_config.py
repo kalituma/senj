@@ -3,16 +3,16 @@ from cerberus import Validator
 from core import OPERATIONS
 from core.util import dict_with_key
 from core.util.errors import check_null_error, NullValueError, ParseError
-from core.config.config_validators import ConfigDependencyValidator
+from core.config.config_validators import CustomValidator
 
 def get_validator(key):
     if key == 'write':
-        return ConfigDependencyValidator
+        return CustomValidator
     else:
         return Validator
 
 def check_root_schema(item, schema, key, allow_unknown: bool = False):
-    v = ConfigDependencyValidator(schema, allow_unknown=allow_unknown)
+    v = CustomValidator(schema, allow_unknown=allow_unknown)
     if not v.validate(item):
         if check_null_error(v.errors):
             raise NullValueError(key)

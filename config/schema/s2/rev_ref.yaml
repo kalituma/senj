@@ -1,0 +1,3 @@
+rev_ref:
+  type: 'dict'
+  required: True

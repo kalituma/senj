@@ -3,10 +3,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, List, AnyStr, Union
 
 from core import OPERATIONS
+
 from core.logic import Context
 from core.operations.parent import CachedOp, SelectOp
 from core.util.op import op_constraint, call_constraint, OP_Module_Type, ATMOSCORR_OP
-from core.util import ProductType, is_contained, glob_match, expand_var
+from core.util import ProductType, is_contained, glob_match, expand_var, get_included_elements, set_nodata_to_band_dict
 from core.raster.funcs import get_band_name_and_index, get_band_grid_size
 from core.raster.funcs import apply_atmos, write_l2r_as_map
 
@@ -25,10 +26,11 @@ class AtmosCorr(CachedOp, SelectOp):
         self._det_bpattern = det_bpattern
         self._det_bword_included = det_bword_included
         self._write_map = write_map
-        self._map_dir = expand_var(map_dir)
+        self._map_dir = map_dir
         self._map_stem = map_stem
 
         if self._write_map:
+            self._map_dir = expand_var(map_dir)
             assert self._map_dir, 'map_dir should be provided when write_map is True'
             if not self._map_stem:
                 self._map_stem = 'l2r_map'
@@ -40,6 +42,7 @@ class AtmosCorr(CachedOp, SelectOp):
 
         self._target_band_names, target_band_indices = get_band_name_and_index(raster, band_id_list=self._target_band_names)
         raster = self.load_bands(raster, self._target_band_names, self._target_band_slot, context)
+        raster.bands = set_nodata_to_band_dict(raster.bands, np.nan)
 
         det_dict = det_names = None
         if self._det_names:
@@ -50,7 +53,7 @@ class AtmosCorr(CachedOp, SelectOp):
             # find the band with glob pattern with asterisk described in det_bands
             all_bands = raster.get_band_names()
             self._det_names = glob_match(all_bands, self._det_bpattern)
-
+            self.log(f'Found detector bands: {self._det_names}')
             if len(self._det_names) == 0:
                 raise ValueError(f'No matching det band found in target raster: {self._det_bpattern}')
 
@@ -75,15 +78,22 @@ class AtmosCorr(CachedOp, SelectOp):
             write_l2r_as_map(l2r, global_attrs, out_dir=self._map_dir, out_file_stem=self._map_stem)
 
         bands = {}
+        raster.meta_dict['atmos_band_meta'] = {}
         for key, value in l2r['bands'].items():
             bands[value['att']['band_name']] = {}
-            value['data'][np.isnan(value['data'])] = -9999
             bands[value['att']['band_name']]['value'] = value['data']
             bands[value['att']['band_name']]['slot'] = key
-            bands[value['att']['band_name']]['no_data'] = -9999
+            bands[value['att']['band_name']]['no_data'] = np.nan
+
+            raster.meta_dict['atmos_band_meta'][value['att']['band_name']] = value['att']
+
 
         raster.bands = bands
         raster = self.post_process(raster, context, clear=True)
+        raster.meta_dict['atmos_global_attrs'] = global_attrs
+
+        # in case of any band was skipped in atmos correction, remove them from original selected bands list
+        self._target_band_names = get_included_elements(self._target_band_names, list(l2r['bands'].keys()))
         raster = SelectOp.pre_process(self, raster, selected_bands_or_indices=self._target_band_names, band_select=True)
 
         return raster
@@ -120,10 +130,9 @@ class AtmosCorr(CachedOp, SelectOp):
         det_names = list(det_res_map.values())
         raster = CachedOp.pre_process(self, raster, context, bands_to_load=det_names)
 
-        # todo: should be improved to be faster
         # for det_res, det_bname in det_res_map.items():
         #     det_elems = np.unique(raster[det_bname]['value']).tolist()
-        #     assert is_contained(det_elems, src_list=[1, 2, 3, 4, 5, 6, 7]), 'Detector band should have values from 1 to 7.'
+        #     assert is_contained(det_elems, src_list=[1, 2, 3, 4, 5, 6, 7]), 'Detector band should have values from 2 to 7.'
 
         det_dict = {res: raster[det_bname]['value'] for res, det_bname in det_res_map.items()}
 

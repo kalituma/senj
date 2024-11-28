@@ -8,7 +8,7 @@ from core.util import assert_bnames, ProductType
 from core.util.op import  call_constraint, OP_Module_Type, op_constraint
 from core.raster import Raster, ModuleType
 from core.raster.funcs import get_band_name_and_index
-from core.util.snap import DemType, InterpolType, terrain_correction_func
+from core.util.snap import DemType, InterpolType, terrain_correction_func, get_mode_and_product_range
 from core.util.gdal import is_epsg_code_valid
 
 
@@ -22,7 +22,7 @@ class TerrainCorrection(ParamOp, SelectOp, SnappyOp):
                  pixel_spacing_meter:float=0.0, pixel_spacing_degree: float=0.0,
                  dem_method:str='BICUBIC_INTERPOLATION',
                  img_method:str='BICUBIC_INTERPOLATION',
-                 save_dem: bool=False, save_incidence_angle=False, epsg:int=4326):
+                 save_dem: bool=False, save_projected_incidence_angle=False, epsg:int=4326):
 
         super().__init__(TERR_CORR_OP)
 
@@ -41,9 +41,17 @@ class TerrainCorrection(ParamOp, SelectOp, SnappyOp):
         self.add_param(demName=str(DemType[dem_name]), saveDem=save_dem,
                        pixelSpacingInMeter=pixel_spacing_meter, pixelSpacingInDegree=pixel_spacing_degree,
                        demResamplingMethod=str(InterpolType[dem_method]), imgResamplingMethod=str(InterpolType[img_method]),
-                       mapProjection=map_projection)
+                       mapProjection=map_projection, saveProjectedLocalIncidenceAngle=save_projected_incidence_angle)
     @call_constraint(module_types=[ModuleType.SNAP], product_types=[ProductType.S1])
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
+
+        assert raster.meta_dict is not None, "Metadata not found in raster"
+
+        mode, range = get_mode_and_product_range(raster.meta_dict)
+
+        if range == 'GRDH':
+            self.log('GRDH product detected. pixelSpacingInDegree will be set to 10.0')
+            self.add_param(pixelSpacingInMeter=10.0)
 
         if self._selected_name_or_index:
             selected_bands, _ = get_band_name_and_index(raster, self._selected_name_or_index)

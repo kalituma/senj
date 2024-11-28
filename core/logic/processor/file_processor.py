@@ -53,7 +53,7 @@ class FileProcessor(Processor):
                 p_list = sorted(p, key=self.sort_func)
 
             if len(p_list) == 0:
-                raise AssertionError(f'No file found with pattern: {self.search_pattern}')
+                raise AssertionError(f'No file was found with pattern: {self.search_pattern}')
 
             for x in p_list:
                 if x.is_file() or x.suffix.lower() == '.safe':

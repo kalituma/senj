@@ -1,5 +1,6 @@
 thermal_noise_removal:
   type: dict
+  nullable: true
   schema:
     polarisations:
       type: 'list'

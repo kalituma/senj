@@ -17,6 +17,7 @@ resample_method: &resample_method
 
 terrain_correction:
   type: 'dict'
+  nullable: true
   schema:
     bands:
       type: 'list'
@@ -35,6 +36,8 @@ terrain_correction:
     img_method:
       type: 'string'
       allowed: *resample_method
+    save_projected_incidence_angle:
+      type: 'boolean'
     save_dem:
       type: 'boolean'
     map_projection:

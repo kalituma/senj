@@ -46,7 +46,7 @@ processor_1: # processor 이름 수정 가능
   input:
     ... 
   operations: [read, resample, ...] # operation 이름 수정 불가
-  read:  
+  read:   # operations에 포함된 operation 중 argument가 필요한 operation을 작성
     ...
   resample:
     ...
@@ -130,24 +130,28 @@ processor_3:
 
 ## Operations 
 
-| Operation Name |          Available Product type           |                                                                                arguments                                                                                 |   module   |                    description                    |
-|:--------------:|:-----------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------:|:-------------------------------------------------:|
-|      read      |                    All                    |                                             ___module(str)___, bands(list[int, str]), bword(str), bname_word_included(bool)                                              | gdal, snap |                                                   |          
-|     write      |                    All                    |                                     ___out_dir(str)___, out_stem(str), out_ext(str), bands(list[int, str]), prefix(str), suffix(str)                                     | gdal, snap |                                                   |
-|    convert     |                    All                    |                                                                           ___to_module(str)___                                                                           | gdal, snap |                                                   |
-|    resample    |                    All                    |                                                           epsg(int), pixel_size(float), resampling_method(str)                                                           | gdal, snap |           epsg 혹은 pixel_size 둘 중 하나는 필수           |
-|     subset     |                    All                    |                                                               ___bounds(list[float])___, bounds_espg(int)                                                                | gdal, snap |                                                   |
-|     select     |                    All                    |                                                              bands(list[int, str]), band_labels(list[str])                                                               | gdal, snap |          band 혹은 band_labels 둘 중 하나는 필수           |
-|     mosaic     |                    All                    |                                                             ___master_module(str)___, bands(list[str, int])                                                              | gdal, snap |              snap module의 경우, 개선 필요               |
-|     stack      |                    All                    |                                                                   band_list(list[list[int,str], None])                                                                   | gdal, snap |                                                   |
-|atmos_corr | Sentinel-2, WorldView/GeoEye, PlanetScope | ___bands___[List[str, int]], ___band_slots___(List[str]), write_map(bool), map_dir(str), map_stem(str), det_bnames(List[str]), det_bword_include(bool), det_pattern(str) | gdal, snap | det_bnames 혹은 det_bword_include, det_pattern 중 선택 |
-| nl_mean_denoising|                    All                    |                                              bands(List[int,str]), h(float), templateWindowSize(int), searchWindowSize(int)                                              | gdal, snap |                                                   |
-| apply_orbit| Sentinel-1 |                                                        orbit_type(str), poly_degree(int), continue_on_fail(bool)                                                         | snap |
-| calibrate| Sentinel-1 |                     polarizations(List[str]), output_sigma(bool), output_beta(bool), output_gamma(bool), output_in_db(bool), output_in_complex(bool)                     |snap||
-| terrain_correction| Sentinel-1 |        bands(List[str, int]), dem_name(str), pixel_spacing_meter(float), pixel_spacing_degree(float), dem_method(str), img_method(str), save_dem(bool), epsg(int)        |snap||
-| speckle_filter| Sentinel-1 | bands(List[str, int]), filter(str), dampling_factor(int), filter_size(list[int]), number_looks(int), window_size(str), target_window_size(str), sigma(str), an_size(int)|snap||
-|thermal_noise_removal| Sentinel-1 | polarizations(List[str])|snap||
-|topsar_deburst| Sentinel-1 | polarizations(List[str])|snap||
+|       Operation Name       |          Available Product type           |                                                                                arguments                                                                                 |   module   |                    description                    |
+|:--------------------------:|:-----------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------:|:-------------------------------------------------:|
+|            read            |                    All                    |                                             ___module(str)___, bands(list[int, str]), bword(str), bname_word_included(bool)                                              | gdal, snap |                                                   |          
+|           write            |                    All                    |                             ___out_path(str)___, ___out_dir(str)___, out_stem(str), out_ext(str), bands(list[int, str]), prefix(str), suffix(str)                             | gdal, snap |        out_path 혹은 out_dir 둘 중 하나를 선택해 지정         |
+|          convert           |                    All                    |                                                                           ___to_module(str)___                                                                           | gdal, snap |                                                   |
+|          resample          |                    All                    |                                                           epsg(int), pixel_size(float), resampling_method(str)                                                           | gdal, snap |           epsg 혹은 pixel_size 둘 중 하나는 필수           |
+|           subset           |                    All                    |                                                               ___bounds(list[float])___, bounds_espg(int)                                                                | gdal, snap |                                                   |
+|           select           |                    All                    |                                                              bands(list[int, str]), band_labels(list[str])                                                               | gdal, snap |          band 혹은 band_labels 둘 중 하나는 필수           |
+|           mosaic           |                    All                    |                                                             ___master_module(str)___, bands(list[str, int])                                                              | gdal, snap |              snap module의 경우, 개선 필요               |
+|           stack            |                    All                    |                                                                   band_list(list[list[int,str], None])                                                                   | gdal, snap |                                                   |
+|         atmos_corr         | Sentinel-2, WorldView/GeoEye, PlanetScope | ___bands___[List[str, int]], ___band_slots___(List[str]), write_map(bool), map_dir(str), map_stem(str), det_bnames(List[str]), det_bword_include(bool), det_pattern(str) | gdal, snap | det_bnames 혹은 det_bword_include, det_pattern 중 선택 |
+| backscattering_coefficient |                    All                    |                                                              bands(list[int, str]), drop_other_bands(bool)                                                               | gdal, snap |                                                   |
+|   cached_speckle_filter    |                    All                    |                                                              bands(list[int, str]), drop_other_bands(bool)                                                               | gdal, snap |                                                   |
+|         normalize          |                    All                    |                                                       method([str]), min(float), max(float), bands(list[int,str])                                                        | gdal, snap |        method는 percentile, minmax 중 선택 가능         |
+|          rev_ref           |                    All                    |                                                                                                                                                                          | gdal, snap |               계산된 지표 반사도를 dn값으로 되돌림               |
+|     nl_mean_denoising      |                    All                    |                                              bands(List[int,str]), h(float), templateWindowSize(int), searchWindowSize(int)                                              | gdal, snap |                                                   |
+|        apply_orbit         |                Sentinel-1                 |                                                        orbit_type(str), poly_degree(int), continue_on_fail(bool)                                                         |    snap    |
+|         calibrate          |                Sentinel-1                 |                     polarizations(List[str]), output_sigma(bool), output_beta(bool), output_gamma(bool), output_in_db(bool), output_in_complex(bool)                     |    snap    |                                                   |
+|     terrain_correction     |                Sentinel-1                 |        bands(List[str, int]), dem_name(str), pixel_spacing_meter(float), pixel_spacing_degree(float), dem_method(str), img_method(str), save_dem(bool), epsg(int)        |    snap    |                                                   |
+|       speckle_filter       |                Sentinel-1                 | bands(List[str, int]), filter(str), dampling_factor(int), filter_size(list[int]), number_looks(int), window_size(str), target_window_size(str), sigma(str), an_size(int) |    snap    |                                                   |
+|   thermal_noise_removal    |                Sentinel-1                 |                                                                         polarizations(List[str])                                                                         |    snap    |                                                   |
+|       topsar_deburst       |                Sentinel-1                 |                                                                         polarizations(List[str])                                                                         |    snap    |                                                   |
 
 * arguments의 ___강조 및 기울여진 항목___ 은 필수 argument을 의미
 
@@ -189,7 +193,10 @@ processor_1:
 
 - ### Write
 - write는 전처리 결과를 디스크에 저장하는 operation으로 processor를 구성하는 operations list의 마지막에 포함될 수 있습니다.
-- write에서 out_dir은 저장할 디렉토리 경로를 나타내며, out_stem은 저장할 파일 이름의 stem을 나타냅니다.
+- out_path는 저장할 파일의 절대 경로를 나타냅니다.
+- out_dir은 저장할 디렉토리 경로를 나타내며, out_stem은 저장할 파일 이름의 stem을 나타냅니다.
+- out_path 혹은 out_dir 둘 중 하나를 사용할 수 있습니다.
+- out_ext, out_stem, prefix, suffix는 out_dir을 사용할 경우, 활용되는 변수들 입니다.
 - out_ext는 저장할 파일의 확장자를 나타내며, bands는 저장할 band의 이름 혹은 인덱스를 나타냅니다.
 - prefix는 파일 이름 앞에 붙일 문자열을 나타내며, suffix는 파일 이름 뒤에 붙일 문자열을 나타냅니다.
 - out_stem의 default 값은 'out', out_ext의 default 값은 앞서 전달된 데이터의 module에 따라 달라집니다.
@@ -204,14 +211,26 @@ processor_1:
 processor_1:
   operations: [..., write]
   ...
-  write:
-    out_dir: 'path/to/dir' # 저장할 디렉토리 경로
-    out_stem: 'out' # 저장할 파일 이름의 stem
-    out_ext: 'tif' # 저장할 파일의 확장자
-    bands: [1, 2, 3] # 저장할 band
-    prefix: 'pre' # 파일 이름 앞에 붙일 문자열
-    suffix: 'suf' # 파일 이름 뒤에 붙일 문자열
+  write:    
+    out_path: 'path/to/file.extension' # 저장할 파일의 절대 경로, out_dir을 사용할 경우, 사용하지 않음
+    out_dir: 'path/to/dir' # 저장할 디렉토리 경로, out_path을 사용할 경우, 사용하지 않음
+    out_stem: 'out' # 저장할 파일 이름의 stem, out_dir을 사용할 경우만 사용
+    out_ext: 'tif' # 저장할 파일의 확장자, out_dir을 사용할 경우만 사용
+    prefix: 'pre' # 파일 이름 앞에 붙일 문자열, out_dir을 사용할 경우만 사용
+    suffix: 'suf' # 파일 이름 뒤에 붙일 문자열, out_dir을 사용할 경우만 사용
+    bands: [1, 2, 3, ...] # 저장할 band index
 ```
+혹은
+```yaml
+processor_1:
+  operations: [..., write]
+  ...
+  write:    
+    out_path: 'path/to/file.extension' # 저장할 파일의 절대 경로    
+    bands: ['밴드_이름_1', '밴드_이름_2', ...] # 저장할 band 이름
+    
+```
+
 
 - ### Convert
 - convert는 데이터를 다른 형식으로 변환하는 operation으로 선행 operation의 module을 다른 module로 바꿔주는 역할을 합니다.
@@ -271,7 +290,7 @@ processor_1:
 ```
 
 - ### Select
-- select는 데이터의 band만 선택하거나, band의 이름을 변경하는 operation입니다.
+- select는 데이터의 특정 band만 선택하거나, 특정 band의 순서를 바꾸거나, band의 이름을 변경하는 operation입니다.
 - bands는 선택할 band의 이름 혹은 인덱스를 나타내며, 리스트 형태로 입력합니다.
 - band_labels는 변환 band의 이름을 나타내며, 리스트 형태로 입력합니다.
 - bands 혹은 band_labels 둘 중 하나는 필수입니다.
@@ -392,6 +411,107 @@ processor_1:
     map_dir: 'path/to/dir' # 이미지를 저장할 디렉토리 경로
     map_stem: 'planet_corrected' # 이미지의 파일 stem
 ```
+- ### backscattering_coefficient
+- backscattering_coefficient은 Sentinel-1 영상의 데이터를 Backscatter 계수로 변환하는 operation입니다.
+- bands는 변환할 밴드의 이름 혹은 인덱스를 나타내며, 리스트 형태로 입력합니다.
+- bands를 입력하지 않을 경우, 전체 밴드에 대해 변환을 수행합니다.
+- drop_other_bands는 변환된 데이터를 제외한 다른 밴드를 제거할 지 여부를 나타내며, default는 False입니다.
+- backscattering_coefficient은 변환을 위한 밴드를 메모리에 로딩해 변환을 수행하므로 snap과 gdal 영상에 사용할 수 있습니다.
+
+```yaml
+processor_1:
+  operations: [..., backscattering_coefficient, ...]
+  ...
+  backscattering_coefficient:
+    bands: ['band_1', 'band_2', ...] # 변환할 밴드
+    drop_other_bands: False # 변환된 데이터를 제외한 다른 밴드를 제거할 지 여부
+...
+```
+
+- backscattering_coefficient 예:
+
+```yaml
+processor_1:
+  operations: [..., backscattering_coefficient, ...]
+  ...
+  backscattering_coefficient:    
+    bands: [1, 2, 3] # 1,2,3번 밴드를 변환
+    drop_other_bands: true # 변환된 데이터를 제외한 다른 밴드를 제거할 지 여부
+...
+```
+
+- ### cached_speckle_filter
+- cached_speckle_filter은 변환할 밴드를 메모리에 로딩해 speckle noise를 제거하는 operation입니다.
+- bands는 speckle noise를 제거할 밴드의 이름 혹은 인덱스를 나타내며, 리스트 형태로 입력합니다.
+- bands를 입력하지 않을 경우, 전체 밴드에 대해 speckle noise 제거를 수행합니다.
+- drop_other_bands는 speckle noise 제거된 데이터를 제외한 다른 밴드를 제거할 지 여부를 나타내며, default는 False입니다.
+- cached_speckle_filter은 snap과 gdal 영상에 사용할 수 있습니다.
+
+```yaml
+processor_1:
+  operations: [..., cached_speckle_filter, ...]
+  ...
+  cached_speckle_filter:
+    bands: ['band_1', 'band_2', ...] # speckle noise를 제거할 밴드
+    drop_other_bands: False # speckle noise 제거된 데이터를 제외한 다른 밴드를 제거할 지 여부
+...
+```
+
+- cached_speckle_filter 예:
+
+```yaml
+processor_1:
+  operations: [..., cached_speckle_filter, ...]
+  ...
+  cached_speckle_filter:    
+    bands: [1, 2, 3] # 1,2,3번 밴드의 speckle noise 제거
+    drop_other_bands: true # speckle noise 제거된 데이터를 제외한 다른 밴드를 제거할 지 여부
+...
+```
+
+- ### normalize
+- normalize은 변환할 밴드를 메모리에 로딩해 데이터를 정규화하는 operation입니다.
+- method는 정규화 방법을 나타내며, percentile, minmax 중 하나를 사용할 수 있습니다.
+- min은 정규화할 최소값(percentile일 경우, 최소값의 백분위수)을 나타내며, max는 정규화할 최대값(percentile일 경우, 최대값의 백분위수)을 나타냅니다.
+- bands는 정규화할 밴드의 이름 혹은 인덱스를 나타내며, 리스트 형태로 입력합니다.
+- bands를 입력하지 않을 경우, 전체 밴드에 대해 정규화를 수행합니다.
+- normalize는 snap과 gdal 영상에 사용할 수 있습니다.
+
+```yaml
+processor_1:
+  operations: [..., normalize, ...]
+  ...
+  normalize:
+    method: 'percentile' # 정규화 방법
+    min: 2 # 정규화할 최소값(percentile일 경우, 최소값의 백분위수)
+    max: 98 # 정규화할 최대값(percentile일 경우, 최대값의 백분위수)
+    bands: ['band_1', 'band_2', ...] # 정규화할 밴드
+...
+```
+
+- normalize 예:
+
+```yaml
+processor_1:
+  operations: [..., normalize, ...]
+  ...
+  normalize:    
+    method: 'minmax' # 정규화 방법
+    min: 0 # 정규화할 최소값
+    max: 255 # 정규화할 최대값
+    bands: [1, 2, 3] # 1,2,3번 밴드를 정규화
+...
+```
+
+- ### rev_ref
+- rev_ref는 Sentinel-2의 대기보정이 완료된 지표 반사도를 dn값으로 되돌리는 operation입니다.
+- rev_ref는 변환할 밴드를 메모리에 로딩해 동작하므로, snap과 gdal 영상에 사용할 수 있습니다.
+
+```yaml
+processor_1:
+  operations: [..., rev_ref, ...]
+  ... # rev_ref는 별도의 argument가 필요하지 않음 
+```
 
 - ### nl_mean_denoising
 - nl_mean_denoising은 opencv의 fastNlMeansDenoising 함수를 활용해 영상의 노이즈를 제거하는 operation입니다.
@@ -401,7 +521,11 @@ processor_1:
 - searchWindowSize는 weighted average를 계산할 때 사용하는 window의 pixel size를 나타내며, int 형태로 입력합니다. (default: 21)
 - 다양한 dtype으로 입력된 밴드는, 해당 operation 처리 내에서 2~98%의 값으로 정규화(0-255)되어 처리됩니다.
 - 노이즈 제거에 대한 자세한 정보는 https://docs.opencv.org/3.4/d1/d79/group__photo__denoise.html#ga4c6b0031f56ea3f98f768881279ffe93 를 참고하세요.
-   
+
+```yaml
+processor_1:
+  opertions: [..., nl_mean_denoising, ...]
+```
 - nl_mean_denoising 예:
 ```yaml
 processor_1:

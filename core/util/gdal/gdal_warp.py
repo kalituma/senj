@@ -28,7 +28,7 @@ def snap_params_to_gdal_warp_options(snap_params: dict) -> dict:
         warp_option_dict['outputBounds'] = snap_params['outputBounds']
         warp_option_dict['outputBoundsSRS'] = 'EPSG:4326'
 
-    if snap_params['use_all_cores']:
+    if 'use_all_cores' in snap_params:
         warp_option_dict['warpOptions'] = ['NUM_THREADS=ALL_CPUS']
     return warp_option_dict
 

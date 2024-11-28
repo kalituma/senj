@@ -17,6 +17,7 @@ def minmax_norm(img:np.ndarray):
     return img
 
 def percentile_norm_mband(img:np.ndarray, p_low:float=2, p_high:float=98):
+    # added from original preprocessing code
 
     or_shape = img.shape
     reshaped = img.reshape(-1, img.shape[2])

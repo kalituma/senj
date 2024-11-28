@@ -5,6 +5,7 @@ class ParamOp(Op):
         super().__init__(op_name)
         self._snap_params = {}
     def add_param(self, **kwargs):
+        self.log(f'Adding parameters: {kwargs}')
         self._snap_params.update(kwargs)
 
     def get_param(self, key:str):

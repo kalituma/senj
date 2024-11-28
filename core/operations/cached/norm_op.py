@@ -58,9 +58,11 @@ class Normalize(CachedOp):
             bands[np.isnan(bands)] = 0
             bands = bands.astype(np.uint8)
         elif self._method == PERCENTILE:
-            bands = percentile_norm(bands, self._min, self._max)
+            # bands = percentile_norm(bands, self._min, self._max)
+            bands = percentile_norm_mband(bands, self._min, self._max)
             bands[np.isnan(bands)] = 0
-            bands = (bands * 255).astype(np.uint8)
+            # bands = np.array(bands * 255).astype(np.uint8)
+            bands = bands.astype(np.uint8)
 
         for key, band in zip(keys, np.split(bands, len(keys), axis=2)):
             raster.bands[key]['value'] = band.squeeze()

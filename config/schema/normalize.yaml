@@ -1,0 +1,23 @@
+normalize:
+  type: 'dict'
+  required: True
+  schema:
+    method:
+      type: 'string'
+      required: True
+      allowed: ['minmax', 'percentile']
+    min:
+      type: 'number'
+      required: false
+    max:
+      type: 'number'
+      required: false
+    bands:
+      type: 'list'
+      empty: False
+      required: false
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'

@@ -11,6 +11,12 @@ from core.util.snap import get_metadata_recursive, get_metadata_value, grid_geom
 if TYPE_CHECKING:
     from esa_snappy import Product
 
+def get_mode_and_product_range(meta_dict:dict) -> tuple[str, ProductType]:
+    product = meta_dict['Abstracted_Metadata']['PRODUCT']
+    mode = product.split('_')[1]
+    product_range = product.split('_')[2]
+    return mode, product_range
+
 def get_polarization(meta_dict:dict) -> Union[list[str], None]:
     pols = list(set(found.value for found in parse('$..*[polarization]').find(meta_dict)))
 

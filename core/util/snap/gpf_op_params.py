@@ -53,17 +53,19 @@ def build_calib_params(selectedPolarisations:list[str], outputSigmaBand=True, ou
     return _build_params(selectedPolarisations=polarArray, outputSigmaBand=outputSigmaBand, outputGammaBand=outputGammaBand, outputBetaBand=outputBetaBand,
                          outputImageInComplex=outputImageInComplex, outputImageScaleInDb=outputImageScaleInDb)
 
-def build_terrain_correction_params(sourceBandNames:list[str], imgResamplingMethod:str, demName:str,
-                                    demResamplingMethod:str, pixelSpacingInMeter:float, pixelSpacingInDegree:float,
-                                    mapProjection:str, saveDem:bool=False):
+def build_terrain_correction_params(**kwargs):
 
     jpy = load_snap('jpy')
-
     double_type = jpy.get_type('java.lang.Double')
-    source_bands = jpy.array('java.lang.String', sourceBandNames)
-    return _build_params(sourceBands=source_bands, imgResamplingMethod=imgResamplingMethod, demName=demName, demResamplingMethod=demResamplingMethod,
-                         pixelSpacingInMeter=double_type(pixelSpacingInMeter), pixelSpacingInDegree=double_type(pixelSpacingInDegree), mapProjection=mapProjection,
-                         saveDEM=saveDem)
+
+    if 'pixelSpacingInMeter' in kwargs and 'pixelSpacingInDegree' in kwargs:
+        kwargs['pixelSpacingInMeter'] = double_type(kwargs['pixelSpacingInMeter'])
+        kwargs['pixelSpacingInDegree'] = double_type(kwargs['pixelSpacingInDegree'])
+
+    if 'sourceBandNames' in kwargs:
+        kwargs['sourceBandNames'] = jpy.array('java.lang.String', kwargs['sourceBandNames'])
+
+    return _build_params(**kwargs)
 
 def build_thermal_noise_removal_params(selectedPolarisations:list[str]):
 
