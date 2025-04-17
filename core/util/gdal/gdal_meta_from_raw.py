@@ -14,3 +14,13 @@ def build_grid_meta_from_gdal(ds:"Dataset") -> dict:
     grid['YDIM'] = ds.GetGeoTransform()[5]
     grid['RESOLUTION'] = grid['XDIM']
     return grid
+
+
+def make_meta_dict_from_grib(ds:"Dataset") -> dict:
+
+    meta_dict = {}
+    meta_dict['projection'] = ds.GetProjection()
+    meta_dict['grib_ids'] = ds.GetRasterBand(1).GetMetadataItem('GRIB_IDS')
+
+    return meta_dict
+    

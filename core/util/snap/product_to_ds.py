@@ -11,7 +11,6 @@ def find_epsg_from_product(product:"Product") -> int:
     jpy = load_snap('jpy')
     Product = load_snap('Product')
 
-
     CRS = jpy.get_type('org.geotools.referencing.CRS')
     return CRS.lookupEpsgCode(Product.findModelCRS(product.getSceneGeoCoding()), True)
 

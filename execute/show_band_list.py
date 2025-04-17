@@ -6,8 +6,9 @@ from logging import info
 from pathlib import Path
 
 from core.config import expand_var
-from core.util import identify_product, get_btoi_from_tif, read_pickle, parse_meta_xml, ProductType
-from core.util.gdal import read_tif
+from core.util import get_btoi_from_tif, read_pickle, parse_meta_xml, ProductType
+from core.util.identify import identify_product
+from core.util.gdal import read_single
 from core.util.snap import read_gpf
 from core.raster.funcs import load_images_paths
 
@@ -46,7 +47,7 @@ def read_bands(file_path) -> list:
             band_list = [key for key in meta_dict['BAND_INFO']]
             raster_num = len(meta_dict['BAND_INFO'])
         elif product_type == ProductType.PS:
-            tif_ds = read_tif(image_paths[0])
+            tif_ds = read_single(image_paths[0])
             raster_num = tif_ds.RasterCount
         else:
             raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')

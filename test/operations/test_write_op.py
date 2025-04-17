@@ -43,7 +43,7 @@ class TestWriteOp(unittest.TestCase):
     def test_write_safe_op(self):
         with self.subTest('write_s1_safe_using_snap'):
             context = Context(None)
-            read = Read(module='SNAP', bword='*_VV', bname_word_included=True)
+            read = Read(module='SNAP', sel_by_bword='*_VV', bname_word_included=True)
             safe_raster = read(self.s1_safe_grdh_path, context)
             self.assertEqual(safe_raster.get_band_names(), ['Amplitude_VV', 'Intensity_VV'])
 
@@ -54,7 +54,7 @@ class TestWriteOp(unittest.TestCase):
     def test_write_dim_op(self):
         with self.subTest('write_s1_dim_using_snap'):
             context = Context(None)
-            read = Read(module='SNAP', bword='*', bname_word_included=True)
+            read = Read(module='SNAP', sel_by_bword='*', bname_word_included=True)
             dim_raster = read(self.s1_dim_path, context)
             self.assertEqual(dim_raster.get_band_names(), ['Sigma0_VV'])
 
@@ -75,7 +75,7 @@ class TestWriteOp(unittest.TestCase):
             self.assertEqual(result.get_band_names(), ['BAND_R'])
 
         with self.subTest('write_wv_tif_using_gdal'):
-            wv_raster = Read(module='gdal', bword='BAND*', bname_word_included=True)(self.wv_tif_path, context)
+            wv_raster = Read(module='gdal', sel_by_bword='BAND*', bname_word_included=True)(self.wv_tif_path, context)
             self.assertEqual(wv_raster.get_band_names(), ['BAND_B', 'BAND_G', 'BAND_R', 'BAND_N'])
             out_dir = os.path.join(self.test_data_root, 'target', 'test_out')
             out_result_path = Write(out_dir=out_dir, out_stem='wv_tif_out', out_ext='tif', bands=['BAND_R'])(wv_raster)

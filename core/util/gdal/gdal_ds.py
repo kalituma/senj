@@ -47,14 +47,17 @@ def create_ds_with_arr(arr:np.ndarray, gdal_format,
     band_num, arr_height, arr_width = arr.shape
     dtype = arr.dtype.name
 
-    arr[arr == no_data] = np.nan
+    if arr.dtype.itemsize < 4:
+        arr[arr == no_data] = 0
+    else:
+        arr[arr == no_data] = np.nan
 
     mem_ds = create_ds(gdal_format, arr_width, arr_height,
                        band_num=band_num, dtype=dtype,
                        proj_wkt=proj_wkt, transform=transform,
                        metadata=metadata, out_path=out_path,
                        is_bigtiff=is_bigtiff, compress=compress,
-                       no_data=np.nan)
+                       no_data=no_data)
     mem_ds.WriteArray(arr)
     mem_ds.FlushCache()
 

@@ -54,7 +54,6 @@ class file_info(object):
         self.filename = filename
         self.init_from_ds(fh)
 
-
     def report(self):
         print("Filename: " + self.filename)
         print("File Size: %dx%dx%d" % (self.xsize, self.ysize, self.bands))
@@ -107,10 +106,10 @@ class file_info(object):
         tw_xoff = int((tgw_ulx - t_geotransform[0]) / t_geotransform[1] + 0.1)
         tw_yoff = int((tgw_uly - t_geotransform[3]) / t_geotransform[5] + 0.1)
         tw_xsize = (
-            int((tgw_lrx - t_geotransform[0]) / t_geotransform[1] + 0.5) - tw_xoff
+                int((tgw_lrx - t_geotransform[0]) / t_geotransform[1] + 0.5) - tw_xoff
         )
         tw_ysize = (
-            int((tgw_lry - t_geotransform[3]) / t_geotransform[5] + 0.5) - tw_yoff
+                int((tgw_lry - t_geotransform[3]) / t_geotransform[5] + 0.5) - tw_yoff
         )
 
         if tw_xsize < 1 or tw_ysize < 1:
@@ -120,10 +119,10 @@ class file_info(object):
         sw_xoff = int((tgw_ulx - self.geotransform[0]) / self.geotransform[1] + 0.1)
         sw_yoff = int((tgw_uly - self.geotransform[3]) / self.geotransform[5] + 0.1)
         sw_xsize = (
-            int((tgw_lrx - self.geotransform[0]) / self.geotransform[1] + 0.5) - sw_xoff
+                int((tgw_lrx - self.geotransform[0]) / self.geotransform[1] + 0.5) - sw_xoff
         )
         sw_ysize = (
-            int((tgw_lry - self.geotransform[3]) / self.geotransform[5] + 0.5) - sw_yoff
+                int((tgw_lry - self.geotransform[3]) / self.geotransform[5] + 0.5) - sw_yoff
         )
 
         if sw_xsize < 1 or sw_ysize < 1:

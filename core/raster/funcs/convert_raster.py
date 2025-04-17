@@ -5,7 +5,7 @@ from core.util import assert_bnames, module_type
 from core.raster import ModuleType, Raster
 from core.util.snap import find_proj_from_band, create_product, add_band_to_product, find_gt_from_band, copy_product, find_geocoding_from_wkt, find_proj_from_product
 from core.util.gdal import create_ds_with_dict, copy_ds
-from core.raster.funcs import read_band_from_raw, set_raw_metadict, update_meta_band_map, get_band_name_and_index
+from core.raster.funcs import read_band_from_raw, set_raw_metadict, get_band_name_and_index
 
 def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union[ModuleType, str]) -> Raster:
 

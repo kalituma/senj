@@ -7,12 +7,15 @@ class ProductType(Enum):
     PS = 'PlanetScope'
     K3 = 'Kompsat3'
     CP = 'Capella'
-    CA = 'CAS500'
+    CA = 'CAS500'    
+    GK2A = 'GK2A'
+    LDAPS = 'LDAPS'
 
     GOCI_CDOM = 'GOCI_CDOM'
     GOCI_AC = 'GOCI_AC'
     SMAP = 'SMAP'
     KHOA_SST = 'KHOA_SST'
+    
 
     UNKNOWN = 'UNKNOWN'
 

@@ -1,11 +1,14 @@
+from typing import Callable, Tuple
 import json
-from pathlib import Path
 from lxml import etree
 from netCDF4 import Dataset
+import functools
 
+from core.util import ProductType, query_dict, read_json
 from core.util import S1_MISSION_PATTERN, S2_MISSION_PATTERN, PS_MISSION_PATTERN, WV_MISSION_PATTERN
-from core.util import ProductType, read_pickle, query_dict
-from core.util.identify import safe_test, dim_test, planet_test, worldview_test
+from core.util import ProductType, query_dict, read_json
+from core.util.gdal import read_single
+from core.util.identify import safe_test, dim_test, planet_test, worldview_test, capella_test, cas500_test, k3_test
 
 def check_product_type_using_meta(meta_dict: dict) -> ProductType:
     if meta_dict is None or len(meta_dict) == 0:
@@ -33,6 +36,23 @@ def check_product_type_using_meta(meta_dict: dict) -> ProductType:
     except:
         return ProductType.UNKNOWN
 
+def with_unknown_product_fallback(func: Callable) -> Callable:
+    
+    @functools.wraps(func)
+    def wrapper(src_path_str: str) -> Tuple[ProductType, str]:
+        try:
+            result = func(src_path_str) 
+            if result is None:
+                raise ValueError(f"Unknown product type for file: {src_path_str}")
+            return result
+        except Exception as e:
+            if isinstance(e, ValueError) and "Unknown product type" in str(e):
+                raise
+            raise ValueError(f"Unknown product type for file: {src_path_str}")
+    
+    return wrapper
+
+@with_unknown_product_fallback
 def identify_safe(src_path_str:str):
     ################
     ## Sentinel-1,2_SAFE
@@ -53,6 +73,7 @@ def identify_safe(src_path_str:str):
     elif mission_id == 'S1B' or mission_id == 'S1A':
         return ProductType.S1, meta_path
 
+@with_unknown_product_fallback
 def identify_dim(src_path_str:str):
     mission_id = ''
     data_files = dim_test(dim_or_data_path=src_path_str)
@@ -70,6 +91,7 @@ def identify_dim(src_path_str:str):
     elif mission_id == 'SENTINEL-1B':
         return ProductType.S1, data_files['dim']
 
+@with_unknown_product_fallback
 def identify_wv(src_path_str:str):
     mission_id = ''
     data_files = worldview_test(tif_or_xml_path=src_path_str)
@@ -82,6 +104,30 @@ def identify_wv(src_path_str:str):
             if mission_id == 'WV02' or mission_id == 'WV03' or mission_id == 'GE01':
                 return ProductType.WV, str(meta_path)
 
+@with_unknown_product_fallback
+def identify_capella(src_path_str:str):    
+    data_files = capella_test(src_path_str)
+    if 'metadata' in data_files:
+        meta_path = data_files['metadata']['path']        
+        meta_dict = read_json(meta_path)
+        platform_name = query_dict('$.properties.platform', meta_dict)
+        if len(platform_name) > 0:
+            if 'capella' in platform_name[0]:
+                return ProductType.CP, str(meta_path)
+
+@with_unknown_product_fallback
+def identify_cas500(src_path_str:str):
+    data_files = cas500_test(src_path_str)
+    if 'metadata' in data_files:
+        return ProductType.CA, str(data_files['metadata']['path'])
+
+@with_unknown_product_fallback
+def identify_k3(src_path_str:str):
+    data_files = k3_test(src_path_str)
+    if 'metadata' in data_files:
+        return ProductType.K3, str(data_files['metadata']['path'])
+
+@with_unknown_product_fallback
 def identify_ps(src_path_str:str):
     mission_id = ''
     data_files = planet_test(src_path_str)
@@ -104,87 +150,37 @@ def identify_ps(src_path_str:str):
             if 'planetscope' in mission_attrs_values[0]:
                 return ProductType.PS, meta_path
 
+@with_unknown_product_fallback
 def identify_nc(src_path_str:str):
     nc_file = Dataset(src_path_str, 'r')
 
-    title = getattr(nc_file, 'title', None)
+    keys = ['instrument', 'title']
 
-    if title is not None:
-        if 'GK2B GOCI-II Level-2 Data' in title:
-            if 'geophysical_data' in nc_file.groups:
-                if 'Rrs' in nc_file['geophysical_data'].groups:
-                    return ProductType.GOCI_AC, src_path_str
-                if 'CDOM' in nc_file['geophysical_data'].variables:
-                    return ProductType.GOCI_CDOM, src_path_str
-        elif 'SMAP' in title:
-            return ProductType.SMAP, src_path_str
-        elif '해수면온도' in title:
-            algorithm = getattr(nc_file, 'algorithm', None)
-            if algorithm:
-                if 'SST' in algorithm:
-                    return ProductType.KHOA_SST, src_path_str
+    for key in keys:    
+        value = getattr(nc_file, key , None)
+        if value is not None:            
+            if 'GK2B GOCI-II Level-2 Data' in value:
+                if 'geophysical_data' in nc_file.groups:
+                    if 'Rrs' in nc_file['geophysical_data'].groups:
+                        return ProductType.GOCI_AC, src_path_str
+                    if 'CDOM' in nc_file['geophysical_data'].variables:
+                        return ProductType.GOCI_CDOM, src_path_str
+            elif 'SMAP' in value:
+                return ProductType.SMAP, src_path_str
+            elif '해수면온도' in value:
+                algorithm = getattr(nc_file, 'algorithm', None)
+                if algorithm:
+                    if 'SST' in algorithm:
+                        return ProductType.KHOA_SST, src_path_str
+            elif 'GK-2A' in value:
+                return ProductType.GK2A, src_path_str
 
+@with_unknown_product_fallback
+def identify_gb(src_path_str:str):
+    
+    ds = read_single(src_path_str)
+    band_desc = ds.GetRasterBand(1).GetMetadataItem("GRIB_IDS")
 
-
-def identify_product(src_path_str:str) -> tuple[ProductType,str]:
-
-    src_path = Path(src_path_str)
-    if not src_path.exists():
-        raise FileNotFoundError(f'{src_path_str} does not exist.')
-
-    meta_path = ''
-    ext = src_path.suffix
-
-    if ext == '.tif':
-        pkl = src_path.with_suffix('.pkl')
-        if pkl.exists():
-            meta_dict = read_pickle(pkl)
-            return check_product_type_using_meta(meta_dict), str(pkl)
-
-    try:
-        ################
-        ## Sentinel-1,2_SAFE
-        identified = identify_safe(src_path_str)
-        if identified:
-            return identified
-    except:
-        pass
-
-    try:
-        ################
-        ## Sentinel-1,2_DIM
-        identified = identify_dim(src_path_str)
-        if identified:
-            return identified
-    except:
-        pass
-
-    try:
-        ################
-        ## WorldView_TIF
-        identified = identify_wv(src_path_str)
-        if identified:
-            return identified
-    except:
-        pass
-
-    try:
-        ################
-        ## PlanetScope
-        identified = identify_ps(src_path_str)
-        if identified:
-            return identified
-    except:
-        pass
-
-    try:
-        ################
-        ## NetCDF FILE
-        identified = identify_nc(src_path_str)
-        if identified:
-            return identified
-    except:
-        pass
-
-    # todo: add warning message to alert that meta_path is not found
-    return ProductType.UNKNOWN, meta_path
+    if 'Seoul' in band_desc and 'Analysis_and_forecast' in band_desc:
+        return ProductType.LDAPS, src_path_str
+    

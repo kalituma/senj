@@ -10,10 +10,10 @@ EXT_MAP = {
 }
 
 MODULE_EXT_MAP = {
-    'gdal' : ['tif', 'xml'],
+    'gdal' : ['tif', 'xml', 'safe'],
     'snap' : ['dim', 'tif', 'safe', 'xml'],
     'netcdf' : ['nc', 'nc4']
 }
 
 
-LOAD_IMAGES_ALLOWED_EXT = ['tif', 'dim', 'xml', 'safe', 'nc', 'nc4']
+LOAD_IMAGES_ALLOWED_EXT = ['tif', 'dim', 'xml', 'safe', 'nc', 'nc4', 'gb2']

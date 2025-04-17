@@ -39,7 +39,8 @@ def merge(datasets:list["Dataset"]):
         no_data_list += no_data
     concat_band = np.concatenate(band_list, axis=0)
 
-    merged_ds = create_ds_with_arr(concat_band, gdal_format='MEM', proj_wkt=datasets[0].GetProjection(), transform=datasets[0].GetGeoTransform())
+    merged_ds = create_ds_with_arr(concat_band, gdal_format='MEM', proj_wkt=datasets[0].GetProjection(), transform=datasets[0].GetGeoTransform(),
+                                   no_data=no_data_list[0])
 
     for i in range(0, merged_ds.RasterCount):
         merged_ds.GetRasterBand(i + 1).SetNoDataValue(no_data_list[i])

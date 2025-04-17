@@ -8,6 +8,7 @@ from core.util import region_to_wkt, assert_bnames, make_transform
 from core.util.op import OP_Module_Type, op_constraint
 from core.util.snap import subset_gpf
 from core.util.gdal import is_epsg_code_valid
+from core.util.snap import find_epsg_from_product
 
 if TYPE_CHECKING:
     from core.logic import Context
@@ -23,6 +24,8 @@ class Subset(ParamOp, WarpOp):
 
         # self._selected_bands = bands
         self._bounds = bounds
+        self._bounds_epsg = bounds_epsg
+
         is_epsg_code_valid(bounds_epsg)
         if bounds_epsg == 4326:
             self._bounds_wkt = region_to_wkt(bounds)
@@ -37,7 +40,7 @@ class Subset(ParamOp, WarpOp):
     def __call__(self, raster:Raster, context:"Context", *args, **kwargs):
 
         if raster.module_type == ModuleType.SNAP:
-            assert self.module_type == OP_Module_Type.SNAP, 'Subset operation is only available for SNAP module'
+            assert self.module_type == OP_Module_Type.SNAP, 'Subset operation is only available for SNAP module'            
 
             self.add_param(bandNames=raster.get_band_names())
             tiePoints = raster.get_tie_point_grid_names()

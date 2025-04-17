@@ -40,7 +40,7 @@ class TestReadOp(unittest.TestCase):
         s2_without_meta = os.path.join(self.test_data_root, 'tif', 'no_meta', 'out_0_read.tif')
 
         with self.subTest('read safe file with band-word included option'):
-            raster = Read(module='snap', bword='*VV', bname_word_included=True)(self.s1_safe_grdh_path, context)
+            raster = Read(module='snap', sel_by_bword='*VV', bname_word_included=True)(self.s1_safe_grdh_path, context)
             self.assertEqual(raster.get_band_names(), ['Amplitude_VV', 'Intensity_VV'])
         with self.subTest('read safe file with specific bands'):
             raster = Read(module='snap', bname_word_included=False)(self.s1_safe_grdh_path, context)
@@ -57,7 +57,7 @@ class TestReadOp(unittest.TestCase):
 
         with self.subTest('read tif not having meta using snap'):
             Product = load_snap('Product')
-            result_raster = Read(module='snap', bword='*4', bname_word_included=True)(s2_without_meta, context)
+            result_raster = Read(module='snap', sel_by_bword='*4', bname_word_included=True)(s2_without_meta, context)
             self.assertEqual(list(result_raster.get_band_names()), ['band_4'])
             self.assertEqual(result_raster.meta_dict, None)
             self.assertEqual(result_raster.product_type, ProductType.UNKNOWN)
@@ -79,14 +79,14 @@ class TestReadOp(unittest.TestCase):
         with self.subTest('read world view'):
             tif_raster = Read(module='snap', bands=['BAND_R', 'BAND_B'])(self.wv_tif_path, context)
             self.assertEqual(list(tif_raster.get_band_names()), ['BAND_R', 'BAND_B'])
-            xml_raster = Read(module='snap', bname_word_included=True, bword='*_G')(self.wv_xml_path, context)
+            xml_raster = Read(module='snap', bname_word_included=True, sel_by_bword='*_G')(self.wv_xml_path, context)
             self.assertEqual(list(xml_raster.get_band_names()), ['BAND_G'])
             tif_raster = xml_raster = None
             wv_gdal_raster = Read(module='gdal', bands=['BAND_R', 'BAND_N'])(self.wv_tif_path, context)
             self.assertEqual(list(wv_gdal_raster.get_band_names()), ['BAND_R', 'BAND_N'])
 
         with self.subTest('read geo eye 1'):
-            ge_snap = Read(module='snap', bname_word_included=True, bword='*_G')(self.ge_tif_path, context)
+            ge_snap = Read(module='snap', bname_word_included=True, sel_by_bword='*_G')(self.ge_tif_path, context)
             self.assertEqual(list(ge_snap.get_band_names()), ['BAND_G'])
             ge_snap_xml = Read(module='snap')(self.ge_xml_path, context)
             self.assertEqual(list(ge_snap_xml.get_band_names()), ['BAND_B', 'BAND_G', 'BAND_R', 'BAND_N'])
@@ -325,8 +325,8 @@ class TestReadOp(unittest.TestCase):
     def test_select_band(self):
 
         bword = '*B1'
-        r = Read(module='SNAP', bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
-        r_gdal = Read(module='GDAL', bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
+        r = Read(module='SNAP', sel_by_bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
+        r_gdal = Read(module='GDAL', sel_by_bword=bword, bname_word_included=True)(self.s2_dim_path, Context(None))
         self.assertTrue(compare_nested_dicts_with_arrays(r.meta_dict, r_gdal.meta_dict))
 
     def test_convert_ps(self):

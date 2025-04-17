@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Union, Tuple
+from typing import TYPE_CHECKING, Union, Tuple, Dict, List, Optional, Any
+from pathlib import Path
 
 from core.util import ProductType, assert_bnames, get_btoi_from_tif
 from core.util.nc import get_band_names_nc
@@ -8,8 +9,7 @@ if TYPE_CHECKING:
     from osgeo.gdal import Dataset
     from esa_snappy import Product
 
-def check_bname_index_valid(raster:Raster, band_id_list:list[Union[str, int]]) -> bool:
-
+def check_bname_index_valid(raster: Raster, band_id_list: List[Union[str, int]]) -> bool:
     if band_id_list is None:
         return False
 
@@ -22,8 +22,7 @@ def check_bname_index_valid(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return True
 
-def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -> tuple[list[str], list[int]]: # done
-
+def get_band_name_and_index(raster: Raster, band_id_list: List[Union[str, int]]) -> Tuple[List[str], List[int]]:
     is_index = all([isinstance(b, int) for b in band_id_list])
 
     if is_index:
@@ -36,35 +35,73 @@ def get_band_name_and_index(raster:Raster, band_id_list:list[Union[str, int]]) -
 
     return band_name, index
 
-def init_bname_index_in_meta(meta_dict:dict, raw:Union["Dataset", "Product"], product_type:ProductType, module_type:ModuleType, band_to_index:dict=None) -> dict: # done
+def process_provided_band_to_index(band_to_index: Dict[str, int]) -> Tuple[Dict[str, int], Dict[int, str]]:
+    b_to_i = {b: int(i) for b, i in band_to_index.items()}
+    i_to_b = {int(i): b for b, i in band_to_index.items()}
+    return b_to_i, i_to_b
 
-    if meta_dict:
-        if 'band_to_index' not in meta_dict or 'index_to_band' not in meta_dict:
-            if band_to_index:
-                meta_dict['band_to_index'] = {b: int(i) for b, i in band_to_index.items()}
-                meta_dict['index_to_band'] = {int(i): b for b, i in band_to_index.items()}
-            else:
-                if product_type == ProductType.S1 or product_type == ProductType.S2 or product_type == ProductType.PS:
-                    if module_type == ModuleType.GDAL:
-                        band_indices = list(range(1, raw.RasterCount + 1))
-                        bnames = [f'band_{index}' for index in band_indices]
-                    elif module_type == ModuleType.SNAP:
-                        bnames = list(raw.getBandNames())
-                    else:
-                        raise NotImplementedError(f'{module_type} is not implemented.')
-                    meta_dict['band_to_index'] = {b: i + 1 for i, b in enumerate(bnames)}
-                    meta_dict['index_to_band'] = {i + 1: b for i, b in enumerate(bnames)}
-                elif product_type == ProductType.WV:
-                    assert 'BAND_INFO' in meta_dict, f'BAND_INFO is not found in meta_dict'
-                    meta_dict['band_to_index'] = {band_name:band_info['index'] for band_name, band_info in meta_dict['BAND_INFO'].items()}
-                    meta_dict['index_to_band'] = {band_info['index']:band_name for band_name, band_info in meta_dict['BAND_INFO'].items()}
-                elif product_type == ProductType.GOCI_CDOM or product_type == ProductType.GOCI_AC:
-                    if module_type == ModuleType.NETCDF:
-                        meta_dict['band_to_index'] = {b:i+1 for i, b in enumerate(get_band_names_nc(raw))}
-                        meta_dict['index_to_band'] = {i+1:b for i, b in enumerate(get_band_names_nc(raw))}
+def process_sentinel_planetscope_capella(raw: Union["Dataset", "Product"], module_type: ModuleType) -> Tuple[Dict[str, int], Dict[int, str]]:
+    if module_type == ModuleType.GDAL:
+        band_indices = list(range(1, raw.RasterCount + 1))
+        bnames = [f'band_{index}' for index in band_indices]
+    elif module_type == ModuleType.SNAP:
+        bnames = list(raw.getBandNames())
+    else:
+        raise NotImplementedError(f'{module_type} is not implemented.')
+    
+    b_to_i = {b: i + 1 for i, b in enumerate(bnames)}
+    i_to_b = {i + 1: b for i, b in enumerate(bnames)}
+    return b_to_i, i_to_b
 
-                else:
-                    raise NotImplementedError(f'{product_type} is not implemented.')
+def process_worldview(meta_dict: Dict[str, Any]) -> Tuple[Dict[str, int], Dict[int, str]]:
+    assert 'BAND_INFO' in meta_dict, f'BAND_INFO is not found in meta_dict'
+    b_to_i = {band_name: band_info['index'] for band_name, band_info in meta_dict['BAND_INFO'].items()}
+    i_to_b = {band_info['index']: band_name for band_name, band_info in meta_dict['BAND_INFO'].items()}
+    return b_to_i, i_to_b
 
+def process_goci_gk2a(raw: Union["Dataset", "Product"], module_type: ModuleType) -> Tuple[Dict[str, int], Dict[int, str]]:
+    if module_type == ModuleType.NETCDF:
+        band_names = get_band_names_nc(raw)
+        b_to_i = {b: i + 1 for i, b in enumerate(band_names)}
+        i_to_b = {i + 1: b for i, b in enumerate(band_names)}
+        return b_to_i, i_to_b
+    
+    raise NotImplementedError(f'{module_type} is not implemented for GOCI products.')
 
+def init_bname_index_in_meta(
+    meta_dict: Dict[str, Any], 
+    raw: Union["Dataset", "Product"], 
+    product_type: ProductType, 
+    module_type: ModuleType, 
+    band_to_index: Optional[Dict[str, int]] = None
+) -> Dict[str, Any]:
+    
+    if not meta_dict:
+        return meta_dict
+        
+    if 'band_to_index' in meta_dict and 'index_to_band' in meta_dict:
+        return meta_dict
+    
+    try:
+        if band_to_index:
+            b_to_i, i_to_b = process_provided_band_to_index(band_to_index)
+        
+        elif product_type in [ProductType.S1, ProductType.S2, ProductType.PS, ProductType.CP]:
+            b_to_i, i_to_b = process_sentinel_planetscope_capella(raw, module_type)
+            
+        elif product_type == ProductType.WV:
+            b_to_i, i_to_b = process_worldview(meta_dict)
+            
+        elif product_type in [ProductType.GOCI_CDOM, ProductType.GOCI_AC]:
+            b_to_i, i_to_b = process_goci_gk2a(raw, module_type)
+            
+        else:
+            raise NotImplementedError(f'{product_type} is not implemented.')
+            
+        meta_dict['band_to_index'] = b_to_i
+        meta_dict['index_to_band'] = i_to_b
+        
+    except Exception as e:
+        print(f"Error initializing band name index: {e}")
+    
     return meta_dict

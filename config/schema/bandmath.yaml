@@ -1,0 +1,17 @@
+bandmath:
+  type: 'dict'  
+  schema:
+    func_name:
+      type: 'string'
+      required: true
+    func_target_bands:
+      type: 'list'
+      required: true
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'
+    out_band_name:
+      type: 'string'
+      required: false

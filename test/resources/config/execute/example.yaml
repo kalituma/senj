@@ -1,0 +1,43 @@
+planetscope_1:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/20200817_013159_78_2277_3B.0.tif'
+  operations: ['read', 'feature_matching', 'clip']
+  read:
+    module: 'opencv'
+  atmos_corr:
+    bands: ['band_1', 'band_2', 'band_3', 'band_4']
+    band_slots: ['blue', 'green', 'red', 'nir']
+    write_map: true
+    map_dir: '$ROOT_DIR/OUTPUTDATA/PS'
+    map_stem: '20200817_013159_78_2277_3B'
+
+planetscope_2:
+  input:
+    path: '$ROOT_DIR/INPUTDATA/PS/20200817_013159_99_2277_3B.0.tif'
+  operations: ['read', 'feature_matching', 'clip']
+  read:
+    module: 'gdal'
+  atmos_corr:
+    bands: ['band_1', 'band_2', 'band_3', 'band_4']
+    band_slots: ['blue', 'green', 'red', 'nir']
+    write_map: true
+    map_dir: '$ROOT_DIR/OUTPUTDATA/PS'
+    map_stem: '20200817_013159_99_2277_3B'
+
+mosaic_subset_warp_write:
+  input:
+    path: ['{{planetscope_1}}', '{{planetscope_2}}']
+  operations: ['mosaic', 'subset', 'resample', 'write']
+  mosaic:
+    master_module: 'gdal'
+  subset:
+    bounds: [326879, 3899616, 332778, 3894407]
+    bounds_epsg: 32652
+  resample:
+    epsg: 4326
+    pixel_size: 0.0001
+  write:
+    out_dir: '$ROOT_DIR/OUTPUTDATA/PS'
+    out_stem: 'ps'
+    suffix: 'atmos_corr_mosaic'
+    out_ext: 'tif'

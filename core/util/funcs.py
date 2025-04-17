@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Callable
 
 import re, os
 import numpy as np
@@ -105,3 +105,23 @@ def check_in_any_case(src_str:str, band_target_list:list) -> bool:
 
 def str_to_hash(src_str:str) -> int:
     return abs(hash(src_str)) % (10 ** 8)
+
+def get_callable_arg_count(func:Callable) -> int:
+    if hasattr(func, 'func_code'):
+        return func.func_code.co_argcount
+    elif hasattr(func, '__code__'):
+        return func.__code__.co_argcount
+
+    try:
+        import inspect
+        sig = inspect.signature(func)
+        arg_count = 0
+        for param in sig.parameters.values():
+            if param.kind in [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.POSITIONAL_ONLY] \
+                and param.default == param.empty:
+                arg_count += 1
+        return arg_count    
+    except (ImportError, ValueError):
+        pass
+
+    return 0

@@ -1,0 +1,12 @@
+histogram_equalization:
+  type: 'dict'
+  nullable: true
+  schema:
+    bands:
+      type: 'list'
+      required: false
+      schema:
+        oneof:
+          - type: 'integer'
+            min: 1
+          - type: 'string'

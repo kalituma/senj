@@ -1,10 +1,10 @@
 import os
 from typing import List, AnyStr, Dict, Callable
 from pathlib import Path
-from core.util import parse_meta_xml
+from core.util import parse_meta_xml, ProductType, ModuleType
 from core.util.identify import planet_test
+from core.raster.raster_const import LOAD_IMAGES_ALLOWED_EXT
 
-from core.raster import ProductType, LOAD_IMAGES_ALLOWED_EXT
 
 def _load_wv_xml_paths(in_path:str) -> List[AnyStr]:
     tmp_meta = parse_meta_xml(in_path, ProductType.WV)
@@ -27,7 +27,7 @@ XML_HANDLERS:Dict[ProductType, Callable[[AnyStr], List[AnyStr]]] = {
     ProductType.PS: _load_ps_xml_paths
 }
 
-def load_images_paths(in_path:str, product_type:ProductType) -> List[AnyStr]:
+def load_images_paths(in_path:str, product_type:ProductType, in_module_type:ModuleType) -> List[AnyStr]:
 
     ext = Path(in_path).suffix[1:].lower()
     assert ext in LOAD_IMAGES_ALLOWED_EXT, f'Input file extension({ext}) is not supported for loading images'
@@ -37,7 +37,6 @@ def load_images_paths(in_path:str, product_type:ProductType) -> List[AnyStr]:
         if handler is None:
             raise NotImplementedError(f'Product type({product_type}) is not implemented for the input process.')
         image_list = handler(in_path)
-
     else:
         image_list = _load_single_image_path(in_path)
 

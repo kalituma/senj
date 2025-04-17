@@ -5,3 +5,5 @@ from .rev_ref_op import *
 from .atmos_op import *
 from .norm_op import *
 from .nl_denoising_op import *
+from .hist_eq_op import *
+from .bandmath_op import *

@@ -4,10 +4,10 @@ from typing import Tuple
 from pathlib import Path
 from osgeo import gdal
 
-def read_tif(path):
+def read_single(path):
 
     ext = Path(path).suffix.lower()
-    assert ext == '.tif', f'input file must be a tif file, but got {ext}'
+    assert ext == '.tif' or ext == '.jp2' or ext == '.gb2', f'input file must be a tif or jp2 or gb2 file, but got {ext}'
 
     ds = gdal.Open(path)
     return ds
@@ -44,4 +44,4 @@ def load_raster_gdal(paths:list[str]) -> list[gdal.Dataset]:
 
     for path in paths:
         assert os.path.splitext(path)[1] == os.path.splitext(paths[0])[1], f'All input files should have the same extension'
-    return [read_tif(path) for path in paths]
+    return [read_single(path) for path in paths]

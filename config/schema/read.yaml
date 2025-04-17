@@ -15,4 +15,15 @@ read:
           - type: 'integer'
             min: 1
           - type: 'string'
-
+    stack_files:
+      type: 'list'
+      empty: False
+      required: false
+      minlength: 1
+      schema:        
+        type: 'string'        
+        empty: False
+    read_and_stack:
+      type: 'boolean'
+      required: false
+      default: False    

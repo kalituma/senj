@@ -2,6 +2,7 @@ from core.util import assert_bnames, remove_list_elements
 from core.util.gdal import read_gdal_bands_as_dict, create_ds_with_dict
 from core.util.snap import copy_cached_to_raw_gpf, read_gpf_bands_as_dict, del_bands_from_product
 from core.raster import Raster, ModuleType
+from core.raster.funcs.meta import MetaDictManager
 from core.raster.funcs import read_band_from_raw
 
 def update_raster_from_raw(raster_obj:Raster, selected_bands=None):
@@ -35,7 +36,6 @@ def update_raw_from_cache(raster:Raster, clear=False):
     # raw to cache
     if raster.is_band_cached:
         cached_bands = raster.get_cached_band_names()
-        not_cached_bands = remove_list_elements(raster.get_band_names(), remove_list=cached_bands)
 
         module_type = raster.module_type
 
@@ -52,11 +52,19 @@ def update_raw_from_cache(raster:Raster, clear=False):
                 raster.copy_band_map_from_meta()
 
         elif module_type == ModuleType.GDAL:
+
+            not_cached_bands = remove_list_elements(raster.get_band_names(), remove_list=cached_bands)
+            added_cached_bands = remove_list_elements(cached_bands, remove_list=raster.get_band_names())
+
             assert raster.cached_bands_have_same_shape(), 'All selected bands should have the same shape'
 
             if not clear:
                 if len(not_cached_bands) > 0:
                     raster = read_band_from_raw(raster, selected_name_or_id=not_cached_bands, add_to_cache=True)
+
+            raster.convert_to_have_same_dtype()
+            cached_order = raster.get_band_names() + added_cached_bands
+            raster.reorder_bands(cached_order)
 
             proj = raster.raw.GetProjection()
             gt = raster.raw.GetGeoTransform()
@@ -64,8 +72,7 @@ def update_raw_from_cache(raster:Raster, clear=False):
             raster.raw = None
             raster.raw, btoi = create_ds_with_dict(raster.bands, 'MEM', proj_wkt=proj, transform=gt, metadata=metadata, out_path='')
             if btoi != raster.band_to_index:
-                raster.update_index_bnames(btoi)
-                raster.copy_band_map_to_meta()
+                MetaDictManager(raster).update_band_mapping(btoi)
         else:
             raise NotImplementedError(f'Raster type {module_type} is not implemented')
 

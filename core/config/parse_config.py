@@ -151,7 +151,7 @@ def parse_config(all_config:dict, schema_map:dict) -> Tuple[dict, List[str], dic
 
         assert_bnames(arg_op_keys, op_keys, f'operations({op_keys}) set in config should match with operation arguments({arg_op_keys})')
 
-        op_args = [p_config[op_key].copy() if op_key in p_config else {} for op_key in op_keys]
+        op_args = [p_config[op_key].copy() if op_key in p_config and p_config[op_key] is not None else {} for op_key in op_keys]
         p_ops[p_key] = op_dicts(op_keys, op_args)
         if len(concat_order) > 0:
             var_link_map[p_key] = concat_order

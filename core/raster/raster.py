@@ -1,5 +1,5 @@
 from typing import Union, TypeVar, TYPE_CHECKING
-
+import warnings
 from pathlib import Path
 
 from core.util import ProductType, ModuleType, check_raw_type
@@ -109,9 +109,25 @@ class Raster(RasterMeta):
 
         self.is_band_cached = False
 
-    def cached_bands_have_same_shape(self):
+    def cached_bands_have_same_shape(self) -> bool:
         cached_band_names = list(self.bands.keys())
         return all([self.bands[band_name]['value'].shape == self.bands[cached_band_names[0]]['value'].shape for band_name in cached_band_names])
+
+    def convert_to_have_same_dtype(self) -> None:
+        cached_band_names = list(self.bands.keys())
+        dtypes = [self.bands[band_name]['value'].dtype for band_name in cached_band_names]
+        have_same_dtype = all([dtypes[0] == dtype for dtype in dtypes])
+        if not have_same_dtype:
+            # warning
+            warnings.warn('Cached bands have different dtypes. Converting to the band which has the biggest byte size.')
+
+            # change dtype of all bands to the band which has the biggest byte size
+            max_dtype = max(dtypes, key=lambda x: x.itemsize)
+            for band_name in cached_band_names:
+                self.bands[band_name]['value'] = self.bands[band_name]['value'].astype(max_dtype)
+    
+    def reorder_bands(self, band_names:list[str]) -> None:
+        self.bands = {band_name: self.bands[band_name] for band_name in band_names}
 
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'

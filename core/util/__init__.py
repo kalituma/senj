@@ -1,3 +1,4 @@
+from .hist_eq import *
 from .lee_filter import *
 from .back_coef import *
 from .band_nodata import *
@@ -33,6 +34,5 @@ from .asserts import *
 from .dict_compare import *
 from .product_type import *
 from .polygon_from_wkt import *
-from .identify_product import *
-from .parse_meta_from_xml import *
+from .parse_meta_text import *
 from .match_str import *

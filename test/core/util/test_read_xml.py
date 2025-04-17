@@ -3,7 +3,8 @@ import unittest
 from lxml import objectify, etree
 
 from core.util import expand_var
-from core.util import ProductType, identify_product
+from core.util import ProductType
+from core.util.identify import identify_product
 
 class TestAtmosSubFuncs(unittest.TestCase):
     def setUp(self) -> None:
