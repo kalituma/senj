@@ -1,4 +1,4 @@
-from typing import Union, TypeVar, TYPE_CHECKING
+from typing import Union, TypeVar, TYPE_CHECKING, Dict
 import warnings
 from pathlib import Path
 
@@ -10,11 +10,18 @@ from core.raster import RasterMeta
 if TYPE_CHECKING:
     from esa_snappy import Product
     from osgeo.gdal import Dataset
+    from core.raster.handlers import ModuleTypeHandler, GdalRasterHandler, SnapRasterHandler, NCRasterHandler
 
 
 T = TypeVar('T', bound='Raster')
 
 class Raster(RasterMeta):
+    _module_handlers: Dict[ModuleType, "ModuleTypeHandler"] = {
+        ModuleType.GDAL: "GdalRasterHandler",
+        ModuleType.SNAP: "SnapRasterHandler",
+        ModuleType.NETCDF: "NCRasterHandler"
+    }
+
     def __init__(self, path:str=None):
 
         super().__init__()
@@ -32,6 +39,17 @@ class Raster(RasterMeta):
 
         if not Path(path).exists():
             raise FileNotFoundError(f'{path} does not exist')
+
+    
+    @property
+    def handler(self) -> "ModuleTypeHandler":
+        if not self.module_type:
+            raise ValueError('Module type is not set')
+        
+        if self.module_type not in self._module_handlers:
+            raise ValueError(f'Module type {self.module_type} is not supported')
+
+        return self._module_handlers[self.module_type]
 
     @staticmethod
     def from_raster(raster:T, **kwargs):
@@ -61,39 +79,22 @@ class Raster(RasterMeta):
         return f'Raster : {self.path} processed from {self.op_history[0]} to {self.op_history[-1]}'
 
     def get_bands_size(self) -> int:
-        if self.module_type == ModuleType.GDAL:
-            return self.raw.RasterCount
-        elif self.module_type == ModuleType.SNAP:
-            return self.raw.getNumBands()
-        else:
-            raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
+        return self.handler.get_band_size(self.raw)
 
     def get_band_names(self) -> list[str]:
 
         # priority : 1. map 2. meta 3. raw
         # before getting band names by this function, meta_dict should be always updated.
 
-        if self._index_to_band is not None and self._band_to_index is not None:
+        if self.initialized:
             return list(self._index_to_band.values())
-
-        if self.module_type == ModuleType.GDAL:
-            band_indices = list(range(1, self.raw.RasterCount+1))
-            bnames = self._get_band_names_from_meta(band_indices) # from meta if exists else create by index
-        elif self.module_type == ModuleType.SNAP:
-            bnames = list(self.raw.getBandNames())
-        elif self.module_type == ModuleType.NETCDF:
-            bnames = get_band_names_nc(self.raw)
-        else:
-            raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
-
-        return bnames
+        return self.handler.get_band_names(self.raw, self.meta_dict)
+    
+    def get_band_names_from_raw(self) -> list[str]:
+        return self.handler.get_band_names(self.raw)
 
     def get_tie_point_grid_names(self) -> Union[list[str], None]:
-        if self.module_type == ModuleType.SNAP:
-            grid_names = self.raw.getTiePointGridNames()
-            if len(grid_names) > 0:
-                return grid_names
-        return None
+        return self.handler.get_tie_point_grid_names(self.raw)
 
     def del_bands_cache(self):
         self.bands = None
@@ -101,12 +102,7 @@ class Raster(RasterMeta):
 
     def close(self):
         super().close()
-
-        if self.module_type == ModuleType.GDAL:
-            self.raw = None
-        elif self.module_type == ModuleType.SNAP:
-            self.raw.dispose()
-
+        self.handler.close(self.raw)
         self.is_band_cached = False
 
     def cached_bands_have_same_shape(self) -> bool:
@@ -131,14 +127,7 @@ class Raster(RasterMeta):
 
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'
-
-        if self.module_type == ModuleType.GDAL:
-            return self.raw.GetProjection()
-        elif self.module_type == ModuleType.SNAP:
-            return self.raw.getSceneCRS().toWKT()
-        else:
-            raise NotImplementedError(f'Raster type {self.module_type.__str__()} is not implemented')
-
+        return self.handler.proj(self.raw)
 
     @property
     def bands(self):
@@ -209,12 +198,3 @@ class Raster(RasterMeta):
             return list(self._bands_data.keys())
         else:
             return None
-
-    def update_index_bnames_from_raw(self):
-        if self.module_type == ModuleType.SNAP:
-            bnames = list(self.raw.getBandNames())
-            self.update_band_map(bnames)
-            if self.meta_dict:
-                self.update_band_map_to_meta(bnames)
-
-        return self

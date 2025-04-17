@@ -30,7 +30,7 @@ class SafeSnapReader(BaseReader, SnapAdapter):
         if self.raster.meta_dict is None:
             MetaDictManager(self.raster).update_band_mapping(self.meta_builder.btoi_from_header)
         else:
-            self.raster.copy_band_map_from_meta()
+            MetaDictManager(self.raster).update_band_mapping()
 
         self.raster = apply_band_names_to_snap(self.raster, self.meta_builder.btoi_from_header, self.raster.meta_dict)
 

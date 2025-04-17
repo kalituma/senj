@@ -30,10 +30,9 @@ class BandMapper(Observable):
     def __init__(self, raster : RasterMeta):
         super().__init__()
         self.raster = raster
-
-    @property
-    def is_initialized(self):
-        return self.raster.band_to_index is not None and self.raster.index_to_band is not None
+    
+    def is_initialized(self) -> bool:
+        return self.raster.initialized
     
     def initialize_from_names(self, band_names:list[str]):
         assert not self.is_initialized, "BandMapper is already initialized"        

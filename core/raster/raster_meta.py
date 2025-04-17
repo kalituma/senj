@@ -9,6 +9,10 @@ class RasterMeta(ABC):
         self.op_history: list = []
 
     @property
+    def initialized(self) -> bool:
+        return self._index_to_band is not None and self._band_to_index is not None
+    
+    @property
     def meta_dict(self):
         return self._meta_dict
 
