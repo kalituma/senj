@@ -10,29 +10,10 @@ class VectorHandler(ABC):
     @abstractmethod
     def get_envelope(self, raw) -> tuple:
         pass
-    
+
     @abstractmethod
-    def get_geometry_type(self, raw) -> str:
-        pass
-    
-    @abstractmethod
-    def get_crs(self, raw) -> str:
-        pass
-    
-    @abstractmethod
-    def get_fields(self, raw) -> List[Dict]:
-        pass
-    
-    @abstractmethod
-    def get_feature_count(self, raw) -> int:
-        pass
-    
-    @abstractmethod
-    def get_layer_names(self, raw) -> List[str]:
-        pass
-    
-    @abstractmethod
-    def close(self, raw):
+    def proj(self, raw):
+
         pass
 
 class GdalVectorHandler(VectorHandler):

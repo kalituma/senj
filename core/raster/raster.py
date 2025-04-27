@@ -11,7 +11,9 @@ from core.raster.bname_strategy import BandNameStrategyFactory
 if TYPE_CHECKING:
     from esa_snappy import Product
     from osgeo.gdal import Dataset
+
     from core.raster.handler import RasterHandler
+
 
 
 T = TypeVar('T', bound='Raster')
@@ -74,7 +76,7 @@ class Raster(GeoData, RasterMeta):
             raise ValueError(f'Module type {self.module_type} is not supported')
 
         return self._module_handlers[self.module_type]
-    
+
     @property
     def bands(self):
         return self._bands_data
@@ -129,6 +131,7 @@ class Raster(GeoData, RasterMeta):
         strategy = BandNameStrategyFactory.get_band_name_strategy(b_type)
         return strategy.get_band_names(self)
 
+
     def get_tie_point_grid_names(self) -> Union[list[str], None]:
         return self.handler.get_tie_point_grid_names(self.raw)
 
@@ -139,6 +142,7 @@ class Raster(GeoData, RasterMeta):
     def cached_bands_have_same_shape(self) -> bool:
         cached_band_names = list(self.bands.keys())
         return all([self.bands[band_name]['value'].shape == self.bands[cached_band_names[0]]['value'].shape for band_name in cached_band_names])
+
 
     def to_have_same_dtype(self) -> None:
         cached_band_names = list(self.bands.keys())
@@ -163,6 +167,7 @@ class Raster(GeoData, RasterMeta):
         return self.handler.proj(self.raw)
     
 
+
     def get_cached_band_names(self) -> Union[list[str], None]:
         if self._bands_data:
             return list(self._bands_data.keys())
@@ -173,3 +178,4 @@ class Raster(GeoData, RasterMeta):
         super().close()
         self.handler.close(self.raw)
         self.is_band_cached = False
+

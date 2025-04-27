@@ -7,7 +7,7 @@ from core.raster import Raster, ModuleType, ProductType
 from core.raster.funcs.load_image_paths import load_images_paths
 
 if TYPE_CHECKING:
-    from core.raster.funcs.adapter import MetaBuilder
+    from core.raster.funcs.meta import MetaBuilder
 
 class BaseRasterReader(ABC):
     def __init__(self):

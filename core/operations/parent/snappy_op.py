@@ -12,5 +12,6 @@ class SnappyOp(Op):
 
     def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):
         super().post_process(raster, context)
+        
         MetaBandsManager(raster).update_band_mapping(raster.get_band_names('raw'))
         return raster

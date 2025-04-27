@@ -32,7 +32,10 @@ class Vector(GeoData):
             raise ValueError(f'Module type {self.module_type} is not supported')
             
         return self._module_handlers[self.module_type]
-    
+
+    def close(self):
+        self.raw = None
+        
     @staticmethod
     def from_vector(vector: T, **kwargs):
         new_vector = Vector(vector.path)
