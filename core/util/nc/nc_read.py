@@ -1,5 +1,6 @@
-from typing import Dict, AnyStr, List
+from typing import Dict, AnyStr, List, Tuple
 from netCDF4 import Dataset
+from osgeo import gdal
 from pathlib import Path
 
 from core.util.nc import get_variables
@@ -49,6 +50,15 @@ def read_nc(path) -> Dataset:
 
     nc_ds = Dataset(path)
     return nc_ds
+
+def get_proj_nc(path:str, band_str) -> Tuple[str, Tuple[float, float, float, float, float, float]]:
+    ext = Path(path).suffix.lower()
+    assert ext == '.nc' or ext == '.nc4', f'input file must be a nc file, but got {ext}'
+
+    nc_path = f'NETCDF:{path}:{band_str}'
+    ds = gdal.Open(nc_path)
+
+    return ds.GetProjection(), ds.GetGeoTransform()
 
 def get_band_names_nc(nc_ds:Dataset) -> List[AnyStr]:
 

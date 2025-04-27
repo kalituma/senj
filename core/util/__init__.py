@@ -1,3 +1,4 @@
+from .asserts import *
 from .hist_eq import *
 from .lee_filter import *
 from .back_coef import *
@@ -30,7 +31,6 @@ from .atts_func import *
 from .read_band import *
 from .cv2_denoise import *
 from .percentile_norm import *
-from .asserts import *
 from .dict_compare import *
 from .product_type import *
 from .polygon_from_wkt import *

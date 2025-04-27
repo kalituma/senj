@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, AnyStr, Union
+from typing import TYPE_CHECKING, List, AnyStr, Union, Optional
 from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, SELECT_OP
 from core.util import list_to_ordered_set
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=SELECT_OP, no_arg_allowed=False)
 @op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
 class Select(SelectOp):
-    def __init__(self, bands:List[Union[int, AnyStr]]=None, band_labels:List[AnyStr]=None):
+    def __init__(self, bands:Optional[List[Union[int, AnyStr]]]=None, band_labels:Optional[List[AnyStr]]=None):
         super().__init__(SELECT_OP)
         self._selected_bands = bands
         self._labels = list_to_ordered_set(band_labels) if band_labels else None

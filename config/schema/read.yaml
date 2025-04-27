@@ -5,7 +5,7 @@ read:
     module:
       type: 'string'
       required: True
-      allowed: ['snap', 'gdal']
+      allowed: ['snap', 'gdal', 'netcdf']
     bands:
       type: 'list'
       empty: False

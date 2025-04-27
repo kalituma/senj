@@ -1,6 +1,7 @@
 from osgeo import gdal
 
 GDAL_DTYPE_MAP = {
+    'bool': gdal.GDT_Byte,
     'uint8': gdal.GDT_Byte,
     'int8': gdal.GDT_Byte,
     'uint16': gdal.GDT_UInt16,
@@ -21,6 +22,7 @@ RESAMPLING_METHODS = {
     'lanczos': gdal.GRA_Lanczos,
 }
 
+from .gdal_vector import *
 from .gdal_file_info import *
 from .check_projection import *
 from .gdal_meta_from_raw import *

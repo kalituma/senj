@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 @OPERATIONS.reg(name=BAND_MATH_OP)
 @op_constraint(avail_module_types=[OP_Module_Type.SNAP, OP_Module_Type.GDAL])
-class BandMathOp(CachedOp):
+class BandMath(CachedOp):
     def __init__(self, func_name:str, func_target_bands:List[Union[str, int]], out_band_name:Optional[str]=None):
         super().__init__(BAND_MATH_OP)
         self.lambda_name = func_name
@@ -21,7 +21,6 @@ class BandMathOp(CachedOp):
 
         assert func_name in LAMBDA, f"Lambda name {func_name} is not valid"
 
-    @call_constraint(product_types=[ProductType.S2])
     def __call__(self, raster:"Raster", context:"Context", *args, **kwargs) -> "Raster":
         if check_bname_index_valid(raster, self.selected_names_or_indices):
             selected_name_or_id = self.selected_names_or_indices
@@ -50,7 +49,7 @@ class BandMathOp(CachedOp):
             'value': out_band_value,
             'no_data': raster.bands[selected_name_or_id[0]]['no_data']
         }
-                
-        raster = self.post_process(raster, context)
+
+        raster = self.post_process(raster, context, clear=True)
         return raster
 

@@ -2,7 +2,7 @@ import os, unittest
 from core.logic import Context
 from core.util import expand_var, Logger
 from core.operations import Read, Write
-from core.operations.cached import Normalize
+from core.operations.etri import Normalize
 
 class TestNormOP(unittest.TestCase):
     def test_normalize(self):

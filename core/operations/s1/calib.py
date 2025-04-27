@@ -7,7 +7,6 @@ from core.util import assert_bnames, ProductType
 from core.util.op import op_constraint, OP_Module_Type, call_constraint
 from core.util.snap import calibrate, get_polarization
 from core.raster import Raster, ModuleType
-from core.raster.funcs import create_meta_dict, init_bname_index_in_meta, set_raw_metadict
 
 if TYPE_CHECKING:
     from core.logic import Context

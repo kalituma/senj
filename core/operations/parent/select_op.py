@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Type, List, Union
+from typing import TYPE_CHECKING, Type, List, Union, Optional
 from core.raster import ModuleType
 from core.util import assert_bnames
 from core.util.nc import get_band_length
@@ -13,7 +13,7 @@ class SelectOp(Op):
     def __init__(self, op_name):
         super().__init__(op_name)
 
-    def pre_process(self, raster:"Raster", selected_bands_or_indices:List[Union[str,int]], band_select:bool=False, *args, **kwargs):
+    def pre_process(self, raster:"Raster", selected_bands_or_indices:Optional[List[Union[str,int]]]=None, band_select:bool=False, *args, **kwargs):
         if selected_bands_or_indices:
             selected_bands, selected_indices = get_band_name_and_index(raster, selected_bands_or_indices)
             assert_bnames(selected_bands, raster.get_band_names(), f'selected bands{selected_bands} should be in source bands({raster.get_band_names()})')
@@ -22,7 +22,7 @@ class SelectOp(Op):
                     if band_select:
                         raster = select_band_raster(raster, selected_bands)
             elif raster.module_type == ModuleType.GDAL:
-                if len(selected_indices) < raster.raw.RasterCount:
+                if len(selected_indices) < raster.get_bands_size():
                     if band_select:
                         raster = select_band_raster(raster, selected_indices)
             elif raster.module_type == ModuleType.NETCDF:

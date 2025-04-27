@@ -8,7 +8,7 @@ read_grdh:
     sort:
       reg_exp: *parse_safe_date
       date_format: *to_date_pattern
-  operations: ['read', 'apply_orbit', 'calibrate', 'terrain_correction', 'subset', 'write']
+  operations: ['read', 'apply_orbit', 'calibrate', 'terrain_correction', 'clip', 'write']
   read:
     module: 'snap'
   apply_orbit:
@@ -29,7 +29,7 @@ read_grdh:
     img_method: 'BILINEAR_INTERPOLATION'
 #    map_projection: 'EPSG:5186'
     save_dem: false
-  subset:
+  clip:
     bounds: [ 127.70, 35.9, 128.2, 35.5 ]
     copy_meta: true
   write:

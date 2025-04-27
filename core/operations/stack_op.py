@@ -5,7 +5,9 @@ from core.util import assert_bnames
 from core.util.op import op_constraint, OP_Module_Type
 
 from core.raster import ModuleType
-from core.raster.funcs import convert_raster, get_band_name_and_index, merge_raster_func
+from core.raster.funcs import get_band_name_and_index, merge_raster_func
+from core.raster.funcs.converter import FormatConverter
+
 from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, STACK_OP
 
@@ -61,7 +63,7 @@ class Stack(SelectOp):
             if selected_band:
                 rasters[i] = self.pre_process(raster, selected_band, band_select=True)
             if raster.module_type != self._module:
-                rasters[i] = convert_raster(rasters[i], out_module=self._module)
+                rasters[i] = FormatConverter.convert(rasters[i], out_module=self._module)
 
         merged_raster = merge_raster_func(rasters, self._module, self._geo_err)
 

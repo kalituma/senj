@@ -1,7 +1,7 @@
 read_grdh:
   input:
     path: '$PROJECT_PATH/data/test/safe/s1/S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE'
-  operations: ['read', 'apply_orbit', 'calibrate', 'terrain_correction', 'subset', 'write']
+  operations: ['read', 'apply_orbit', 'calibrate', 'terrain_correction', 'clip', 'write']
   read:
     module: 'snap'
   apply_orbit:
@@ -22,7 +22,7 @@ read_grdh:
     img_method: 'BILINEAR_INTERPOLATION'
 #    map_projection: 'EPSG:5186'
     save_dem: false
-  subset:
+  clip:
     bounds: [ 127.70, 35.9, 128.2, 35.5 ]
     copy_meta: true
   write:

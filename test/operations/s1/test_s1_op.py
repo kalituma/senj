@@ -5,7 +5,7 @@ import numpy as np
 from core.util import expand_var
 from core.util.snap import ORBIT_TYPE
 from core.raster.funcs import read_band_from_raw
-from core.operations import Read, Write, Subset
+from core.operations import Read, Write, RasterClip
 from core.operations.s1 import ApplyOrbit, Calibrate, TopsarDeburst, TerrainCorrection
 
 from core.logic.context import Context
@@ -43,7 +43,7 @@ class TestS1Op(unittest.TestCase):
         context = Context(None)
         out_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/senj/data/test/target/test_out/s1_op/s1_test_cal_deburst.dim'
         out_raster = Read(module='snap')(out_path, context)
-        out_raster = Subset(bounds=[127.03, 36.39, 127.38, 36.18], copyMetadata=True)(out_raster, context)
+        out_raster = RasterClip(bounds=[127.03, 36.39, 127.38, 36.18], copyMetadata=True)(out_raster, context)
         Write(out_dir=os.path.join(self.data_root, 'target', 'test_out','s1_op'), out_stem='s1_test_cal_deburst', suffix='subset', out_ext='dim')(out_raster)
 
     def do_grdh_terrain_correction(self, context):
@@ -65,6 +65,6 @@ class TestS1Op(unittest.TestCase):
         # out_path = self.do_grdh_terrain_correction(context)
         out_path = '/home/airs_khw/mount/d_drive/__develope/temp/etri/senj/data/test/target/test_out/s1_op/grdh_orb_cal_tc.dim'
         out_raster = Read(module='snap')(out_path, context)
-        out_raster = Subset(bounds=[128.17124, 35.90668, 128.39547, 35.68248], copyMetadata=True)(out_raster, context)
+        out_raster = RasterClip(bounds=[128.17124, 35.90668, 128.39547, 35.68248], copyMetadata=True)(out_raster, context)
         Write(out_dir=os.path.join(self.data_root, 'target', 'test_out', 's1_op'), out_stem='s1_grdh_cal_tc',
               suffix='subset', out_ext='dim')(out_raster)

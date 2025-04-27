@@ -11,7 +11,7 @@ from core.util.errors import ExtensionNotSupportedError
 from core.util import assert_bnames
 
 from core.raster import ModuleType, Raster, MODULE_EXT_MAP
-from core.raster.funcs import load_raster, find_bands_contains_word
+from core.raster.funcs import find_bands_contains_word
 from core.raster.funcs.reader import ReaderFactory, SafeGdalReader
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 @OPERATIONS.reg(name=READ_OP, conf_no_arg_allowed=False)
 @op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP, OP_Module_Type.NETCDF])
 class Read(SelectOp):
-    def __init__(self, module:str, bands:List[Union[int,AnyStr]]=None,*args, **kwargs):
+    def __init__(self, module:str, bands:List[Union[int,AnyStr]]=None, *args, **kwargs):
         super().__init__(READ_OP)
         self._module = ModuleType.from_str(module)        
 
@@ -48,7 +48,7 @@ class Read(SelectOp):
             assert self._stack_files is not None, 'stack_files should be provided for SafeGdalReader'
             assert self._read_and_stack == True, 'read_and_stack option should be True for SafeGdalReader'
 
-            raster = reader.read(stack_files=self._stack_files)
+            raster = reader.read(contained_words=self._stack_files)
         else:
             raster = reader.read()
 

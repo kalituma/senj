@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from core.util import expand_var, Logger
-from core.operations import Read, Write, Subset
+from core.operations import Read, Write, RasterClip
 from core.operations.s1 import SpeckleFilter
 from core.util.errors import ProductTypeError
 from core.logic.context import Context

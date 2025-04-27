@@ -5,7 +5,7 @@ import numpy as np
 from core.util import expand_var
 from core.util.snap import ORBIT_TYPE
 from core.util.errors import ModuleError, ProductTypeError, ExtensionError
-from core.operations import Read, Write, Subset
+from core.operations import Read, Write, RasterClip
 from core.operations.s1 import ApplyOrbit, Calibrate, TopsarDeburst, TerrainCorrection
 
 from core.logic.context import Context

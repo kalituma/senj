@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List
 from copy import deepcopy
 
 from core.util import assert_bnames
@@ -6,7 +6,9 @@ from core.util.op import op_constraint, OP_Module_Type
 
 from core.raster import ModuleType
 
-from core.raster.funcs import convert_raster, mosaic_raster_func
+from core.raster.funcs import mosaic_raster_func
+from core.raster.funcs.meta import MetaBandsManager
+from core.raster.funcs.converter import FormatConverter
 
 from core.operations.parent import SelectOp
 from core.operations import OPERATIONS, MOSAIC_OP
@@ -28,7 +30,8 @@ class Mosaic(SelectOp):
 
         if selected_meta is not None:
             raster.meta_dict = deepcopy(selected_meta)
-            raster.copy_band_map_to_meta()
+            btoi = raster.get_band_names('map')
+            MetaBandsManager(raster).update_band_mapping(btoi)
         else:
             # todo: should warn if meta_dict is not available
             pass
@@ -48,8 +51,8 @@ class Mosaic(SelectOp):
                 raster[i] = self.pre_process(raster, self._selected_bands, band_select=True)
 
         for i, raster in enumerate(rasters):
-            if raster.module_type != self._module:
-                rasters[i] = convert_raster(raster, self._module)
+            if raster.module_type != self._module:                
+                rasters[i] = FormatConverter.convert(raster, self._module)
 
         mosaic_raster = mosaic_raster_func(rasters, self._module)
 

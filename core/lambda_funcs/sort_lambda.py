@@ -25,9 +25,3 @@ def sort_by_ge_date(file_name: str) -> datetime:
      locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
      date_obj = datetime.strptime(date_paresed.group(), '%y%b%d%H%M%S')
      return date_obj
-
-@LAMBDA.reg(name='ndwi')
-def ndwi(b2:np.ndarray, b4:np.ndarray) -> np.ndarray:
-    b2 = b2.astype(np.float32)
-    b4 = b4.astype(np.float32)
-    return (b2 - b4) / (b2 + b4)

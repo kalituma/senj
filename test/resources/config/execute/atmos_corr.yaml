@@ -1,10 +1,10 @@
-subset_safe:
+clip_safe:
   input:
     path: '$ROOT_DIR/INPUTDATA/S2/safe/S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.SAFE'
   operations: ['read', 'subset', 'atmos_corr', 'write']
   read:
     module: 'snap'
-  subset:
+  clip:
     bounds: [435257, 3905427, 471373, 3876907]
     bounds_epsg: 32652
     copy_meta: true

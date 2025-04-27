@@ -5,7 +5,7 @@ from core.operations import CONVERT_OP
 from core.operations.parent import Op
 
 from core.raster import ModuleType
-from core.raster.funcs import convert_raster
+from core.raster.funcs.converter import FormatConverter
 
 if TYPE_CHECKING:
     from core.raster import Raster
@@ -23,8 +23,7 @@ class Convert(Op):
         if self._module == raster_obj.module_type:
             return raster_obj
 
-        # result = update_cached_to_raw(raster_obj)
-        result = convert_raster(raster_obj, out_module=self._module)
+        result = FormatConverter.convert(raster_obj, self._module)
         result = self.post_process(result, context)
 
         return result

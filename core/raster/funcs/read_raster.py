@@ -3,6 +3,7 @@ from typing import Union, Tuple, List, AnyStr, Dict, Optional, Any
 from pathlib import Path
 
 from core.util import parse_meta_xml, read_pickle, get_btoi_from_tif, dict_to_ordered_list
+from core.util.asserts import deprecated
 from core.util.identify import planet_test, identify_product
 from core.util.gdal import load_raster_gdal, mosaic_by_file_paths, read_gdal_bands_as_dict
 from core.util.snap import load_raster_gpf, mosaic_gpf, rename_bands, read_gpf_bands_as_dict
@@ -82,6 +83,7 @@ def apply_band_names_to_snap(raster: Raster, btoi_from_header: Optional[Dict[str
         
     return raster
 
+@deprecated
 def load_raster(empty_raster: Raster, in_module: ModuleType) -> Raster:
     
     path, product_type, _ = _prepare_paths_and_type(empty_raster, in_module)    

@@ -7,7 +7,7 @@ read_and_warp:
   resample:
     epsg: 4326
     pixel_size: 0.0008
-  subset:
+  clip:
     bounds: [ 128.2332, 34.9645, 128.3584, 34.8387 ]
     bounds_epsg: 4326
 

@@ -3,10 +3,13 @@ from pathlib import Path
 from core.util import assert_bnames, module_type
 
 from core.raster import ModuleType, Raster
+
+from core.util.asserts import deprecated
 from core.util.snap import find_proj_from_band, create_product, add_band_to_product, find_gt_from_band, copy_product, find_geocoding_from_wkt, find_proj_from_product
 from core.util.gdal import create_ds_with_dict, copy_ds
 from core.raster.funcs import read_band_from_raw, set_raw_metadict, get_band_name_and_index
 
+@deprecated
 def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union[ModuleType, str]) -> Raster:
 
     if selected_bands is not None:
@@ -39,13 +42,13 @@ def wrap_up_raster(raster_obj:Raster, selected_bands:list[str], out_module:Union
 
     return raster_obj
 
+@deprecated
 def convert_raster(raster_obj:Raster, out_module:ModuleType) -> Raster:
     assert raster_obj.module_type != out_module, 'input and output module type should be different'
 
     # bands should be loaded before converting
     if not raster_obj.is_band_cached:
         raster_obj = read_band_from_raw(raster_obj, selected_name_or_id=None)
-
     if out_module == ModuleType.SNAP:
         raster_obj = _convert_to_gpf(raster_obj, cached_bands=raster_obj.bands) # Product
     elif out_module == ModuleType.GDAL:
@@ -58,6 +61,7 @@ def convert_raster(raster_obj:Raster, out_module:ModuleType) -> Raster:
 
     return raster_obj
 
+@deprecated
 def _convert_to_gpf(target_raster:Raster, cached_bands:dict) -> Raster:
 
     if target_raster.module_type == ModuleType.GDAL:
@@ -76,6 +80,7 @@ def _convert_to_gpf(target_raster:Raster, cached_bands:dict) -> Raster:
 
     return target_raster
 
+@deprecated
 def _convert_to_gdal(raster:Raster, cache_bands:dict) -> Raster:
 
     assert raster.is_band_cached, 'bands should be loaded in the cache before converting to GDAL'

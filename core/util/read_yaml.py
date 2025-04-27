@@ -13,4 +13,5 @@ def load_yaml(config:str)-> dict:
 def read_yaml_text(config_path:str) -> str:
     with open(config_path, 'r') as f:
         Logger.get_logger().log('debug', f'Reading config file as text: {config_path}')
-        return f.read()
+        data = yaml.safe_load(f)
+        return yaml.dump(data, default_flow_style=False)

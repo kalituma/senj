@@ -1,3 +1,4 @@
+import warnings
 from core.util import load_ogr, load_osr
 
 def wkt_to_ds(wkt:str, epsg:int):
@@ -27,7 +28,13 @@ def wkt_to_epsg(wkt:str) -> int:
 
     spatial_ref = osr.SpatialReference()
     spatial_ref.ImportFromWkt(wkt)
-    return int(spatial_ref.GetAuthorityCode(None))
+    code = spatial_ref.GetAuthorityCode(None)
+    if code == None:
+        warning_msg = f"Cannot identify EPSG code from WKT: {wkt}"
+        warnings.warn(warning_msg)
+        return 0
+    else:
+        return int(code)
 
 def epsg_to_wkt(epsg:int):
     osr = load_osr()

@@ -1,0 +1,18 @@
+clip:
+  type: 'dict'
+  required: true
+
+  schema:
+    bounds:
+      type: 'list'
+      empty: false
+      required: true
+      schema:
+        type: 'number'
+        required: True
+    bounds_epsg:
+      type: 'integer'
+    copy_meta:
+      type: 'boolean'
+      required: false
+      default: true

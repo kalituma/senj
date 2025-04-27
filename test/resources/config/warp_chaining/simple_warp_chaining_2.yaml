@@ -4,7 +4,7 @@ read_and_warp:
   operations: ['read', 'subset']
   read:
     module: 'gdal'
-  subset:
+  clip:
     bounds: [ 430021, 3869351.6, 441266, 3855411 ]
     bounds_epsg: 32652
 

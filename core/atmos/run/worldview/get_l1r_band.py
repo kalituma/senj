@@ -5,6 +5,17 @@ def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_
                  percentiles_compute, percentiles,
                  atmospherically_corrected):
 
+    dtype_zero_map = {
+            np.dtype('uint8'): np.uint8(0),
+            np.dtype('uint16'): np.uint16(0),
+            np.dtype('int8'): np.int8(0),
+            np.dtype('int16'): np.int16(0),
+            np.dtype('int32'): np.int32(0),
+            np.dtype('uint32'): np.uint32(0),
+            np.dtype('float32'): np.float32(0),
+            np.dtype('float64'): np.float64(0)
+        }
+    
     out = {}
     ## run through bands
     for band_name, band in bands.items():
@@ -18,12 +29,10 @@ def get_l1r_band(bands, band_info, gains, gains_parameter, se_distance, mus, f0_
         #         print('Data has been enhanced by the provider: {}'.format(meta['RADIOMETRICENHANCEMENT']))
 
         ## track mask
-        if d.dtype == np.dtype('uint8'):
-            nodata = d == np.uint8(0)
-        elif d.dtype == np.dtype('uint16'):
-            nodata = d == np.uint16(0)
-        elif d.dtype == np.dtype('float32'):
-            nodata = d == np.float32(0)
+        if d.dtype in dtype_zero_map:
+            nodata = d == dtype_zero_map[d.dtype]
+        else:
+            nodata = d == 0
 
         ## convert to float and scale to TOA reflectance
         d = d.astype(np.float32) * cf

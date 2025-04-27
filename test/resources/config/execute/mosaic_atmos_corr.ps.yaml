@@ -24,13 +24,13 @@ planetscope_2:
     map_dir: '$ROOT_DIR/OUTPUTDATA/PS'
     map_stem: '20200817_013159_99_2277_3B'
 
-mosaic_subset_warp_write:
+mosaic_clip_warp_write:
   input:
     path: ['{{planetscope_1}}', '{{planetscope_2}}']
-  operations: ['mosaic', 'subset', 'resample', 'write']
+  operations: ['mosaic', 'clip', 'resample', 'write']
   mosaic:
     master_module: 'gdal'
-  subset:
+  clip:
     bounds: [326879, 3899616, 332778, 3894407]
     bounds_epsg: 32652
   resample:

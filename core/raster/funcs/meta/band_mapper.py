@@ -30,13 +30,12 @@ class BandMapper(Observable):
     def __init__(self, raster : RasterMeta):
         super().__init__()
         self.raster = raster
-
-    @property
-    def is_initialized(self):
-        return self.raster.band_to_index is not None and self.raster.index_to_band is not None
+    
+    def is_initialized(self) -> bool:
+        return self.raster.initialized
     
     def initialize_from_names(self, band_names:list[str]):
-        assert not self.is_initialized, "BandMapper is already initialized"        
+        assert not self.is_initialized(), "BandMapper is already initialized"
         self.raster.index_to_band, self.raster.band_to_index = self.produce_band_map(band_names)
         self.notify_observers(BandMapEvent.INITIALIZED)
 
@@ -55,7 +54,7 @@ class BandMapper(Observable):
             self.raster.band_to_index = band_to_index
 
     def copy_to_meta(self):
-        if self.raster.has_meta_dict:
+        if self.raster.has_meta_dict():
             self.raster.meta_dict['index_to_band'] = self.raster.index_to_band
             self.raster.meta_dict['band_to_index'] = self.raster.band_to_index
     

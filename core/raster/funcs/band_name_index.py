@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Union, Tuple, Dict, List, Optional, Any
-from pathlib import Path
 
-from core.util import ProductType, assert_bnames, get_btoi_from_tif
+from core.util import ProductType, assert_bnames
 from core.util.nc import get_band_names_nc
 from core.raster import Raster, ModuleType
 

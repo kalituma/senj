@@ -1,7 +1,7 @@
 read_slc:
   input:
     path: '$PROJECT_PATH/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
-  operations: ['read', 'apply_orbit', 'calibrate', 'topsar_deburst', 'terrain_correction', 'subset', 'write']
+  operations: ['read', 'apply_orbit', 'calibrate', 'topsar_deburst', 'terrain_correction', 'clip', 'write']
   read:
       module: 'snap'
   apply_orbit:
@@ -24,7 +24,7 @@ read_slc:
     img_method: 'BILINEAR_INTERPOLATION'
 #    save_dem: true
 #    map_projection: 'EPSG:5186'
-  subset:
+  clip:
     bounds: [127.70, 35.9, 128.2, 35.5]
     copy_meta: true
   write:

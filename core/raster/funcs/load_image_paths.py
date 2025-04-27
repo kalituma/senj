@@ -5,7 +5,6 @@ from core.util import parse_meta_xml, ProductType, ModuleType
 from core.util.identify import planet_test
 from core.raster.raster_const import LOAD_IMAGES_ALLOWED_EXT
 
-
 def _load_wv_xml_paths(in_path:str) -> List[AnyStr]:
     tmp_meta = parse_meta_xml(in_path, ProductType.WV)
     base_path = Path(in_path).parent

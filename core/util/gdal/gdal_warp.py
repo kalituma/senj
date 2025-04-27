@@ -13,7 +13,9 @@ def snap_params_to_gdal_warp_options(snap_params: dict) -> dict:
 
     if 'src_crs' in snap_params:
         warp_option_dict['srcSRS'] = snap_params['src_crs']
+    if 'crs' in snap_params:
         warp_option_dict['dstSRS'] = snap_params['crs']
+
     if 'resamplingName' in snap_params:
         if snap_params['resamplingName'] in SNAP_TO_GDAL_RESAMPLING:
             warp_option_dict['resampleAlg'] = SNAP_TO_GDAL_RESAMPLING[snap_params['resamplingName']]

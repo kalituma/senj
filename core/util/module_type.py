@@ -7,6 +7,7 @@ class ModuleType(Enum):
     GDAL = 'gdal'
     SNAP = 'snap'
     NETCDF = 'netcdf'
+    VECTOR = 'vector'
 
     @classmethod
     def from_str(cls, s):
@@ -17,8 +18,10 @@ class ModuleType(Enum):
             return cls.SNAP
         elif target == 'netcdf':
             return cls.NETCDF
+        elif target == 'vector':
+            return cls.VECTOR
         else:
-            raise ModuleError(s, available_modules=[str(cls.GDAL), str(cls.SNAP), str(cls.NETCDF)])
+            raise ModuleError(s, available_modules=[str(cls.GDAL), str(cls.SNAP), str(cls.NETCDF), str(cls.VECTOR)])
 
     def __str__(self):
         return self.value

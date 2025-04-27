@@ -55,8 +55,8 @@ processor_2:
   input:
     path: '{{processor_1}}' # processor_1의 출력 자료를 사용한다는 의미
   operations:
-    [subset, select, ...]
-  subset:
+    [clip, select, ...]
+  clip:
     ...
   select:
     ...
@@ -136,7 +136,7 @@ processor_3:
 |           write            |                    All                    |                             ___out_path(str)___, ___out_dir(str)___, out_stem(str), out_ext(str), bands(list[int, str]), prefix(str), suffix(str)                             | gdal, snap |        out_path 혹은 out_dir 둘 중 하나를 선택해 지정         |
 |          convert           |                    All                    |                                                                           ___to_module(str)___                                                                           | gdal, snap |                                                   |
 |          resample          |                    All                    |                                                           epsg(int), pixel_size(float), resampling_method(str)                                                           | gdal, snap |           epsg 혹은 pixel_size 둘 중 하나는 필수           |
-|           subset           |                    All                    |                                                               ___bounds(list[float])___, bounds_espg(int)                                                                | gdal, snap |                                                   |
+|            clip            |                    All                    |                                                               ___bounds(list[float])___, bounds_espg(int)                                                                | gdal, snap |                                                   |
 |           select           |                    All                    |                                                              bands(list[int, str]), band_labels(list[str])                                                               | gdal, snap |          band 혹은 band_labels 둘 중 하나는 필수           |
 |           mosaic           |                    All                    |                                                             ___master_module(str)___, bands(list[str, int])                                                              | gdal, snap |              snap module의 경우, 개선 필요               |
 |           stack            |                    All                    |                                                                   band_list(list[list[int,str], None])                                                                   | gdal, snap |                                                   |
@@ -272,8 +272,8 @@ processor_1:
 ...
 ```
 - ### Subset
-- subset은 데이터를 특정 영역으로 자르는 operation입니다.
-- subset에서 bounds는 자를 영역의 좌표를 나타내며, bounds_epsg는 bounds의 좌표계를 나타냅니다.
+- clip은 데이터를 특정 영역으로 자르는 operation입니다.
+- clip에서 bounds는 자를 영역의 좌표를 나타내며, bounds_epsg는 bounds의 좌표계를 나타냅니다.
 - bounds는 [min_x, max_y, max_x, min_y] 형태로 입력하며, bounds_epsg는 좌표계의 epsg 코드를 나타냅니다.
 - bounds_epsg의 default 값은 4326입니다.
    
@@ -281,9 +281,9 @@ processor_1:
 - Subset 예:
 ```yaml
 processor_1:
-  operations: [..., subset, ...]
+  operations: [..., clip, ...]
   ...
-  subset:
+  clip:
     bounds: [126.5, 38.5, 127.0, 38.0] # 자를 영역의 좌표
     bounds_epsg: 4326 # 좌표계의 epsg 코드
 ...
