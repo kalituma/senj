@@ -26,6 +26,7 @@ class SnapReader(BaseRasterReader, SnapRasterAdapter):
 
         self.meta_builder.build_meta_dict(False)
         self.raster.meta_dict = self.meta_builder.after_build()
+        
         MetaBandsManager(self.raster).update_band_mapping()
 
         self.raster = apply_band_names_to_snap(self.raster, self.meta_builder.btoi_from_header, self.raster.meta_dict)

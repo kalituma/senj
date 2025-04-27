@@ -1,4 +1,4 @@
-from typing import Union, TypeVar, TYPE_CHECKING, Dict, Optional
+from typing import Union, TypeVar, TYPE_CHECKING, Dict
 import warnings
 from pathlib import Path
 
@@ -11,7 +11,8 @@ from core.raster.bname_strategy import BandNameStrategyFactory
 if TYPE_CHECKING:
     from esa_snappy import Product
     from osgeo.gdal import Dataset
-    from core.raster.handler import RasterHandler
+
+    from core.raster.handlers import ModuleTypeHandler, GdalRasterHandler, SnapRasterHandler, NCRasterHandler
 
 
 T = TypeVar('T', bound='Raster')
@@ -73,45 +74,7 @@ class Raster(GeoData, RasterMeta):
         if self.module_type not in self._module_handlers:
             raise ValueError(f'Module type {self.module_type} is not supported')
 
-        return self._module_handlers[self.module_type]
-    
-    @property
-    def bands(self):
-        return self._bands_data
-
-    @bands.setter
-    def bands(self, bands):
-        self._bands_data = bands
-    
-    @property
-    def product_type(self):
-        return self._product_type
-
-    @product_type.setter
-    def product_type(self, product_type):
-        if isinstance(product_type, str):
-            self._product_type = ProductType.from_str(product_type)
-        else:
-            self._product_type = product_type
-
-    @property
-    def is_band_cached(self):
-        return self._is_band_cached
-
-    @is_band_cached.setter
-    def is_band_cached(self, is_cached):
-        self._is_band_cached = is_cached
-
-    @property
-    def raster_from(self):
-        return self._raster_from
-
-    @raster_from.setter
-    def raster_from(self, from_proc):
-        self._raster_from = from_proc
-
-    def __getitem__(self, item):
-        return self.bands[item]
+        return self._module_handlers[self.module_type]    
 
     def __setitem__(self, key, value):
         self.bands[key] = value
@@ -125,9 +88,17 @@ class Raster(GeoData, RasterMeta):
     def get_bands_size(self) -> int:
         return self.handler.get_band_size(self.raw)
 
-    def get_band_names(self, b_type:str= 'default') -> list[str]:
-        strategy = BandNameStrategyFactory.get_band_name_strategy(b_type)
-        return strategy.get_band_names(self)
+    def get_band_names(self) -> list[str]:
+
+        # priority : 1. map 2. meta 3. raw
+        # before getting band names by this function, meta_dict should be always updated.
+
+        if self.initialized:
+            return list(self._index_to_band.values())
+        return self.handler.get_band_names(self.raw, self.meta_dict)
+    
+    def get_band_names_from_raw(self) -> list[str]:
+        return self.handler.get_band_names(self.raw)
 
     def get_tie_point_grid_names(self) -> Union[list[str], None]:
         return self.handler.get_tie_point_grid_names(self.raw)
@@ -136,11 +107,16 @@ class Raster(GeoData, RasterMeta):
         self.bands = None
         self.is_band_cached = False
 
+    def close(self):
+        super().close()
+        self.handler.close(self.raw)
+        self.is_band_cached = False
+
     def cached_bands_have_same_shape(self) -> bool:
         cached_band_names = list(self.bands.keys())
         return all([self.bands[band_name]['value'].shape == self.bands[cached_band_names[0]]['value'].shape for band_name in cached_band_names])
 
-    def to_have_same_dtype(self) -> None:
+    def convert_to_have_same_dtype(self) -> None:
         cached_band_names = list(self.bands.keys())
         dtypes = [self.bands[band_name]['value'].dtype for band_name in cached_band_names]
         have_same_dtype = all([dtypes[0] == dtype for dtype in dtypes])
@@ -152,16 +128,13 @@ class Raster(GeoData, RasterMeta):
             max_dtype = max(dtypes, key=lambda x: x.itemsize)
             for band_name in cached_band_names:
                 self.bands[band_name]['value'] = self.bands[band_name]['value'].astype(max_dtype)
-
-    def reorder_bands(self, band_names:list[str], sort:bool=True) -> None:
-        if sort:
-            band_names.sort()
-        self.bands = {band_name: self.bands[band_name] for band_name in band_names}
     
+    def reorder_bands(self, band_names:list[str]) -> None:
+        self.bands = {band_name: self.bands[band_name] for band_name in band_names}
+
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'
         return self.handler.proj(self.raw)
-    
 
     def get_cached_band_names(self) -> Union[list[str], None]:
         if self._bands_data:
