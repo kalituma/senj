@@ -1,4 +1,5 @@
 from scipy.ndimage import uniform_filter, variance
+
 def apply_lee_filter(bands:dict, size:int):
     """
     Apply Lee filter to reduce speckle noise.

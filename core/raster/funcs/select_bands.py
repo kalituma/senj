@@ -5,7 +5,7 @@ from core.raster import Raster
 from core.util.snap import copy_product
 from core.util.gdal import copy_ds
 from core.util.nc import copy_nc_ds
-from core.raster.funcs.meta import MetaDictManager
+from core.raster.funcs.meta import MetaBandsManager
 from core.raster.funcs import get_band_name_and_index
 
 
@@ -23,8 +23,6 @@ def select_band_raster(raster:Raster, selected_bands_or_indices:List[Union[int,s
 
     assert_bnames(selected_band_name, src_bands, f'bands list to split {selected_band_name} should be in source bands({src_bands})')
 
-    # new_raster = Raster.from_raster(raster)
-
     if raster.module_type == ModuleType.GDAL:
         assert all([b > 0 for b in selected_index]), f'selected_bands for module "{ModuleType.GDAL.__str__()}" should be > 0'
         raw = copy_ds(raster.raw, 'MEM', selected_index=selected_index)
@@ -37,11 +35,8 @@ def select_band_raster(raster:Raster, selected_bands_or_indices:List[Union[int,s
 
     new_band_name = _update_duplicated_band_names(selected_band_name)
     raster.raw = raw
-    if raster.meta_dict:
-        MetaDictManager(raster).update_band_mapping(new_band_name)
 
-    # new_raster = set_raw_metadict(new_raster, raw, raster.product_type, new_meta)
-    # new_raster = new_raster.update_index_bnames(bnames=new_band_name)
+    MetaBandsManager(raster).update_band_mapping(new_band_name)
 
     return raster
 

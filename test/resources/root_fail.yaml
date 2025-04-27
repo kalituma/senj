@@ -100,20 +100,20 @@ stack_5:
 subset_1:
   <<: *parent
   operations : ['subset']
-  subset:
+  clip:
     epsg: 4326
     bounds: []
 
 subset_2:
   <<: *parent
   operations : ['subset']
-  subset:
+  clip:
     bounds: ['a','b','c','d']
 
 subset_3:
   <<: *parent
   operations : ['subset']
-  subset:
+  clip:
     epsg: 4326
 
 # write

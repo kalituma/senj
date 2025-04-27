@@ -10,6 +10,8 @@ class TestReproject(unittest.TestCase):
         self.s2_dim_path = os.path.join(self.test_data_root, 'dim', 's2', 'snap', 'subset_S2A_MSIL1C_20230509T020651_N0509_R103_T52SDD_20230509T035526.0.dim')
         self.s1_tif_path = os.path.join(self.test_data_root, 'tif', 's2', 'snap', 'out_0_B2_B3_B4_B_detector_footprint_B2_B_detector_footprint_B3_B_detector_footprint_B4.tif')
 
+        self.no_meta_path = os.path.join(self.test_data_root, 'tif', 'no_meta', 'out_0_read.tif')
+
     def test_select_op(self):
         context = Context(None)
 
@@ -41,6 +43,13 @@ class TestReproject(unittest.TestCase):
             s1_raster = Read(module='gdal')(self.s1_tif_path, context)
             s1_raster = Select(band_labels=['a', 'b', 'c', 'aa', 'bb', 'cc'])(s1_raster, context)
             self.assertEqual(s1_raster.get_band_names(), ['a', 'b', 'c', 'aa', 'bb', 'cc'])
+
+        with self.subTest(msg='select using tif without meta'):
+            s2_raster = Read(module='gdal', bands=['band_1', 'band_3', 'band_5'])(self.no_meta_path, context)
+            s2_raster = Select(bands=[1, 2, 3], band_labels=['a', 'b', 'c'])(s2_raster, context)
+            out_path = Write(out_dir=out_dir, out_stem='select_no_meta', out_ext='tif')(s2_raster, context)
+            print(out_path)
+            self.assertEqual(s2_raster.get_band_names(), ['a', 'b', 'c'])
 
     def test_save_rgb(self):
         context = Context(None)

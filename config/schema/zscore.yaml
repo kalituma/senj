@@ -1,0 +1,13 @@
+zscore:
+  type: 'dict'
+  required: true
+  schema:
+    band:
+      oneof:
+        - type: 'integer'
+          min: 1
+        - type: 'string'
+      required: true
+    shp_path:
+      type: 'string'
+      required: true

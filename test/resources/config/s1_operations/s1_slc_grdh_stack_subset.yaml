@@ -1,7 +1,7 @@
 read_slc:
   input:
     path: '$PROJECT_PATH/data/test/safe/s1/S1B_IW_SLC__1SDV_20190807T213153_20190807T213220_017485_020E22_1061.SAFE'
-  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'topsar_deburst', 'terrain_correction', 'subset']
+  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'topsar_deburst', 'terrain_correction', 'clip']
   read:
       module: 'snap'
   apply_orbit:
@@ -26,7 +26,7 @@ read_slc:
     img_method: 'BILINEAR_INTERPOLATION'
     save_dem: false
 #    map_projection: 'EPSG:5186'
-  subset:
+  clip:
     bounds: [ 127.70, 35.9, 128.2, 35.5 ]
     copy_meta: true
 
@@ -54,7 +54,7 @@ read_grdh:
     img_method: 'BILINEAR_INTERPOLATION'
 #    map_projection: 'EPSG:5186'
     save_dem: false
-  subset:
+  clip:
     bounds: [ 127.70, 35.9, 128.2, 35.5 ]
     copy_meta: true
 

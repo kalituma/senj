@@ -2,10 +2,10 @@ read_s1_tif:
   input:
     path: '$PROJECT_PATH/data/test/tif/s1/gdal/src_1'
     pattern: '*.tif'
-  operations: ['read', 'subset']
+  operations: ['read', 'clip']
   read:
     module: 'gdal'
-  subset:
+  clip:
     bounds: [ 126.901, 36.294, 127.081, 36.114 ]
     bounds_epsg: 4326
 
@@ -18,7 +18,7 @@ read_s1_dim:
     module: 'snap'
   convert:
     to_module: 'gdal'
-  subset:
+  clip:
     bounds: [ 126.901, 36.294, 127.081, 36.114 ]
     bounds_epsg: 4326
 

@@ -1,0 +1,53 @@
+projection:
+  type: 'dict'
+  required: true
+  schema:
+    epsg:
+      type: 'integer'
+      required: false        
+    proj_params:
+      type: 'dict'
+      required: false
+      schema:
+        proj_cs:
+          type: 'string'
+          required: false
+          allowed: ['lcc']
+        geog_cs:
+          type: 'string'
+          required: false
+          allowed: ['wgs84']
+        std_parallel1:
+          type: 'float'
+          required: false
+        std_parallel2:
+          type: 'float'
+          required: false
+        latitude_origin:
+          type: 'float'
+          required: false
+        longitude_origin:
+          type: 'float'
+          required: false
+        false_easting:
+          type: 'float'
+          required: false
+        false_northing:
+          type: 'float'
+          required: false
+    gt_params:
+      type: 'dict'
+      required: false
+      schema:
+        ul_x:
+          type: 'float'
+          required: false
+        ul_y:
+          type: 'float'
+          required: false
+        pixel_size_x:
+          type: 'float'
+          required: false
+        pixel_size_y:
+          type: 'float'
+          required: false

@@ -10,7 +10,7 @@ EXT_MAP = {
 }
 
 MODULE_EXT_MAP = {
-    'gdal' : ['tif', 'xml', 'safe'],
+    'gdal' : ['tif', 'xml', 'safe', 'gb2'],
     'snap' : ['dim', 'tif', 'safe', 'xml'],
     'netcdf' : ['nc', 'nc4']
 }

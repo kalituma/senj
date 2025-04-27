@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 import warnings
 
 class RasterMeta(ABC):
     def __init__(self):
-        self._meta_dict:dict = None
-        self._index_to_band:dict = None
-        self._band_to_index:dict = None
+        self._meta_dict:Optional[dict] = None
+        self._index_to_band:Optional[dict] = None
+        self._band_to_index:Optional[dict] = None
         self.op_history: list = []
 
     @property
@@ -17,14 +18,14 @@ class RasterMeta(ABC):
         return self._meta_dict
 
     @meta_dict.setter
-    def meta_dict(self, meta_dict):
+    def meta_dict(self, meta_dict:dict):
         self._meta_dict = meta_dict
 
     def has_meta_dict(self):
         return self._meta_dict is not None
     
     def has_meta_band_map(self):
-        if not self.has_meta_dict:
+        if not self.has_meta_dict():
             warnings.warn('Meta dict is not initialized')
             return False        
         return 'index_to_band' in self._meta_dict and 'band_to_index' in self._meta_dict
@@ -49,7 +50,7 @@ class RasterMeta(ABC):
         return list(self._index_to_band.values())
        
     @abstractmethod
-    def get_band_names(self):
+    def get_band_names(self, type:str='default') -> list[str]:
         pass
 
     # def init_band_map_raw(self, bnames):
@@ -104,12 +105,6 @@ class RasterMeta(ABC):
 
     def _produce_band_map(self, band_names:list[str]):
         return {i+1: b for i, b in enumerate(band_names)}, {b: i+1 for i, b in enumerate(band_names)}
-
-    def _get_band_names_from_meta(self, indices:list) -> list[str]:
-        try:
-            return [self.meta_dict['index_to_band'][index-1] for index in indices]
-        except Exception as e:
-            return [f'band_{index}' for index in indices]
 
     def add_history(self, history):
         self.op_history.append(history)

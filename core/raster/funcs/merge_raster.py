@@ -4,7 +4,7 @@ from core.raster import Raster, ModuleType
 from core.util import assert_bnames, ProductType
 from core.util.snap import merge as merge_gpf
 from core.util.gdal import merge as merge_gdal
-
+from core.raster.funcs.meta import MetaBandsManager
 def merge_product_types(rasters:list[Raster]):
     product_types = [r.product_type for r in rasters]
     if len(set(product_types)) > 1:
@@ -32,6 +32,7 @@ def merge_raster_func(rasters:list[Raster], module_type:ModuleType, geo_err:floa
 
     new_product_type = merge_product_types(rasters)
     merged_raster = Raster.from_raster(rasters[0], path='', raw=merged, module_type=module_type, product_type=new_product_type)
-    merged_raster.update_band_map(band_name_list)
+
+    MetaBandsManager(merged_raster).update_band_mapping(band_name_list)
 
     return merged_raster

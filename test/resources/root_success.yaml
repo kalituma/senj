@@ -111,14 +111,14 @@ stack_5:
 subset_1:
   <<: *parent
   operations : ['subset']
-  subset:
+  clip:
     epsg: 4326
     bounds: [128,10,34,25]
 
 subset_2:
   <<: *parent
   operations : ['subset']
-  subset:
+  clip:
     bounds: [128.1,32.5,129.3,33.4]
 
 # write

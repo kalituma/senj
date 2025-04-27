@@ -1,6 +1,7 @@
 from core.raster import Raster, ModuleType
 from core.util.gdal import mosaic_by_ds
 from core.util.snap import mosaic_gpf
+from core.raster.funcs.meta import MetaBandsManager
 
 def mosaic_raster_func(rasters:list[Raster], module_type:ModuleType):
 
@@ -17,6 +18,6 @@ def mosaic_raster_func(rasters:list[Raster], module_type:ModuleType):
 
     new_product_type = rasters[0].product_type
     mosaic_raster = Raster.from_raster(rasters[0], path='', raw=mosaic_raw, module_type=module_type, product_type=new_product_type)
-    mosaic_raster.update_band_map(band_name_list)
+    MetaBandsManager(mosaic_raster).update_band_mapping(band_name_list)
 
     return mosaic_raster

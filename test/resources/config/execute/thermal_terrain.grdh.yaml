@@ -1,7 +1,7 @@
 grdh_1:
   input:
     path: '$ROOT_DIR/INPUTDATA/S1/S1A_IW_GRDH_1SDV_20230519T092327_20230519T092357_048601_05D86A_6D9B.SAFE'
-  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'terrain_correction', 'subset']
+  operations: ['read', 'apply_orbit', 'thermal_noise_removal', 'calibrate', 'terrain_correction', 'clip']
   read:
     module: 'snap'
   apply_orbit:
@@ -18,7 +18,7 @@ grdh_1:
     pixel_spacing_degree: 0.0008
     img_method: 'BICUBIC_INTERPOLATION'
     map_projection: 'WGS84(DD)'
-  subset:
+  clip:
     bounds: [127.54, 35.818, 128.227, 35.132]
     bounds_epsg: 4326
 
@@ -42,7 +42,7 @@ grdh_2:
     pixel_spacing_degree: 0.0008
     img_method: 'BICUBIC_INTERPOLATION'
     map_projection: 'WGS84(DD)'
-  subset:
+  clip:
     bounds: [127.54, 35.818, 128.227, 35.132]
     bounds_epsg: 4326
 

@@ -74,7 +74,7 @@ def build_thermal_noise_removal_params(selectedPolarisations:list[str]):
     polarArray = jpy.array('java.lang.String', selectedPolarisations)
     return _build_params(selectedPolarisations=polarArray)
 
-def build_subset_params(**kwargs):
+def build_clip_params(**kwargs):
 
     jpy = load_snap('jpy')
 

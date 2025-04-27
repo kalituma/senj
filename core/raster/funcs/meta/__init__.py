@@ -1,4 +1,11 @@
 from .band_mapper import BandMapper, BandMapEvent
-from .metadata_manager import MetaDictManager
+from .meta_bands_manager import MetaBandsManager
 
-__all__ = ['BandMapper', 'MetaDictManager', 'BandMapEvent']
+from .meta_builder import MetaBuilder
+from .meta_builder import SnapMetaBuilder
+from .meta_builder import TifMetaBuilder
+from .meta_builder import NcMetaBuilder
+from .meta_builder import GribMetaBuilder
+
+__all__ = ['BandMapper', 'MetaBandsManager', 'BandMapEvent', 
+           'MetaBuilder', 'TifMetaBuilder', 'SnapMetaBuilder', 'NcMetaBuilder', 'GribMetaBuilder']

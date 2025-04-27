@@ -4,10 +4,10 @@ read_blue:
   input:
     path: '$ROOT_DIR/INPUTDATA/NO_META'
     pattern: '*.BLUE.*.tif'
-  operations: ['read', 'subset']
+  operations: ['read', 'clip']
   read:
     module: 'gdal'
-  subset:
+  clip:
     bounds: *bounds
     bounds_epsg: 32652
 
@@ -18,7 +18,7 @@ read_red:
   operations: [ 'read', 'subset' ]
   read:
     module: 'gdal'
-  subset:
+  clip:
     bounds: *bounds
     bounds_epsg: 32652
 
@@ -29,7 +29,7 @@ read_green:
   operations: [ 'read', 'subset' ]
   read:
     module: 'gdal'
-  subset:
+  clip:
     bounds: *bounds
     bounds_epsg: 32652
 

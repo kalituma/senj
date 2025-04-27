@@ -1,4 +1,4 @@
-subset:
+clip:
   type: 'dict'
   required: true
 

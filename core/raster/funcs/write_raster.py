@@ -1,10 +1,14 @@
 from pathlib import Path
 from core.raster import Raster, ModuleType, EXT_MAP
 from core.util import set_btoi_to_tif, set_btoi_to_tif_meta
-from core.util.snap import write_gpf, write_metadata, is_bigtiff_gpf
+from core.util.meta import write_metadata
+
+from core.util.asserts import deprecated
+from core.util.snap import write_gpf, is_bigtiff_gpf
 from core.util.gdal import copy_ds, is_bigtiff_gdal
 from core.util.errors import ExtensionNotSupportedError
 
+@deprecated
 def write_raster(raster:Raster, out_path:str):
 
     out_ext = Path(out_path).suffix[1:]

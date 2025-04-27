@@ -5,6 +5,7 @@ from core.util import set_btoi_to_tif
 from core.util.snap import rename_bands
 from core.raster import Raster, ModuleType
 from core.raster.funcs import get_band_name_and_index
+from core.raster.funcs.meta import MetaBandsManager
 
 def rename_raster_bands(raster:Raster, old_names_or_indices:List[AnyStr], new_band_names:List[AnyStr]):
     assert len(new_band_names) == len(old_names_or_indices), f'new band names({len(new_band_names)}) should be equal to the number of bands({len(raster.bands)})'
@@ -23,11 +24,7 @@ def rename_raster_bands(raster:Raster, old_names_or_indices:List[AnyStr], new_ba
     #     if ext == 'tif':
     #         raster.raw = set_btoi_to_tif(path, {band_name_list[i]:i+1 for i in range(len(band_name_list))})
 
-    if raster.meta_dict:
-        raster.update_band_map_to_meta(band_name_list)
-        raster.update_index_bnames()
-    else:
-        raster.update_index_bnames(band_name_list)
+    MetaBandsManager(raster).update_band_mapping(band_name_list)
 
     if raster.module_type == ModuleType.SNAP:
         raster.raw = rename_bands(raster.raw, band_names=band_name_list)

@@ -1,23 +1,25 @@
 from typing import TYPE_CHECKING, List, Union, AnyStr
 from copy import deepcopy
 
-from core.operations.parent import ParamOp, WarpOp
-from core.operations import OPERATIONS, SUBSET_OP
+from core.operations.parent import ParamOp, WarpOp, Op
+from core.operations import OPERATIONS, CLIP_OP
 from core.raster import Raster, ModuleType
+
 from core.util import region_to_wkt, assert_bnames, make_transform
 from core.util.op import OP_Module_Type, op_constraint
-from core.util.snap import subset_gpf
-from core.util.gdal import is_epsg_code_valid
+from core.util.snap import clip_gpf
+from core.util.gdal import is_epsg_code_valid, create_envelope
 from core.util.snap import find_epsg_from_product
 
 if TYPE_CHECKING:
     from core.logic import Context
+    from core.vector import Vector
 
-@OPERATIONS.reg(name=SUBSET_OP, no_arg_allowed=False)
+@OPERATIONS.reg(name=CLIP_OP, no_arg_allowed=False)
 @op_constraint(avail_module_types=[OP_Module_Type.GDAL, OP_Module_Type.SNAP])
-class Subset(ParamOp, WarpOp):
+class RasterClip(ParamOp, WarpOp):
     def __init__(self, bounds:list[float], bounds_epsg:int=4326,  copy_meta:bool=True):
-        super().__init__(SUBSET_OP)
+        super().__init__(CLIP_OP)
 
         self.add_param(copyMetadata=copy_meta)
         assert len(bounds) == 4, 'bounds should have 4(min_x, max_y, max_x, min_y) elements'
@@ -46,7 +48,7 @@ class Subset(ParamOp, WarpOp):
             tiePoints = raster.get_tie_point_grid_names()
             if tiePoints:
                 self.add_param(tiePointGridNames=tiePoints)
-            raster.raw = subset_gpf(raster.raw, self.snap_params)
+            raster.raw = clip_gpf(raster.raw, self.snap_params)
         elif raster.module_type == ModuleType.GDAL:
             assert self.module_type == OP_Module_Type.GDAL, 'Subset operation is only available for GDAL module'
             cur_params = deepcopy(self.snap_params)
@@ -58,3 +60,19 @@ class Subset(ParamOp, WarpOp):
         raster = self.post_process(raster, context)
 
         return raster
+    
+class VectorClip(Op):
+    def __init__(self, bounds:list[float]):
+        super().__init__(CLIP_OP)
+
+        if len(bounds) == 4:
+            self.bounds = [bounds[0], bounds[1], bounds[2], bounds[1], bounds[2], bounds[3], bounds[0], bounds[3]] # ulx, uly, urx, ury, lrx, lry, llx, lly
+        elif len(bounds) == 8:            
+            self.bounds = bounds
+
+        self.bounds_geom = create_envelope(*self.bounds)
+
+        assert len(bounds) >= 4, 'bounds should have at least 4(min_x, max_y, max_x, min_y) or 8(ulx, uly, urx, ury, lrx, lry, llx, lly) elements'
+
+    def __call__(self, vector:"Vector", context:"Context", *args, **kwargs):
+        return vector

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class ProcessorType(Enum):
     FILE = 'FileProcessor'
     LINK = 'LinkProcessor'
+    SUB = 'SubProcessor'
 
     def __str__(self):
         return self.value
@@ -22,6 +23,8 @@ class ProcessorType(Enum):
             return ProcessorType.FILE
         elif s == 'LinkProcessor':
             return ProcessorType.LINK
+        elif s == 'SubProcessor':
+            return ProcessorType.SUB
         else:
             raise ValueError(f'Unknown ProcessorType: {s}')
 
@@ -62,8 +65,8 @@ class Processor(OperationManager):
     def splittable(self, splittable:bool):
         self._splittable = splittable
 
-    def process(self, input:"Raster", ctx:"Context"):
-        x = input
+    def process(self, in_raster:"Raster", ctx:"Context"):
+        x = in_raster
         for i, op in enumerate(self._ops):
             x = op(x, ctx)
         return x

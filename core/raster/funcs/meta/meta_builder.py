@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TYPE_CHECKING
 from pathlib import Path
-from lxml import etree
+
 
 from core.util import (
     get_btoi_from_tif, read_pickle, parse_meta_capella, parse_meta_xml, get_files_recursive
@@ -11,10 +11,12 @@ from core.util.nc import make_meta_dict_from_nc_ds
 from core.util.gdal import make_meta_dict_from_grib
 from core.raster import ProductType
 from core.raster.funcs import update_meta_dict, process_provided_band_to_index, process_sentinel_planetscope_capella, process_worldview, process_goci_gk2a
-from core.raster.funcs.reader import BaseReader
+
+if TYPE_CHECKING:
+    from core.raster.funcs.reader import BaseRasterReader
 
 class MetaBuilder(ABC):
-    def __init__(self, reader: BaseReader):        
+    def __init__(self, reader: "BaseRasterReader"):
                 
         self.reader = reader
         self.raster_path = self.reader.raster.path
@@ -95,8 +97,9 @@ class MetaBuilder(ABC):
         return None
 
 class TifMetaBuilder(MetaBuilder):
-    def build_meta_dict(self, update_meta_bounds: bool=False) -> Dict[str, Any]:                
-        self.btoi_from_header = get_btoi_from_tif(self.raster_path)
+    def build_meta_dict(self, update_meta_bounds: bool=False) -> Dict[str, Any]:
+        if Path(self.raster_path).suffix.lower() == '.tif':
+            self.btoi_from_header = get_btoi_from_tif(self.raster_path)
 
         raw = self.reader.raster.raw
         meta_dict = self.check_cached_meta()

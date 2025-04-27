@@ -14,11 +14,11 @@ ge_atmos_corr:
     map_dir: '$ROOT_DIR/OUTPUTDATA/GE'
     map_stem: 'ge'
 
-ge_subset_select_convert:
+ge_clip_select_convert:
   input:
     path: '{{ge_atmos_corr}}'
   operations: ['subset', 'select', 'convert', 'write']
-  subset:
+  clip:
     bounds: [129.0115, 37.623, 129.0424, 37.5967]
     bounds_epsg: 4326
   select:

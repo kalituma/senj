@@ -1,6 +1,6 @@
 from typing import Union, TYPE_CHECKING, Optional, List, Dict, Any
 from pathlib import Path
-from core.util import ProductType, read_pickle, parse_meta_xml, load_gdal
+from core.util import ProductType, read_pickle, parse_meta_xml, load_gdal, deprecated
 
 from core.raster import ModuleType
 from core.util.parse_meta_text import parse_meta_capella
@@ -57,6 +57,7 @@ def update_meta_dict(meta_dict: Dict[str, Any], raw: Union["Dataset", "Product"]
 
     return meta_dict
 
+@deprecated
 def _try_load_cached_meta(raster_path: str) -> Optional[Dict[str, Any]]:
     if not raster_path:
         return None
@@ -69,6 +70,7 @@ def _try_load_cached_meta(raster_path: str) -> Optional[Dict[str, Any]]:
     
     return None
 
+@deprecated
 def get_tif_dimension(raw: Union["Dataset", "Product", None], gdal) -> Optional[List[int]]:
     if raw is None:
         return None
@@ -78,6 +80,7 @@ def get_tif_dimension(raw: Union["Dataset", "Product", None], gdal) -> Optional[
     
     return None
 
+@deprecated
 def create_meta_dict(
     raw: Union["Product", "Dataset"], 
     product_type: ProductType, 

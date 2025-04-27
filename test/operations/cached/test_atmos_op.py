@@ -59,7 +59,7 @@ class TestAtmosCorr(unittest.TestCase):
     def test_atmos_corr_to_ps(self):
         context = Context(None)
         Logger.get_logger(log_level='info', log_file_path=os.path.join(self.data_root, 'target', 'test_out', 'atmos_op', 'atmos_op.log'))
-        raster = Read(module='snap')(self.ps_xml_path, context)
+        raster = Read(module='gdal')(self.ps_xml_path, context)
         raster = AtmosCorr(bands=['band_1', 'band_2', 'band_3', 'band_4'],
                            band_slots=['blue', 'green', 'red', 'nir'],
                            write_map=True,
@@ -76,7 +76,7 @@ class TestAtmosCorr(unittest.TestCase):
             raster = Read(module='snap')(self.s2_dim_path, context)
             with self.assertRaises(AssertionError) as assert_error:
                 AtmosCorr(bands=['B1', 'B2', 'B3', 'B4', 'B5'], band_slots=['B1', 'B2', 'B3', 'B4', 'B5'])(raster, context)
-            self.assertEqual(str(assert_error.exception), 'Sentinel-2 product should have detector bands.')
+                self.assertEqual(str(assert_error.exception), 'AssertionError: Sentinel-2 product should have detector bands.')
 
         with self.subTest('the error case band_slots length short than bands length'):
             raster = Read(module='snap')(self.s2_dim_path, context)

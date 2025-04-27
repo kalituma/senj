@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from core.operations.parent import Op
-from core.raster.funcs.meta import MetaDictManager
+from core.raster.funcs.meta import MetaBandsManager
 
 if TYPE_CHECKING:
     from core.raster import Raster
@@ -12,5 +12,5 @@ class SnappyOp(Op):
 
     def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):
         super().post_process(raster, context)
-        MetaDictManager(raster).update_band_mapping(raster.get_band_names_from_raw())
+        MetaBandsManager(raster).update_band_mapping(raster.get_band_names('raw'))
         return raster

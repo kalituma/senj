@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, Optional
 
 from core.operations.parent import ChainableOp
 from core.util.op import OP_Module_Type
@@ -57,7 +57,7 @@ class OperationManager:
         pass
 
     @abstractmethod
-    def chaining(self, prev_op:Type["Op"]=None, prev_chain_key:"CHAIN_KEY"=None):
+    def chaining(self, prev_op:Optional[Type["Op"]]=None, prev_chain_key:Optional["CHAIN_KEY"]=None):
 
         for op in self._ops:
             if isinstance(op, ChainableOp):

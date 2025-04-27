@@ -1,6 +1,9 @@
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, TYPE_CHECKING
 import numpy as np
 from osgeo import gdal
+
+if TYPE_CHECKING:
+    from osgeo.gdal import Dataset
 
 from core.util.gdal import GDAL_DTYPE_MAP, read_gdal_bands
 
@@ -92,7 +95,7 @@ def create_ds_with_dict(raster_bands:dict[str], gdal_format,
     mem_ds.FlushCache()
     return mem_ds, btoi_for_ds
 
-def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=None, is_bigtiff=False, compress=False):
+def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=None, is_bigtiff=False, compress=False) -> 'Dataset':
     if not out_path:
         out_path = ''
 

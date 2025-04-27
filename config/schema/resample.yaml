@@ -4,8 +4,7 @@ resample:
   schema:
     epsg:
       type: 'integer'
-      required: false
-      min: 1
+      required: false    
     pixel_size:
       type: 'number'
       required: false
