@@ -4,12 +4,13 @@ from copy import deepcopy
 from core.operations.parent import ParamOp, WarpOp, Op
 from core.operations import OPERATIONS, CLIP_OP
 from core.raster import Raster, ModuleType
+from core.vector.funcs import VectorClipper
 
 from core.util import region_to_wkt, assert_bnames, make_transform
 from core.util.op import OP_Module_Type, op_constraint
 from core.util.snap import clip_gpf
 from core.util.gdal import is_epsg_code_valid, create_envelope
-from core.util.snap import find_epsg_from_product
+
 
 if TYPE_CHECKING:
     from core.logic import Context
@@ -75,4 +76,6 @@ class VectorClip(Op):
         assert len(bounds) >= 4, 'bounds should have at least 4(min_x, max_y, max_x, min_y) or 8(ulx, uly, urx, ury, lrx, lry, llx, lly) elements'
 
     def __call__(self, vector:"Vector", context:"Context", *args, **kwargs):
-        return vector
+        clipped_vector = VectorClipper.clip(vector, self.bounds_geom)
+        clipped_vector = self.post_process(clipped_vector, context)
+        return clipped_vector

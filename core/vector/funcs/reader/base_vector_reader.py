@@ -34,9 +34,9 @@ class BaseVectorReader(ABC):
     def path(self, value: str):
         self._path = value
 
-    def initialize(self):
-        self.vector = Vector.create(self.path, self.module_type)
-        self.module_type = self.module_type
+    def initialize(self, file_path: str, module_type: ModuleType):
+        self.vector = Vector.create(file_path, module_type)
+        self.module_type = module_type
 
     @abstractmethod
     def read(self, file_path: str, *args, **kwargs):

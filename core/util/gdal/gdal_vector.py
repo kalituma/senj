@@ -1,15 +1,14 @@
+from typing import TYPE_CHECKING
+from tqdm import tqdm
 from osgeo import ogr
+from osgeo import gdal
 
-def get_envelope_coords(raw) -> tuple[float, float, float, float, float, float, float, float]:
-    gt = raw.GetGeoTransform()
-    cols = raw.RasterXSize
-    rows = raw.RasterYSize
+if TYPE_CHECKING:
+    from osgeo.ogr import Layer, FieldDefn
 
-    ulx, uly = gt[0], gt[3]
-    urx, ury = gt[0] + cols * gt[1], gt[3] + cols * gt[2] 
-    lrx, lry = gt[0] + cols * gt[1] + rows * gt[4], gt[3] + cols * gt[2] + rows * gt[5]
-    llx, lly = gt[0] + rows * gt[4], gt[3] + rows * gt[5]
-
+def get_vector_envelope(vector_layer: "Layer") -> tuple[float, float, float, float, float, float, float, float]:
+    minx, maxx, miny, maxy = vector_layer.GetExtent()
+    ulx, uly, urx, ury, lrx, lry, llx, lly = minx, maxy, maxx, maxy, maxx, miny, minx, miny
     return ulx, uly, urx, ury, lrx, lry, llx, lly
 
 def create_envelope(ulx, uly, urx, ury, lrx, lry, llx, lly) -> ogr.Geometry:
@@ -30,18 +29,11 @@ def clip_vector(input_ds, clip_geom, out_ds):
     
     in_layer = input_ds.GetLayer()
         
-    out_layer = out_ds.CreateLayer('clipped',
-                                  in_layer.GetSpatialRef(),
-                                  in_layer.GetGeomType())
-        
-    in_layer_defn = in_layer.GetLayerDefn()
-    for i in range(in_layer_defn.GetFieldCount()):
-        out_layer.CreateField(in_layer_defn.GetFieldDefn(i))
-    
+    out_layer = out_ds.GetLayer()
     out_defn = out_layer.GetLayerDefn()
     
     in_layer.ResetReading()
-    for in_feat in in_layer:
+    for in_feat in tqdm(in_layer, desc="Clipping features"):
         geom = in_feat.GetGeometryRef()
         clipped_geom = geom.Intersection(clip_geom)
         
@@ -49,10 +41,18 @@ def clip_vector(input_ds, clip_geom, out_ds):
             out_feat = ogr.Feature(out_defn)
             out_feat.SetGeometry(clipped_geom)
             
-            for i in range(in_layer_defn.GetFieldCount()):
+            for i in range(out_defn.GetFieldCount()):
                 out_feat.SetField(i, in_feat.GetField(i))
             
             out_layer.CreateFeature(out_feat)
             out_feat = None
 
     return out_ds
+
+def get_vector_fields(vector_layer: "Layer") -> list["FieldDefn"]:
+    fields = []
+    layer_defn = vector_layer.GetLayerDefn()
+    for i in range(layer_defn.GetFieldCount()):
+        field_defn = layer_defn.GetFieldDefn(i)
+        fields.append(field_defn)
+    return fields

@@ -34,7 +34,7 @@ class BaseWriter(ABC):
     def write(self, path: str) -> None:
         ext = Path(path).suffix.lower()
         if ext in self._format_strategies:
-            self._format_strategies[ext].write_data(self, self.raster, path)
+            self._format_strategies[ext].write(self, self.raster, path)
         else:
             raise ValueError(f"Unsupported file extension: {ext}")
 

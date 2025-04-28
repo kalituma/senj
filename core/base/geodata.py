@@ -16,10 +16,18 @@ class GeoData(ABC):
         self._path: str = path
         self._raw = None
         self._is_cached: bool = False
+        self._op_history: list = []
         
         if path and not Path(path).exists():
             raise FileNotFoundError(f'{path} does not exist')
     
+    @property
+    def op_history(self) -> list:
+        return self._op_history
+    
+    def add_history(self, history):
+        self.op_history.append(history)
+
     @property
     def path(self) -> str:
         return self._path
@@ -57,9 +65,13 @@ class GeoData(ABC):
         pass
     
     @property
-    def envelope(self):
-        return self.handler.get_envelope(self.raw)
+    def envelope_geom(self):
+        return self.handler.get_envelope_geom(self.raw)
+    
+    @property
+    def bounds(self):
+        return self.handler.bounds(self.raw)
 
     @property
     def proj(self):
-        return self.handler.proj(self.raw)
+        return self.handler.proj(self.raw)    

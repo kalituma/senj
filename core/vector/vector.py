@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 T = TypeVar('T', bound='Vector')
 
-class Vector(GeoData):    
+class Vector(GeoData):
     
     _module_handlers: Dict[ModuleType, "VectorHandler"] = {
         ModuleType.GDAL: GdalVectorHandler(),
@@ -22,9 +22,9 @@ class Vector(GeoData):
         self._features_data: Dict = None
         self._geometry_type: str = None
         self._fields: List[Dict] = None
-        
+
     @property
-    def handler(self):
+    def handler(self) -> "VectorHandler":
         if not self.module_type:
             raise ValueError('Module type is not set')
         
@@ -35,7 +35,13 @@ class Vector(GeoData):
 
     def close(self):
         self.raw = None
-        
+
+    @staticmethod
+    def like(vector: T):
+        new_vector = Vector.create('', vector.module_type)
+        new_vector.raw = vector.handler.empty_raw(vector.raw)
+        return new_vector
+    
     @staticmethod
     def from_vector(vector: T, **kwargs):
         new_vector = Vector(vector.path)
@@ -47,18 +53,20 @@ class Vector(GeoData):
         for key, value in kwargs.items():
             setattr(new_vector, key, value)
             
-        return new_vector
+        return new_vector   
+        
     
     @classmethod
     def create(cls, path: str, module_type: Optional[ModuleType]=None, **kwargs):
         vector = cls(path)
-        
+
         if module_type:
-            vector.module_type = module_type        
+            if module_type not in cls._module_handlers:
+                raise ValueError(f'Module type {module_type} is not supported')            
+            vector.module_type = module_type
         
         return vector
-    
-    
+
     @property
     def features(self) -> Dict:
         if not self._features_data and self.raw:

@@ -13,10 +13,10 @@ class CachedOp(Op):
     def __call__(self, *args, **kwargs):
         pass
 
-    def pre_process(self, raster:"Raster", context:"Context", *args, **kwargs):
+    def pre_process(self, data: "Raster", context: "Context", *args, **kwargs):
 
         bands_to_load = kwargs['bands_to_load']
-        target_raster = read_band_from_raw(raster, bands_to_load, add_to_cache=True)
+        target_raster = read_band_from_raw(data, bands_to_load, add_to_cache=True)
         self._logger.log('DEBUG', f'({self.__class__.__name__})-->preprocess : {bands_to_load} bands are loaded from raw')
         return target_raster
 

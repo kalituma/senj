@@ -1,7 +1,6 @@
 clip:
   type: 'dict'
   required: true
-
   schema:
     bounds:
       type: 'list'

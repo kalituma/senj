@@ -1,15 +1,26 @@
-from typing import Union, Tuple, List, TYPE_CHECKING
+from typing import Union, Tuple, List, TYPE_CHECKING, Optional
 import numpy as np
-from osgeo import gdal
+from osgeo import gdal, ogr, osr
 
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset
+    from osgeo.ogr import DataSource, FieldDefn
 
 from core.util.gdal import GDAL_DTYPE_MAP, read_gdal_bands
 
-def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str=None, transform:tuple=None, metadata=None,
-              out_path='', is_bigtiff=False, compress=False, no_data=np.nan):
+def create_ds(gdal_format=None, width=None, height=None, band_num=None, dtype=None, 
+              proj_wkt:str=None, transform:tuple=None, metadata=None,
+              out_path='', is_bigtiff=False, compress=False, no_data=np.nan, 
+              is_vector=False, geom_type=None, field_defs=None):
+    if is_vector:
+        return create_vector_ds(gdal_format, proj_wkt, out_path, geom_type, field_defs, metadata)
+    else:
+        return create_raster_ds(gdal_format, width, height, band_num, dtype, proj_wkt, 
+                                transform, metadata, out_path, is_bigtiff, compress, no_data)
 
+def create_raster_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str=None, 
+                    transform:tuple=None, metadata=None, out_path='', 
+                    is_bigtiff=False, compress=False, no_data=np.nan):    
     if isinstance(dtype, str):
         gdal_dtype = GDAL_DTYPE_MAP[dtype]
     else:
@@ -39,6 +50,38 @@ def create_ds(gdal_format, width, height, band_num, dtype, proj_wkt:str=None, tr
         new_ds.GetRasterBand(i+1).Fill(no_data)
 
     return new_ds
+
+def create_vector_ds(gdal_format: str = 'Memory', proj_wkt: Optional[str] = None, 
+                     out_path: str = '', geom_type: Optional[int] = ogr.wkbPolygon,
+                     field_defs: Optional[List["FieldDefn"]] = None,
+                     metadata: Optional[dict] = None) -> 'DataSource':
+    
+    if not gdal_format:
+        gdal_format = 'Memory'
+    if not geom_type:
+        geom_type = ogr.wkbPolygon
+    if not field_defs:
+        field_defs = []
+        
+    driver = gdal.GetDriverByName(gdal_format)
+    ds = driver.Create(out_path if out_path else "", 0, 0, 0, gdal.GDT_Unknown, [])
+    
+    layer_name = "layer0" if gdal_format == 'Memory' else ""
+    srs = None
+    if proj_wkt:
+        srs = osr.SpatialReference()
+        srs.ImportFromWkt(proj_wkt)
+    
+    layer = ds.CreateLayer(layer_name, srs, geom_type)
+    
+    for field_defn in field_defs:
+        layer.CreateField(field_defn)
+    
+    if metadata:
+        for key, value in metadata.items():
+            ds.SetMetadataItem(key, value)
+    
+    return ds
 
 def create_ds_with_arr(arr:np.ndarray, gdal_format,
                        proj_wkt:Union[str, None]=None, transform:Union[tuple, None]=None, metadata:dict=None,
@@ -125,5 +168,6 @@ def copy_ds(src_ds, target_ds_type, selected_index:list[int]=None, out_path:str=
 
     return tar_ds
 
-
+def read_vector_ds(path: str):
+    return gdal.OpenEx(path, gdal.OF_VECTOR)
 

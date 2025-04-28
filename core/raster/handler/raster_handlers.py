@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from osgeo import osr
 
 from core.util.nc import get_band_names_nc
-from core.util.gdal import create_envelope, get_envelope_coords
+from core.util.gdal import create_envelope, get_raster_envelope
 import warnings
 
 if TYPE_CHECKING:
@@ -30,7 +30,11 @@ class RasterHandler(ABC):
         pass
 
     @abstractmethod
-    def get_envelope(self, raw) -> list[float]:
+    def bounds(self, raw) -> tuple[float, float, float, float]:
+        pass
+
+    @abstractmethod
+    def get_envelope_geom(self, raw) -> "Geometry":
         pass
 
     def get_band_names_from_meta_dict(self, meta_dict:dict) -> list[str]:
@@ -55,10 +59,15 @@ class GdalRasterHandler(RasterHandler):
 
     def get_tie_point_grid_names(self, raw:"Dataset") -> Optional[list[str]]:        
         raise NotImplementedError("Tie point grid names not implemented for GDAL")
+    
+    def bounds(self, raw: "Dataset") -> tuple[float, float, float, float]:
+        ulx, uly, _, _, lrx, lry, _, _= get_raster_envelope(raw)
+        return ulx, uly, lrx, lry
 
-    def get_envelope(self, raw:"Dataset") -> "Geometry":        
+    def get_envelope_geom(self, raw:"Dataset") -> "Geometry":        
+        
+        ulx, uly, urx, ury, lrx, lry, llx, lly = get_raster_envelope(raw)
 
-        ulx, uly, urx, ury, lrx, lry, llx, lly = get_envelope_coords(raw)
         env_polygon =  create_envelope(ulx, uly, urx, ury, lrx, lry, llx, lly)
         srs = osr.SpatialReference()
         srs.ImportFromWkt(raw.GetProjectionRef())
@@ -84,7 +93,10 @@ class SnapRasterHandler(RasterHandler):
         if len(grid_names) > 0:
             return grid_names
 
-    def get_envelope(self, raw:"Product"):
+    def bounds(self, raw: "Product") -> list[float]:
+        raise NotImplementedError("Envelope not implemented for SNAP")
+
+    def get_envelope_geom(self, raw:"Product"):
         raise NotImplementedError("Envelope not implemented for SNAP")
     
     def close(self, raw:"Product") -> None:
@@ -104,7 +116,10 @@ class NCRasterHandler(RasterHandler):
     def get_tie_point_grid_names(self, raw) -> Optional[list[str]]:        
         raise NotImplementedError("Tie point grid names not implemented for NetCDF")
     
-    def get_envelope(self, raw):
+    def bounds(self, raw) -> list[float]:
+        raise NotImplementedError("Envelope not implemented for NetCDF")
+    
+    def get_envelope_geom(self, raw):
         raise NotImplementedError("Envelope not implemented for NetCDF")
     
     def close(self, raw) -> None:

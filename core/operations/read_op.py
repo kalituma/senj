@@ -48,9 +48,9 @@ class Read(SelectOp):
             assert self._stack_files is not None, 'stack_files should be provided for SafeGdalReader'
             assert self._read_and_stack == True, 'read_and_stack option should be True for SafeGdalReader'
 
-            raster = reader.read(contained_words=self._stack_files)
+            raster = reader.read(file_path=path, contained_words=self._stack_files)
         else:
-            raster = reader.read()
+            raster = reader.read(file_path=path)
 
         if self._bname_word_included:
             assert self._sel_by_bword, 'bword should be provided for bname_word_included'

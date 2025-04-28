@@ -23,7 +23,7 @@ class GdalTifStrategy(FormatStrategy):
     def write(self, writer: "GdalRasterAdapter", raster: Raster, path: str) -> None:
         is_bigtiff = is_bigtiff_gdal(raster.raw)
         compress = is_bigtiff
-        writer.write_raster(raster.raw, path, is_bigtiff=is_bigtiff, compress=compress)
+        writer.write_data(raster.raw, path, is_bigtiff=is_bigtiff, compress=compress)
     
     def write_meta(self, writer, raster: Raster, path: str) -> None:
         write_metadata(raster.meta_dict, path)
@@ -33,7 +33,7 @@ class SnapTifStrategy(FormatStrategy):
     def write(self, writer: "SnapRasterAdapter", raster: Raster, path: str) -> None:
         is_bigtiff = is_bigtiff_gpf(raster.raw)
         format_type = 'GeoTIFF-BigTIFF' if is_bigtiff else 'GeoTIFF'
-        writer.write_raster(raster.raw, path, format_type)
+        writer.write_data(raster.raw, path, format_type)
     
     def write_meta(self, writer, raster: Raster, path: str) -> None:
         write_metadata(raster.meta_dict, path)
@@ -41,7 +41,7 @@ class SnapTifStrategy(FormatStrategy):
 
 class SnapDimStrategy(FormatStrategy):
     def write(self, writer: "SnapRasterAdapter", raster: Raster, path: str) -> None:
-        writer.write_raster(raster.raw, path, 'BEAM-DIMAP')
+        writer.write_data(raster.raw, path, 'BEAM-DIMAP')
     
     def write_meta(self, writer, raster: Raster, path: str) -> None:
         write_metadata(raster.meta_dict, path)

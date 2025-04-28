@@ -1,5 +1,19 @@
 import numpy as np
+
+from core import LAMBDA
 from core.util import load_gdal, load_ogr
+
+def get_raster_envelope(raster_raw) -> tuple[float, float, float, float, float, float, float, float]:
+    gt = raster_raw.GetGeoTransform()
+    cols = raster_raw.RasterXSize
+    rows = raster_raw.RasterYSize
+
+    ulx, uly = gt[0], gt[3]
+    urx, ury = gt[0] + cols * gt[1], gt[3] + cols * gt[2]
+    lrx, lry = gt[0] + cols * gt[1] + rows * gt[4], gt[3] + cols * gt[2] + rows * gt[5]
+    llx, lly = gt[0] + rows * gt[4], gt[3] + rows * gt[5]
+
+    return ulx, uly, urx, ury, lrx, lry, llx, lly
 
 def is_bigtiff_gdal(ds):
 
@@ -17,8 +31,6 @@ def is_bigtiff_gdal(ds):
         return True
     else:
         return False
-
-
 
 def create_geom(wkt):
     ogr = load_ogr()
@@ -114,3 +126,21 @@ def get_geo_spec_gdal(ds):
         'lr_x': lr_x,
         'lr_y': lr_y
     }
+
+@LAMBDA.reg(name='create_dem')
+def create_dem(in_ds, out_ds, res, out_bounds, column_name, algorithm='linear'):
+    gdal = load_gdal()
+    ulx, uly, lrx, lry = out_bounds
+
+    cols = int((lrx - ulx) / res)
+    rows = int((uly - lry) / res)
+
+    out_ds = gdal.Grid(out_ds, in_ds, outputBounds=[ulx, uly, lrx, lry],
+                       zfield=column_name, algorithm=algorithm, width=cols, height=rows)
+    return out_ds
+
+@LAMBDA.reg(name='create_slope')
+def create_slope(in_ds, out_ds):
+    gdal = load_gdal()
+    out_ds = gdal.DEMProcessing(out_ds, in_ds, 'slope')
+    return out_ds

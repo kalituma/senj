@@ -7,7 +7,6 @@ class RasterMeta(ABC):
         self._meta_dict:Optional[dict] = None
         self._index_to_band:Optional[dict] = None
         self._band_to_index:Optional[dict] = None
-        self.op_history: list = []
 
     @property
     def initialized(self) -> bool:
@@ -106,8 +105,6 @@ class RasterMeta(ABC):
     def _produce_band_map(self, band_names:list[str]):
         return {i+1: b for i, b in enumerate(band_names)}, {b: i+1 for i, b in enumerate(band_names)}
 
-    def add_history(self, history):
-        self.op_history.append(history)
 
     def close(self):
         self.bands = None

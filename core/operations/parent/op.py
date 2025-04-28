@@ -1,11 +1,13 @@
 from typing import TYPE_CHECKING, Type, List, Union, AnyStr
 from core.raster import Raster
+from core.vector import Vector
 from core.logic.event import EventEmitter
 from core.util.op import OP_Module_Type
 from core.util.errors import OPTypeNotAvailableError
 from core.util.logger import Logger, print_log_attrs
 
 if TYPE_CHECKING:
+    from core.base import GeoData
     from core.logic import Context
 
 class LogCall(type):
@@ -97,13 +99,13 @@ class Op(EventEmitter, metaclass=LogCall):
     def __str__(self):
         return ":".join([self.proc_name, self.__class__.__name__])
 
-    def pre_process(self, raster:"Raster", context:"Context", *args, **kwargs):
+    def pre_process(self, data: "GeoData", context: "Context", *args, **kwargs):
         pass
 
-    def post_process(self, raster:"Raster", context:"Context", *args, **kwargs):
-        raster.op_history.append(self.name)
+    def post_process(self, data: "GeoData", context:"Context", *args, **kwargs):
+        data.add_history(self.name)
         self.__increase_counter()
-        return raster
+        return data
 
     def log(self, msg, level='info'):
         self._logger.log(level, f'({self.__class__.__name__}) {msg}')
@@ -111,7 +113,7 @@ class Op(EventEmitter, metaclass=LogCall):
     def start_log(self):
         self.log(f'------------------------------------------------------ call {self.__class__.__name__}')
 
-    def end_log(self, result:Union['Raster', str]):
+    def end_log(self, result:Union['GeoData', str]):
         if isinstance(result, Raster):
             self.log(f'bands_to_index : {result.band_to_index}')
             self.log(f'------------------------------------------------------ history: {result.op_history}')

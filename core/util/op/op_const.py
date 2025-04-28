@@ -36,5 +36,11 @@ CACHED_SPECKLE_FILTER_OP = 'cached_speckle_filter'
 HIST_EQUAL_OP = 'histogram_equalization'
 BAND_MATH_OP = 'bandmath'
 ZSCORE_OP = 'zscore'
+FUNC_OP = 'func'
+
 # etc
 PROJECTION_OP = 'projection'
+
+# etri
+DEM_SLOPE_OP = 'dem_slope'
+LSBAND_OP = 'lsband'

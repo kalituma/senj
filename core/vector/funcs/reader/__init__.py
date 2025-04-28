@@ -1,4 +1,4 @@
 from .base_vector_reader import BaseVectorReader
-from .gdal_reader import ShapeGdaReader
+from .shape_reader import ShapeGdalReader
 
-__all__ = ['BaseVectorReader', 'ShapeGdaReader']
+__all__ = ['BaseVectorReader', 'ShapeGdalReader']

@@ -25,6 +25,6 @@ class ReaderFactory:
         
         for (mod_type, extensions), reader_cls in cls._reader_map.items():
             if module_type == mod_type and file_ext in extensions:
-                return reader_cls(file_path)
+                return reader_cls()
         
         raise ValueError(f"not supported file extension: {file_ext} (module: {module_type})")

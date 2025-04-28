@@ -46,6 +46,9 @@ class Raster(GeoData, RasterMeta):
     def create(cls, path:str, module_type:Optional[ModuleType]=None, product_type:Optional[ProductType]=None):
         raster = cls(path)
         if module_type is not None:
+            if module_type not in cls._module_handlers:
+                raise ValueError(f'Module type {module_type} is not supported')
+                    
             raster.module_type = module_type
         if product_type is not None:
             raster.product_type = product_type
@@ -57,7 +60,7 @@ class Raster(GeoData, RasterMeta):
         new_raster = Raster.create(raster.path)
 
         for key, value in vars(raster).items():
-            if key in ['op_history', '_module_type', '_path', '_product_type']:
+            if key in ['_op_history', '_module_type', '_path', '_product_type']:
                 setattr(new_raster, key, value)
             else:
                 continue
@@ -70,10 +73,7 @@ class Raster(GeoData, RasterMeta):
     @property
     def handler(self) -> "RasterHandler":
         if not self.module_type:
-            raise ValueError('Module type is not set')
-        
-        if self.module_type not in self._module_handlers:
-            raise ValueError(f'Module type {self.module_type} is not supported')
+            raise ValueError('Module type is not set')        
 
         return self._module_handlers[self.module_type]
 
@@ -165,8 +165,6 @@ class Raster(GeoData, RasterMeta):
     def proj(self) -> str:
         assert self.raw is not None, 'For getting projection, raster object must have raw data.'
         return self.handler.proj(self.raw)
-    
-
 
     def get_cached_band_names(self) -> Union[list[str], None]:
         if self._bands_data:
