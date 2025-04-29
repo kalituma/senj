@@ -1,9 +1,9 @@
 from typing import List
 
+from core.util.gdal import copy_features
 from core.vector.vector import Vector
 
-
-class VectorMerger:    
+class VectorMerger:
     @staticmethod
     def merge(vector_list: List[Vector]) -> Vector:
         if not vector_list:
@@ -23,6 +23,6 @@ class VectorMerger:
         for vector in vector_list:
             from_layer = vector.raw.GetLayer()
             merged_layer = merged_vector.raw.GetLayer()
-            merged_vector.handler.copy_features(merged_layer, from_layer)
+            merged_layer = copy_features(merged_layer, from_layer)
         
         return merged_vector

@@ -66,6 +66,7 @@ class Resample(ParamOp, WarpOp):
         if not usr_res:
             usr_res = res
 
+        dataset = None
         if src_epsg != usr_epsg_str or not np.isclose(res, usr_res):
 
             if usr_epsg_str != '':
@@ -87,19 +88,21 @@ class Resample(ParamOp, WarpOp):
             if self.module_type == OP_Module_Type.SNAP:
                 assert raster.module_type == ModuleType.SNAP, 'Resample operation is only available for SNAP module'
                 dataset = reproject_gpf(raster.raw, self.snap_params)
+
             elif self.module_type == OP_Module_Type.GDAL:
                 assert raster.module_type == ModuleType.GDAL, 'Resample operation is only available for GDAL module'
-                
                 self.add_param(crs=usr_epsg_str)
                 self.add_param(src_crs=src_epsg)
                 self.add_param(use_all_cores=self._use_all_cores)
-
-                cur_params = deepcopy(self.snap_params)
-                dataset, context = self.call_warp(raster.raw, cur_params, context)
             else:
                 raise NotImplementedError(f"Resample method for {raster.module_type.__str__()} is not implemented yet")
 
-            raster.raw = dataset
+        if self.module_type == OP_Module_Type.GDAL:
+            cur_params = deepcopy(self.snap_params)
+            dataset, context = self.call_warp(raster.raw, cur_params, context)
+
+        raster.raw = dataset
+
 
         raster = self.post_process(raster, context)
 

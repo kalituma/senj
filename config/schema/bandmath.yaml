@@ -15,3 +15,6 @@ bandmath:
     out_band_name:
       type: 'string'
       required: false
+    normalize:
+      type: 'boolean'
+      required: false

@@ -42,6 +42,10 @@ class RasterHandler(ABC):
         return [meta_dict['index_to_band'][index] for index in band_indices]
 
     @abstractmethod
+    def get_pixel_size(self, raw) -> float:
+        pass
+
+    @abstractmethod
     def close(self, raw) -> None:
         pass
 
@@ -78,6 +82,10 @@ class GdalRasterHandler(RasterHandler):
     def close(self, raw:"Dataset") -> None:
         raw = None
 
+    def get_pixel_size(self, raw:"Dataset") -> float:
+        gt = raw.GetGeoTransform()
+        return gt[1]
+
 class SnapRasterHandler(RasterHandler):
     def get_band_size(self, raw:"Product") -> int:
         return raw.getNumBands()
@@ -102,6 +110,9 @@ class SnapRasterHandler(RasterHandler):
     def close(self, raw:"Product") -> None:
         raw.dispose()
 
+    def get_pixel_size(self, raw:"Product") -> float:
+        raise NotImplementedError("Pixel size not implemented for SNAP")
+
 
 class NCRasterHandler(RasterHandler):
     def get_band_size(self, raw) -> int:        
@@ -125,3 +136,5 @@ class NCRasterHandler(RasterHandler):
     def close(self, raw) -> None:
         raw = None
 
+    def get_pixel_size(self, raw) -> float:
+        raise NotImplementedError("Pixel size not implemented for NetCDF")

@@ -38,23 +38,9 @@ class Vector(GeoData):
 
     @staticmethod
     def like(vector: T):
-        new_vector = Vector.create('', vector.module_type)
+        new_vector = Vector.create("", vector.module_type)
         new_vector.raw = vector.handler.empty_raw(vector.raw)
-        return new_vector
-    
-    @staticmethod
-    def from_vector(vector: T, **kwargs):
-        new_vector = Vector(vector.path)
-        
-        for key, value in vars(vector).items():
-            if key in ['op_history', '_module_type', '_path']:
-                setattr(new_vector, key, value)
-        
-        for key, value in kwargs.items():
-            setattr(new_vector, key, value)
-            
-        return new_vector   
-        
+        return new_vector    
     
     @classmethod
     def create(cls, path: str, module_type: Optional[ModuleType]=None, **kwargs):

@@ -4,9 +4,15 @@ from osgeo import gdal, ogr, osr
 
 if TYPE_CHECKING:
     from osgeo.gdal import Dataset
-    from osgeo.ogr import DataSource, FieldDefn
+    from osgeo.ogr import DataSource, FieldDefn, Layer
 
 from core.util.gdal import GDAL_DTYPE_MAP, read_gdal_bands
+
+def create_datasource(path: str, ogr_format: str = 'ESRI Shapefile'):
+    driver = ogr.GetDriverByName(ogr_format)    
+    if driver.Open(path):
+        driver.DeleteDataSource(path)    
+    return driver.CreateDataSource(path)
 
 def create_ds(gdal_format=None, width=None, height=None, band_num=None, dtype=None, 
               proj_wkt:str=None, transform:tuple=None, metadata=None,
@@ -82,6 +88,19 @@ def create_vector_ds(gdal_format: str = 'Memory', proj_wkt: Optional[str] = None
             ds.SetMetadataItem(key, value)
     
     return ds
+
+def create_ds_with_layer(layer: "Layer", gdal_format, out_path=''):
+    driver = ogr.GetDriverByName(gdal_format)
+
+    if driver.Open(out_path):
+        driver.DeleteDataSource(out_path)
+    
+    out_ds = driver.CreateDataSource(out_path)
+    out_ds.CreateLayer(layer.GetName(), layer.GetSpatialRef(), layer.GetGeomType())
+    out_ds.FlushCache()
+    out_ds = None
+
+    return out_ds
 
 def create_ds_with_arr(arr:np.ndarray, gdal_format,
                        proj_wkt:Union[str, None]=None, transform:Union[tuple, None]=None, metadata:dict=None,

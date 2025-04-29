@@ -68,7 +68,7 @@ def identify_safe(src_path_str:str):
         meta_root = etree.parse(meta_path).getroot()
         mission_id = str(meta_root.xpath('//missionId/text()')[0])
 
-    if mission_id == 'Sentinel-2A':
+    if mission_id == 'Sentinel-2A' or mission_id == 'Sentinel-2B':
         return ProductType.S2, meta_path
     elif mission_id == 'S1B' or mission_id == 'S1A':
         return ProductType.S1, meta_path

@@ -112,6 +112,10 @@ class Raster(GeoData, RasterMeta):
     def raster_from(self, from_proc):
         self._raster_from = from_proc
 
+    @property
+    def pixel_size(self):
+        return self.handler.get_pixel_size(self.raw)
+
     def __getitem__(self, item):
         return self.bands[item]
 

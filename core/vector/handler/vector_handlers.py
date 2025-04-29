@@ -4,14 +4,14 @@ from osgeo import osr, ogr
 
 
 from core.util.gdal.gdal_vector import get_vector_envelope, create_envelope, get_vector_fields
-from core.util.gdal import create_ds
+from core.util.gdal import create_ds, create_datasource
 
 if TYPE_CHECKING:
     from osgeo.ogr import Geometry
     from osgeo.gdal import Dataset
     from core.vector.vector import Vector
     from core.util import ModuleType
-    from osgeo.ogr import Feature, Layer
+    from osgeo.ogr import Feature, Layer, DataSource
 
 class VectorHandler(ABC):
         
@@ -34,11 +34,6 @@ class VectorHandler(ABC):
     @abstractmethod
     def empty_raw(self, raw):
         pass
-
-    @abstractmethod
-    def copy_features(self, layer, from_layer):
-        pass
-
 
 
 class GdalVectorHandler(VectorHandler):    
@@ -100,27 +95,21 @@ class GdalVectorHandler(VectorHandler):
             fields.append(field_defn.GetName())
         return fields
 
-    def empty_raw(self, raw):
-        in_layer = raw.GetLayerByIndex(0)
+    def empty_raw(self, raw) -> "Dataset":
+        
+        in_layer = raw.GetLayerByIndex(0)        
         fields = get_vector_fields(in_layer)
         geom_type = in_layer.GetGeomType()
         proj_wkt = in_layer.GetSpatialRef().ExportToWkt()
-        new_raw = create_ds(gdal_format='Memory', is_vector=True, field_defs=fields, geom_type=geom_type, proj_wkt=proj_wkt)
-        
+        new_raw = create_ds(gdal_format="Memory", is_vector=True, field_defs=fields, geom_type=geom_type, proj_wkt=proj_wkt)
+
         return new_raw
     
-    def copy_features(self, layer: "Layer", from_layer: "Layer"):
-        layer_defn = from_layer.GetLayerDefn()        
-        
-        for feature in from_layer:
-            new_feature = ogr.Feature(layer_defn)
-            for i in range(feature.GetFieldCount()):
-                new_feature.SetField(i, feature.GetField(i))
-            new_feature.SetGeometry(feature.GetGeometryRef().Clone())
-            layer.CreateFeature(new_feature)
-            new_feature = None
-        
-        return layer
+    def shape_raw(self, path: str) -> "DataSource":
+        new_raw = create_datasource(path=path)        
+        return new_raw
+    
+
 
     # def merge(self, raw_list: List["Dataset"]) -> "Dataset":
     #     from osgeo import ogr

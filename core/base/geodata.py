@@ -2,7 +2,9 @@
 from abc import ABC, abstractmethod
 from typing import Union, TypeVar, Dict, Any
 from pathlib import Path
-        
+
+import warnings
+
 from core.util import ModuleType
 
 T = TypeVar('T', bound='GeoData')
@@ -17,9 +19,13 @@ class GeoData(ABC):
         self._raw = None
         self._is_cached: bool = False
         self._op_history: list = []
+        self._exists: bool = False
         
         if path and not Path(path).exists():
-            raise FileNotFoundError(f'{path} does not exist')
+            self._exists = False
+            warnings.warn(f'{path} does not exist')
+        else:
+            self._exists = True
     
     @property
     def op_history(self) -> list:

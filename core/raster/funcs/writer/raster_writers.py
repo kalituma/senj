@@ -6,7 +6,7 @@ from core.raster import Raster
 from core.raster.funcs.adapter import SnapRasterAdapter, GdalRasterAdapter
 from core.raster.funcs.writer.writer_strategy import SnapTifStrategy, SnapDimStrategy, GdalTifStrategy
 
-class BaseWriter(ABC):
+class BaseRasterWriter(ABC):
     def __init__(self, raster:Raster):
         self._raster = raster
         self._format_strategies = {}
@@ -38,7 +38,7 @@ class BaseWriter(ABC):
         else:
             raise ValueError(f"Unsupported file extension: {ext}")
 
-class SnapWriter(BaseWriter, SnapRasterAdapter):
+class SnapRasterWriter(BaseRasterWriter, SnapRasterAdapter):
 
     def _initialize_strategies(self) -> None:
         self._format_strategies = {
@@ -46,17 +46,17 @@ class SnapWriter(BaseWriter, SnapRasterAdapter):
             '.dim': SnapDimStrategy()
         }
 
-class GdalWriter(BaseWriter, GdalRasterAdapter):
+class GdalRasterWriter(BaseRasterWriter, GdalRasterAdapter):
     def _initialize_strategies(self) -> None:
         self._format_strategies = {
             '.tif': GdalTifStrategy()
         }
 
 
-def get_writer(raster: Raster) -> BaseWriter:
+def get_writer(raster: Raster) -> BaseRasterWriter:
     if raster.module_type == ModuleType.SNAP:
-        return SnapWriter(raster)
+        return SnapRasterWriter(raster)
     elif raster.module_type == ModuleType.GDAL:
-        return GdalWriter(raster)
+        return GdalRasterWriter(raster)
     else:
         raise ValueError(f"Unsupported module type: {raster.module_type}")

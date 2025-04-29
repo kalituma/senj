@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from tqdm import tqdm
 from osgeo import ogr
 from osgeo import gdal
-
+from pathlib import Path
 if TYPE_CHECKING:
     from osgeo.ogr import Layer, FieldDefn
 
@@ -26,6 +26,8 @@ def create_envelope(ulx, uly, urx, ury, lrx, lry, llx, lly) -> ogr.Geometry:
     return env_geom
 
 def clip_vector(input_ds, clip_geom, out_ds):
+
+    file_stem = Path(input_ds.GetFileList()[0]).stem
     
     in_layer = input_ds.GetLayer()
         
@@ -33,7 +35,7 @@ def clip_vector(input_ds, clip_geom, out_ds):
     out_defn = out_layer.GetLayerDefn()
     
     in_layer.ResetReading()
-    for in_feat in tqdm(in_layer, desc="Clipping features"):
+    for in_feat in tqdm(in_layer, desc=f"Clipping features for '{file_stem}'"):
         geom = in_feat.GetGeometryRef()
         clipped_geom = geom.Intersection(clip_geom)
         
