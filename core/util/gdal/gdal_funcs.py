@@ -128,15 +128,12 @@ def get_geo_spec_gdal(ds):
     }
 
 @LAMBDA.reg(name='create_dem')
-def create_dem(in_ds, out_ds, res, out_bounds, column_name, algorithm='linear'):
+def create_dem(in_ds, out_ds, out_bounds, column_name, ref_cols, ref_rows, algorithm='linear'):
     gdal = load_gdal()
     ulx, uly, lrx, lry = out_bounds
 
-    cols = int((lrx - ulx) / res)
-    rows = int((uly - lry) / res)
-
     out_ds = gdal.Grid(out_ds, in_ds, outputBounds=[ulx, uly, lrx, lry],
-                       zfield=column_name, algorithm=algorithm, width=cols, height=rows)
+                       zfield=column_name, algorithm=algorithm, width=ref_cols, height=ref_rows)
     return out_ds
 
 @LAMBDA.reg(name='create_slope')

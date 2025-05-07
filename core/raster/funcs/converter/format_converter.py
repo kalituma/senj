@@ -52,6 +52,7 @@ class FormatConverter(ABC):
         product.setSceneGeoCoding(geocoding)
         product = add_band_to_product(product, cached_bands)
         raster.raw = product
+        raster.module_type = ModuleType.SNAP
         
         return raster
     
@@ -66,6 +67,7 @@ class FormatConverter(ABC):
         gt = find_gt_from_band(raster.raw.getBand(band_name_list[0]))
         
         raster.raw, btoi = create_ds_with_dict(cached_bands, gdal_format='MEM', proj_wkt=wkt, transform=gt, metadata=None, out_path='')
+        raster.module_type = ModuleType.GDAL
         
         if btoi != raster.band_to_index:
             MetaBandsManager(raster).update_band_mapping(btoi)
@@ -81,6 +83,7 @@ class FormatConverter(ABC):
 
         wkt, gt = get_proj_nc(raster.path, band_name_list[0])
         raster.raw, btoi = create_ds_with_dict(cached_bands, gdal_format='MEM', proj_wkt=wkt, transform=gt,metadata=None, out_path='')
+        raster.module_type = ModuleType.GDAL
 
         if btoi != raster.band_to_index:
             MetaBandsManager(raster).update_band_mapping(btoi)
